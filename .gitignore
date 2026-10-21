@@ -1,0 +1,33 @@
+# Server-only data and generated artifacts
+/datasets/
+/data/
+/models/
+/checkpoints/
+/weights/
+/outputs/
+/results/
+/logs/
+/runs/
+/wandb/
+/cache/
+/.cache/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+
+# Local environments and Python artifacts
+/.venv/
+/venv/
+/env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local secrets and OS files
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
