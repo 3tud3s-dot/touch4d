@@ -10,7 +10,9 @@ Defaults resolve relative to this project's root, not the current directory:
   --source-root datasets/deform360 (contains raw/ and processed/)
   --output-root datasets/touch4d-v1
 
-Original files are read-only. No tar extraction, download, overwrite or cleanup.
+Original files are read-only. No tar extraction or download.
+Existing episodes are skipped only after full source validation. --overwrite
+rebuilds selected episodes, validates replacements fully, then replaces old outputs.
 An interrupted/failed episode stays at .episode_N.incomplete for inspection;
 only a validated episode is renamed to episode_N. No training features added.
 Published robot.npy uses a pickled dictionary; source-root must be trusted.
@@ -27,6 +29,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import shutil
 import sys
 import tarfile
 
@@ -35,7 +38,8 @@ import numpy as np
 
 PROJECT = Path(__file__).resolve().parents[2]
 VERSION = "touch4d-v1"
-SCRIPT_VERSION = "1.1.0"
+SCRIPT_VERSION = "1.3.0"
+SUPPORTED_SCRIPT_VERSIONS = ("1.1.0", "1.2.0", SCRIPT_VERSION)
 # Reviewed physical identities, not an inference from episode number or R.
 # New scenes/episodes require a reviewed entry before reconstruction.
 SCENE_BINDINGS = {
@@ -248,6 +252,27 @@ def load_robot(payload, frames, slots):
     return t, o, original_shapes
 
 
+def load_actions(payload, frames, slots, t, openings):
+    data = np.load(io.BytesIO(payload), allow_pickle=True).item()
+    require(isinstance(data, dict) and "actions" in data, "Missing original actions")
+    actions = np.asarray(data["actions"])
+    shape = list(actions.shape)
+    if actions.ndim == 3:
+        require(len(slots) == 1 and actions.shape == (frames, 5, 3), "Malformed single-hand actions")
+        actions = actions[:, None]
+    require(actions.shape == (frames, len(slots), 5, 3)
+            and actions.dtype.kind == "f" and actions.dtype.itemsize in (4, 8), "Bad original actions")
+    check_actions(actions, t, openings)
+    return actions, shape
+
+
+def check_actions(actions, t, openings):
+    require(np.array_equal(actions[..., 0, :], t[..., :3, 3], equal_nan=True), "Actions translation mismatch")
+    require(np.array_equal(actions[..., 1:4, :], t[..., :3, :3], equal_nan=True), "Actions rotation mismatch")
+    require(np.array_equal(actions[..., 4, 0], openings, equal_nan=True), "Actions opening mismatch")
+    require(np.all(actions[..., 4, 1:] == 0), "Actions last row must be [opening, 0, 0]")
+
+
 def select_raw(raw_ts, obs):
     index = (np.searchsorted(raw_ts, obs, side="right") - 1).astype(np.int64)
     age = np.full(len(obs), -1, dtype=np.int64)
@@ -425,16 +450,25 @@ def find_raw_sources(source_root, scene, obs):
     return selected
 
 
-def output_paths(source_root, output_root, scene, episode):
+def output_paths(source_root, output_root, scene, episode, *, allow_existing=False):
     target = output_root / scene / f"episode_{episode}"
     partial = target.with_name(f".episode_{episode}.incomplete")
     require(not (output_root / scene).is_symlink(), "Output scene directory must not be a symlink")
-    for path in (target, partial):
+    backup = target.with_name(f".episode_{episode}.previous")
+    for path in (target, partial, backup):
         resolved = path.resolve()
         require(resolved.is_relative_to(output_root.resolve()), f"Output escapes destination: {path}")
         for source in (source_root / "raw", source_root / "processed"):
             require(not resolved.is_relative_to(source.resolve()), f"Output is inside source data: {path}")
-        require(not path.exists() and not path.is_symlink(), f"Refusing existing/partial output: {path}")
+        require(not path.is_symlink(), f"Refusing linked output: {path}")
+        if path == target and allow_existing:
+            require(not path.exists() or path.is_dir(), f"Output is not a directory: {path}")
+        elif path == backup and allow_existing and target.is_dir():
+            # A published target can be validated/skipped despite cleanup leftovers.
+            # A backup without a target still requires recovery, never regeneration.
+            require(not path.exists() or path.is_dir(), f"Backup is not a directory: {path}")
+        else:
+            require(not path.exists(), f"Refusing existing/partial/backup output: {path}")
     return target, partial
 
 
@@ -446,12 +480,14 @@ def preflight(source_root, output_root, scene, episodes):
     seen_recordings = set()
     for ep in episodes:
         slots = hand_slots(scene, ep)
-        output_paths(source_root, output_root, scene, ep)
+        output_paths(source_root, output_root, scene, ep, allow_existing=True)
         with SourceReader(source_root) as reader:
             prefix, camera_refs, gs_refs = episode_layout(reader, scene, ep)
             camera, obs = observation_timeline(reader, camera_refs)
             require(sorted(gs_refs) == list(range(len(obs))), f"GS gaps/extra frames in episode {ep}")
-            load_robot(reader.read("robot", f"{prefix}/robot/robot.npy"), len(obs), slots)
+            robot_payload = reader.read("robot", f"{prefix}/robot/robot.npy")
+            t, o, _ = load_robot(robot_payload, len(obs), slots)
+            load_actions(robot_payload, len(obs), slots, t, o)
             tactile_sources = find_raw_sources(source_root, scene, obs)
             for channel, paths in enumerate(tactile_sources):
                 raw_path, time_path, median_path = paths
@@ -486,8 +522,12 @@ def parameters():
             "gs_correspondence": "no fixed cross-frame identity"}
 
 
-def rebuild_episode(source_root, output_root, scene, episode, plan):
-    target, partial = output_paths(source_root, output_root, scene, episode)
+def rebuild_episode(source_root, output_root, scene, episode, plan, *, overwrite=False):
+    target, partial = output_paths(source_root, output_root, scene, episode, allow_existing=overwrite)
+    backup = target.with_name(f".episode_{episode}.previous")
+    require(not backup.exists() and not backup.is_symlink(),
+            f"Inspect/remove the previous backup before another overwrite: {backup}")
+    old_identity = (target.stat().st_dev, target.stat().st_ino) if target.exists() else None
     partial.mkdir(parents=True, exist_ok=False)
     (partial / "gs").mkdir()
     try:
@@ -504,11 +544,13 @@ def rebuild_episode(source_root, output_root, scene, episode, plan):
             source_meta = json.loads(reader.read("episode_metadata", f"{prefix}/metadata.json").decode("utf-8"))
             require(camera in source_meta.get("cameras", []), "Observation camera absent in source metadata")
             slots = hand_slots(scene, episode)
-            t, o, original_shapes = load_robot(reader.read("robot", f"{prefix}/robot/robot.npy"), frames, slots)
+            robot_payload = reader.read("robot", f"{prefix}/robot/robot.npy")
+            t, o, original_shapes = load_robot(robot_payload, frames, slots)
+            actions, original_shapes["actions"] = load_actions(robot_payload, frames, slots, t, o)
             points, controller_mask, clipped = controller_arrays(t, o, slots)
             write_npz(partial / "controller.npz", {"controller_points": points,
                 "controller_valid_mask": controller_mask, "T_worlds": t, "openings": o,
-                "opening_clipped": clipped})
+                "opening_clipped": clipped, "actions": actions})
             tactile = np.zeros((frames, 4, 12, 32), dtype=np.float32)
             valid = np.zeros(tactile.shape, dtype=bool)
             index = np.full((frames, 4), -1, dtype=np.int64)
@@ -547,7 +589,7 @@ def rebuild_episode(source_root, output_root, scene, episode, plan):
                 "physical_hand_to_robot_slot": {h: slots.index(h) if h in slots else None for h in HAND_ORDER},
                 "binding_basis": binding_evidence(scene, episode),
                 "controller_point_ids": POINT_IDS, "source_robot_shapes": original_shapes,
-                "source_robot_dtypes": {"T_worlds": str(t.dtype), "openings": str(o.dtype)},
+                "source_robot_dtypes": {"T_worlds": str(t.dtype), "openings": str(o.dtype), "actions": str(actions.dtype)},
                 "parameters": parameters(), "source_files": reader.refs,
                 "gs_point_counts": counts,
                 "protocol_sha256": hash_file(protocol) if protocol.is_file() else None,
@@ -560,15 +602,37 @@ def rebuild_episode(source_root, output_root, scene, episode, plan):
             with (partial / "metadata.json").open("x", encoding="utf-8") as stream:
                 json.dump(metadata, stream, ensure_ascii=False, indent=2, allow_nan=False)
                 stream.write("\n")
-        # Numeric and metadata checks before publication; source bytes were just read.
+        # Replacements must pass full source verification before touching old output.
         from validate import validate_episode
-        validate_episode(partial, expected_scene=scene, source_root=source_root, verify_sources=False)
-        require(not target.exists() and not target.is_symlink(), f"Output appeared during rebuild: {target}")
-        partial.rename(target)
-        print(f"Completed: {target}", flush=True)
+        validate_episode(partial, expected_scene=scene, source_root=source_root, verify_sources=overwrite)
+        require(not target.is_symlink(), f"Output became a symlink: {target}")
+        if old_identity is None:
+            require(not target.exists(), f"Output appeared during rebuild: {target}")
+            partial.rename(target)
+        else:
+            require(target.is_dir() and (target.stat().st_dev, target.stat().st_ino) == old_identity,
+                    f"Output changed during rebuild: {target}")
+            backup = target.with_name(f".episode_{episode}.previous")
+            require(not backup.exists() and not backup.is_symlink(), f"Backup already exists: {backup}")
+            target.rename(backup)
+            try:
+                partial.rename(target)
+            except Exception:
+                backup.rename(target)
+                raise
     except Exception:
-        print(f"Failed episode {episode}; partial output retained at {partial}", file=sys.stderr)
+        print(f"Episode {episode} failed; inspect {partial}, {target}, and "
+              f"{target.with_name(f'.episode_{episode}.previous')} before retrying", file=sys.stderr)
         raise
+    # Publication is committed. Cleanup must not change reconstruction success.
+    print(f"Completed: {target}", flush=True)
+    if old_identity is not None:
+        try:
+            shutil.rmtree(backup)
+        except Exception as exc:
+            print(f"WARNING: reconstruction succeeded at {target}, but old backup cleanup "
+                  f"failed at {backup}: {exc}. Validation and default skipping remain available; "
+                  "inspect the backup before another overwrite.", file=sys.stderr, flush=True)
 
 
 def main(argv=None):
@@ -578,6 +642,8 @@ def main(argv=None):
     parser.add_argument("--output-root", type=Path, default=PROJECT / "datasets/touch4d-v1")
     parser.add_argument("--episodes", type=parse_episodes, metavar="0-9 or 0,5",
                         help="Optional subset; default: every discovered source episode")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Rebuild selected episodes; replace existing outputs only after full validation")
     args = parser.parse_args(argv)
     require(os.name != "nt", "Reconstruction outputs belong on the server; do not run on local Windows")
     source_root, output_root = args.source_root.resolve(), args.output_root.resolve()
@@ -587,10 +653,46 @@ def main(argv=None):
     available = discover_episodes(source_root / "processed" / args.scene)
     episodes = args.episodes if args.episodes is not None else list(available)
     require(set(episodes) <= set(available), "Requested episodes are absent from the source scene")
-    plans = preflight(source_root, output_root, args.scene, episodes)
-    print(f"Source: {source_root}\nOutput: {output_root / args.scene}\nEpisodes: {episodes}", flush=True)
+    # Lock the scene directory itself: no lock file and no concurrent skip/replace races.
+    import fcntl
+    scene_dir = output_root / args.scene
     for episode in episodes:
-        rebuild_episode(source_root, output_root, args.scene, episode, plans[episode])
+        output_paths(source_root, output_root, args.scene, episode, allow_existing=True)
+    scene_dir.mkdir(parents=True, exist_ok=True)
+    with ExitStack() as stack:
+        lock_fd = os.open(scene_dir, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        stack.callback(os.close, lock_fd)
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise ValueError(f"Another rebuild is using this scene: {scene_dir}") from exc
+        pending, skipped = [], []
+        for episode in episodes:
+            target, _ = output_paths(source_root, output_root, args.scene, episode, allow_existing=True)
+            if target.exists() and not args.overwrite:
+                print(f"Full validation before skipping: {target}", flush=True)
+                try:
+                    result = validate_episode(target, expected_scene=args.scene, source_root=source_root,
+                                              verify_sources=True)
+                except Exception as exc:
+                    raise ValueError(f"Existing episode failed full validation: {target}; "
+                                     f"inspect the error or explicitly use --overwrite: {exc}") from exc
+                require(result["contains_actions"],
+                        f"Existing episode passed full validation but needs an upgrade: {target}; "
+                        "legacy output lacks actions. Use --overwrite to upgrade.")
+                skipped.append(episode)
+                print(f"Skipped (full validation passed): {target}", flush=True)
+            else:
+                backup = target.with_name(f".episode_{episode}.previous")
+                require(not backup.exists() and not backup.is_symlink(),
+                        f"Inspect/remove the previous backup before another overwrite: {backup}")
+                pending.append(episode)
+        # Include skipped episodes in pairing checks so a recording cannot be reused.
+        plans = preflight(source_root, output_root, args.scene, episodes) if pending else {}
+        print(f"Source: {source_root}\nOutput: {scene_dir}\nRebuild: {pending}\nSkipped: {skipped}", flush=True)
+        for episode in pending:
+            rebuild_episode(source_root, output_root, args.scene, episode, plans[episode],
+                            overwrite=args.overwrite)
     return 0
 
 

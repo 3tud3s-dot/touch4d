@@ -29,11 +29,11 @@ import numpy as np
 
 sys.dont_write_bytecode = True
 from rebuild import (GS_FIELDS, HAND_ORDER, POINT_IDS, PROJECT, SCENE_BINDINGS,
-                     SCRIPT_VERSION, STREAMS, VERSION, SourceReader,
+                     SUPPORTED_SCRIPT_VERSIONS, STREAMS, VERSION, SourceReader,
                      binding_evidence, discover_episodes, episode_layout,
                      find_raw_sources, observation_timeline,
                      controller_arrays, gs_arrays, hand_slots, hash_file,
-                     load_median, load_raw, load_robot, parameters, parse_episodes,
+                     load_actions, check_actions, load_median, load_raw, load_robot, parameters, parse_episodes,
                      require, safe_relative, select_raw,
                      tactile_arrays, timestamp_array)
 
@@ -133,7 +133,7 @@ def validate_episode(directory, *, expected_scene=None, source_root=None, verify
     directory = Path(directory).resolve()
     with (directory / "metadata.json").open(encoding="utf-8") as stream:
         metadata = json.load(stream)
-    require(metadata["schema_version"] == VERSION and metadata["script_version"] == SCRIPT_VERSION,
+    require(metadata["schema_version"] == VERSION and metadata["script_version"] in SUPPORTED_SCRIPT_VERSIONS,
             "Unsupported schema/script version")
     scene = metadata["scene"]
     require(scene in SCENE_BINDINGS, "Scene has no reviewed bindings")
@@ -197,6 +197,9 @@ def validate_episode(directory, *, expected_scene=None, source_root=None, verify
         # Further pixel validity and response values require the original raw/median.
 
     controller_keys = {"controller_points", "controller_valid_mask", "T_worlds", "openings", "opening_clipped"}
+    has_actions = metadata["script_version"] == "1.3.0"
+    if has_actions:
+        controller_keys.add("actions")
     controller = read_npz(directory / "controller.npz", controller_keys)
     field(controller["controller_points"], (frames, 2, 30, 3), np.float32, "controller_points", finite=True)
     field(controller["controller_valid_mask"], (frames, 2, 30), bool, "controller_valid_mask")
@@ -205,7 +208,19 @@ def validate_episode(directory, *, expected_scene=None, source_root=None, verify
     require(t.dtype.kind == "f" and t.dtype.itemsize in (4, 8) and t.shape == (frames, len(slots), 4, 4), "Bad T_worlds")
     require(openings.dtype.kind == "f" and openings.dtype.itemsize in (4, 8)
             and openings.shape == (frames, len(slots)), "Bad openings")
-    require(metadata["source_robot_dtypes"] == {"T_worlds": str(t.dtype), "openings": str(openings.dtype)},
+    expected_dtypes = {"T_worlds": str(t.dtype), "openings": str(openings.dtype)}
+    if has_actions:
+        actions = controller["actions"]
+        require(actions.shape == (frames, len(slots), 5, 3)
+                and actions.dtype.kind == "f" and actions.dtype.itemsize in (4, 8), "Bad actions")
+        check_actions(actions, t, openings)
+        expected_dtypes["actions"] = str(actions.dtype)
+        allowed_shapes = [[frames, len(slots), 5, 3]]
+        if len(slots) == 1:
+            allowed_shapes.append([frames, 5, 3])
+        require(metadata["source_robot_shapes"].get("actions") in allowed_shapes,
+                "Original actions shape metadata mismatch")
+    require(metadata["source_robot_dtypes"] == expected_dtypes,
             "Source dtype metadata mismatch")
     points, mask, clipped = controller_arrays(t, openings, slots)
     equal(controller["controller_points"], points, "controller_points recomputation")
@@ -242,7 +257,12 @@ def validate_episode(directory, *, expected_scene=None, source_root=None, verify
             equal(obs, source_obs, "observation timeline source")
             source_meta = json.loads(checked_payload(reader, refs, "episode_metadata").decode("utf-8"))
             require(set(cameras) == set(source_meta.get("cameras", [])), "Cameras differ from original metadata")
-            source_t, source_o, shapes = load_robot(checked_payload(reader, refs, "robot"), frames, slots)
+            robot_payload = checked_payload(reader, refs, "robot")
+            source_t, source_o, shapes = load_robot(robot_payload, frames, slots)
+            if has_actions:
+                source_actions, shapes["actions"] = load_actions(robot_payload, frames, slots, source_t, source_o)
+                equal(actions, source_actions, "original actions")
+                require(actions.dtype == source_actions.dtype, "Original actions dtype mismatch")
             equal(t, source_t, "original T_worlds")
             equal(openings, source_o, "original openings")
             require(metadata["source_robot_shapes"] == shapes, "Original shape metadata mismatch")
@@ -280,6 +300,7 @@ def validate_episode(directory, *, expected_scene=None, source_root=None, verify
                         "opening_clipped_hand_frames": int(clipped.sum())}
     require(metadata["summary"] == expected_summary, "Summary disagrees with arrays")
     return {"scene": scene, "episode": episode, "status": "PASS", "frames": frames,
+            "contains_actions": has_actions,
             "gs_count_min": min(counts), "gs_count_max": max(counts), **expected_summary,
             "source_verification": "full" if verify_sources else "skipped (structure-only)",
             "source_files_verified": len(refs) if verify_sources else 0}
@@ -301,7 +322,7 @@ def main(argv=None):
     if args.episodes is None:
         # Never silently ignore retained, unpublished partial episodes.
         partial_ids = {int(m[1]) for p in scene_dir.iterdir()
-                       if (m := re.fullmatch(r"\.episode_(\d+)\.incomplete", p.name))}
+                       if (m := re.fullmatch(r"\.episode_(\d+)\.(?:incomplete|previous)", p.name))}
         episodes = sorted(set(episodes) | partial_ids)
         if not args.structure_only:
             if source_root is None:
@@ -320,6 +341,10 @@ def main(argv=None):
             require(not (scene_dir / f".episode_{episode}.incomplete").exists(), "Unpublished partial output exists")
             result = validate_episode(path, expected_scene=args.scene, source_root=source_root,
                                       verify_sources=not args.structure_only)
+            backup = scene_dir / f".episode_{episode}.previous"
+            if backup.exists() or backup.is_symlink():
+                print(f"WARNING: validated published output; retained backup needs inspection: {backup}",
+                      file=sys.stderr, flush=True)
         except (ValueError, OSError, KeyError, TypeError, ImportError, tarfile.TarError) as exc:
             failed = True
             result = {"scene": args.scene, "episode": episode, "status": "FAIL", "error": str(exc)}

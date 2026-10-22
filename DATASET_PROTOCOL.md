@@ -28,7 +28,7 @@ touch4d/
 | 文件 | 保存内容 |
 |---|---|
 | `tactile.npz` | `tactile`、`valid_mask` |
-| `controller.npz` | `controller_points`、`controller_valid_mask`、统一夹爪维度但保留原始数值和 slot 顺序的 `T_worlds`、`openings`，以及开口裁剪标记 `opening_clipped[F,2]`（bool，按左手、右手排列；缺失手为 False） |
+| `controller.npz` | `controller_points`、`controller_valid_mask`、统一夹爪维度但保留原始数值和 slot 顺序的 `T_worlds`、`openings`、`actions`，以及开口裁剪标记 `opening_clipped[F,2]`（bool，按左手、右手排列；缺失手为 False） |
 | `timestamps.npz` | `observation_timestamp_us`、四路完整 raw 触觉时间戳、`tactile_raw_index`、`tactile_age_us` |
 | `metadata.json` | 场景与 episode 标识、通道顺序、左右手 slot 映射、处理参数、版本、源文件路径及 SHA-256（含 median 来源） |
 | `gs/frame_XXXXXX.npz` | 对应原始帧号的 GS 字段、`frame_id`、`timestamp_us`；各帧点数可不同 |
@@ -117,6 +117,18 @@ openings[F, R]  # 开口距离，单位米
 
 - `T_worlds[F, R, 4, 4]`：每帧、每个已发布夹爪的根坐标到世界坐标的齐次变换；左上 `3×3` 为旋转矩阵，最后一列前三项为平移（米），最后一行为 `[0,0,0,1]`。
 - `openings[F, R]`：对应帧、对应夹爪的开口距离，单位米。
+- `actions[F, R, 5, 3]`：单独保留原始绝对位姿与开口编码；保留原始浮点精度（001、008 为 float64）、数值及 slot 顺序，单手增加 `R=1` 维。不是下一步的增量控制指令，与同帧 `T_worlds`、`openings`、GS 共用观测时间轴。
+
+```text
+每帧、每只夹爪的 actions：
+[ tx  ty  tz  ]
+[ R00 R01 R02 ]
+[ R10 R11 R12 ]
+[ R20 R21 R22 ]
+[  w   0   0  ]
+```
+
+`tx,ty,tz` 是 `T_worlds` 最后一列的世界位置（米）；中间三行是其左上角的旋转矩阵；`w` 是对应的原始 `openings`（米，不裁剪）。反向转换时，将位置和旋转填回 `T_worlds`，底行设为 `[0,0,0,1]`，取 `w` 作为 `openings`。001、008 全部 episode 的上述数值关系完全一致。`actions` 不额外重排为固定双手维；这两个场景 episode 0–4 为 `[右手]`，5–9 为 `[右手,左手]`。
 
 以上是加载后的统一结构；原始单手文件可能省略夹爪维，分别为 `T_worlds[F,4,4]`、`openings[F]`，加载时增加 `R=1` 维，数值不变。
 
