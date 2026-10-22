@@ -5,6 +5,7 @@ Dependencies: Python >= 3.10, numpy, plyfile. Run reconstruction on the server.
 Example (not executed automatically):
   python scripts/rebuild_dataset/rebuild.py --scene 001-rope
   python scripts/rebuild_dataset/rebuild.py --scene 008-pink-cloth
+  python scripts/rebuild_dataset/rebuild.py --scene 051-cube
 
 Defaults resolve relative to this project's root, not the current directory:
   --source-root datasets/deform360 (contains raw/ and processed/)
@@ -38,8 +39,8 @@ import numpy as np
 
 PROJECT = Path(__file__).resolve().parents[2]
 VERSION = "touch4d-v1"
-SCRIPT_VERSION = "1.3.0"
-SUPPORTED_SCRIPT_VERSIONS = ("1.1.0", "1.2.0", SCRIPT_VERSION)
+SCRIPT_VERSION = "1.4.0"
+SUPPORTED_SCRIPT_VERSIONS = ("1.1.0", "1.2.0", "1.3.0", SCRIPT_VERSION)
 # Reviewed physical identities, not an inference from episode number or R.
 # New scenes/episodes require a reviewed entry before reconstruction.
 SCENE_BINDINGS = {
@@ -52,6 +53,29 @@ SCENE_BINDINGS = {
         0: ("right",), 1: ("right",), 2: ("right",), 3: ("right",), 4: ("right",),
         5: ("right", "left"), 6: ("right", "left"), 7: ("right", "left"),
         8: ("right", "left"), 9: ("right", "left"),
+    },
+    "051-cube": {
+        0: ("right",), 1: ("right",), 2: ("right",), 3: ("right",), 4: ("right",),
+        5: ("right", "left"), 6: ("right", "left"), 7: ("right", "left"),
+        8: ("right", "left"), 9: ("right", "left"),
+    },
+}
+CUBE_REVIEW_FRAMES = {
+    0: [86, 127, 168], 1: [72, 108, 145], 2: [82, 122, 163],
+    3: [93, 131, 169], 4: [98, 126, 154], 5: [61, 123, 185],
+    6: [149, 194, 240], 7: [96, 120, 145], 8: [54, 109, 164],
+    9: [58, 116, 174],
+}
+# Explicit audited choices, not a general earliest/latest-median heuristic.
+# These four baselines reproduce all 40 published synced_tactile arrays for
+# 051-cube under the release processing. Some thresholded arrays are ambiguous.
+# Reconstruction still uses continuous positive values and causal alignment.
+SCENE_MEDIANS = {
+    "051-cube": {
+        "tactilel_left": "median_1769464491882420.npy",
+        "tactilel_right": "median_1769464492448159.npy",
+        "tactiler_left": "median_1769464491240896.npy",
+        "tactiler_right": "median_1769464491904483.npy",
     },
 }
 PINK_REVIEW_FRAMES = {
@@ -109,6 +133,11 @@ def hand_slots(scene, episode):
 
 def binding_evidence(scene, episode):
     hand_slots(scene, episode)
+    if scene == "051-cube":
+        return {"camera": "brics-odroid-001_cam0",
+                "method": "episode-specific RGB and projected robot geometry review; no inferred identity",
+                "review_frames": CUBE_REVIEW_FRAMES[episode],
+                "review_record": "051-cube representative-frame review"}
     return {"camera": "brics-odroid-001_cam0",
             "method": "episode-specific RGB and projected robot geometry review; no inferred identity",
             "review_frames": PINK_REVIEW_FRAMES[episode] if scene == "008-pink-cloth" else [],
@@ -420,17 +449,23 @@ def find_raw_sources(source_root, scene, obs):
     """Pair by exact stem and unique time-interval overlap, never sorted ordinal.
 
     A partial download may omit unrelated episodes without renumbering anything.
-    Missing/ambiguous selected recordings and multiple median candidates fail.
+    Multiple medians require an explicit reviewed scene/sensor choice.
+    Missing/ambiguous selected recordings or missing chosen baselines fail.
     """
     selected = []
     for sensor_name in STREAMS:
         sensor = "brics-odroid_" + sensor_name
         directory = Path(source_root) / "raw" / scene / sensor
         require(directory.is_dir(), f"Missing tactile sensor directory: {directory}")
-        medians = sorted(directory.glob("median_*.npy"))
-        require(len(medians) == 1, f"Expected one unambiguous baseline in {directory}, found {len(medians)}")
-        require(medians[0].is_file() and re.fullmatch(r"median_\d+\.npy", medians[0].name),
-                f"Unexpected baseline filename: {medians[0]}")
+        if scene in SCENE_MEDIANS:
+            require(sensor_name in SCENE_MEDIANS[scene], f"Missing reviewed baseline for {scene}/{sensor}")
+            median = directory / SCENE_MEDIANS[scene][sensor_name]
+        else:
+            medians = sorted(directory.glob("median_*.npy"))
+            require(len(medians) == 1, f"Expected one unambiguous baseline in {directory}, found {len(medians)}")
+            median = medians[0]
+        require(median.is_file() and re.fullmatch(r"median_\d+\.npy", median.name),
+                f"Missing or unexpected baseline: {median}")
         data = {p.stem: p for p in directory.glob("*.npy") if not p.name.startswith("median_")}
         times = {p.stem: p for p in directory.glob("*.txt")}
         require(data and data.keys() == times.keys(), f"Unpaired raw .npy/.txt files in {directory}")
@@ -442,7 +477,7 @@ def find_raw_sources(source_root, scene, obs):
             if ts[0] <= obs[-1] and ts[-1] >= obs[0]:
                 require(data[stem].stat().st_size == len(ts) * 16 * 32 * 4,
                         f"Raw byte/timestamp count mismatch: {data[stem]}")
-                candidates.append((data[stem], times[stem], medians[0]))
+                candidates.append((data[stem], times[stem], median))
         require(len(candidates) == 1,
                 f"{scene}/{sensor}: expected one raw recording overlapping observation "
                 f"[{obs[0]}, {obs[-1]}], found {len(candidates)}; cannot guess pairing")

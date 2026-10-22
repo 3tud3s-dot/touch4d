@@ -5,6 +5,7 @@ Dependencies: Python >= 3.10, numpy; plyfile for full source verification.
 Examples (not executed automatically):
   python scripts/rebuild_dataset/validate.py --scene 001-rope
   python scripts/rebuild_dataset/validate.py --scene 008-pink-cloth
+  python scripts/rebuild_dataset/validate.py --scene 051-cube
   python scripts/rebuild_dataset/validate.py --scene 008-pink-cloth --episodes 0 --structure-only
 
 By default verify every output hash, schema, timeline, mask, controller geometry,
@@ -28,7 +29,7 @@ import tarfile
 import numpy as np
 
 sys.dont_write_bytecode = True
-from rebuild import (GS_FIELDS, HAND_ORDER, POINT_IDS, PROJECT, SCENE_BINDINGS,
+from rebuild import (GS_FIELDS, HAND_ORDER, POINT_IDS, PROJECT, SCENE_BINDINGS, SCENE_MEDIANS,
                      SUPPORTED_SCRIPT_VERSIONS, STREAMS, VERSION, SourceReader,
                      binding_evidence, discover_episodes, episode_layout,
                      find_raw_sources, observation_timeline,
@@ -107,6 +108,9 @@ def check_sources_schema(refs, scene, episode, frames, prefix, cameras, camera):
             pattern = r"median_\d+\.npy" if kind == "median" else (
                 re.escape(sensor) + (r"_\d+\.npy" if kind == "raw" else r"_\d+\.txt"))
             require(re.fullmatch(pattern, path.name) is not None, "Unexpected tactile source name")
+            if kind == "median" and scene in SCENE_MEDIANS:
+                require(path.name == SCENE_MEDIANS[scene][STREAMS[channel]],
+                        f"Wrong reviewed baseline for {scene}/{sensor}")
         require(Path(refs[f"tactile_{channel}_raw"]["path"]).stem ==
                 Path(refs[f"tactile_{channel}_timestamps"]["path"]).stem, "Raw/timestamp stems differ")
     for f in range(frames):
@@ -197,7 +201,7 @@ def validate_episode(directory, *, expected_scene=None, source_root=None, verify
         # Further pixel validity and response values require the original raw/median.
 
     controller_keys = {"controller_points", "controller_valid_mask", "T_worlds", "openings", "opening_clipped"}
-    has_actions = metadata["script_version"] == "1.3.0"
+    has_actions = metadata["script_version"] in ("1.3.0", "1.4.0")
     if has_actions:
         controller_keys.add("actions")
     controller = read_npz(directory / "controller.npz", controller_keys)
