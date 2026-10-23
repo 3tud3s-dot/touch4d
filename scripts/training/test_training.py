@@ -23,12 +23,12 @@ from .losses import chamfer_samples, depth_samples, nearest_distances, objective
 from .model import PositionPredictor
 from .rendering import DepthRenderer, assemble_gaussians
 from .train import (EpisodeMetrics, checkpoint_state, evaluate_loader, restore_training,
-                    train_epoch, recover_best_score, publish_checkpoints)
+                    train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser)
 from .visualize import png_bytes, viewer_html, main as visualize_main
 
 
 def config():
-    return dict(scene='001-rope', width=32, heads=4, layers=2, depth_weight=1.,
+    return dict(scene='001-rope', width=32, heads=4, layers=2, depth_weight=0.,
                 chamfer_chunk=2, max_train_batches=0)
 
 
@@ -56,19 +56,29 @@ class TrainingTests(unittest.TestCase):
         self.batch = self.processor(self.raw)
         self.model = PositionPredictor(width=32, heads=4, layers=2)
 
-    def test_absolute_position_output_not_initial_residual(self):
-        torch.nn.init.zeros_(self.model.position_head[-1].weight)
+    def activate_head(self):
+        # Exercise the learned path; a zero head would make causality and
+        # invariance tests pass even if the condition path were broken.
+        torch.nn.init.normal_(self.model.position_head[-1].weight, std=.02)
+
+    def test_zero_initialized_displacement_and_initial_reference(self):
+        x = self.batch['inputs']
+        keep = x['gs_mask'][:, None].expand(-1, 5, -1)
+        initial = x['gs_xyz'][:, None].expand(-1, 5, -1, -1)
+        self.assertTrue(torch.all(self.model.position_head[-1].weight == 0))
+        self.assertTrue(torch.all(self.model.position_head[-1].bias == 0))
+        torch.testing.assert_close(self.model(x), initial, atol=0, rtol=0)
         torch.nn.init.constant_(self.model.position_head[-1].bias, .25)
-        out = self.model(self.batch['inputs'])
-        keep = self.batch['inputs']['gs_mask'][:, None].expand(-1, 5, -1)
+        out = self.model(x)
         self.assertEqual(tuple(out.shape), (*keep.shape, 3))
-        self.assertTrue(torch.all(out[keep] == .25))
+        torch.testing.assert_close(out[keep], (initial+.25)[keep], atol=0, rtol=0)
         self.assertTrue(torch.all(out[~keep] == 0))
-        shifted = copy.deepcopy(self.batch['inputs'])
+        shifted = copy.deepcopy(x)
         shifted['gs_xyz'] += 100
-        torch.testing.assert_close(out, self.model(shifted))
+        torch.testing.assert_close(self.model(shifted)[keep], (initial+100+.25)[keep])
 
     def test_every_horizon_cannot_read_later_conditions(self):
+        self.activate_head()
         x = self.batch['inputs']
         original = self.model(x)
         for k in range(4):
@@ -85,6 +95,7 @@ class TrainingTests(unittest.TestCase):
         self.assertFalse(torch.equal(original, self.model(changed)))
 
     def test_padding_and_invalid_conditions_do_not_affect_real_queries(self):
+        self.activate_head()
         x = self.batch['inputs']
         baseline = self.model(x)
         other = copy.deepcopy(x)
@@ -95,6 +106,7 @@ class TrainingTests(unittest.TestCase):
         torch.testing.assert_close(baseline, self.model(other), atol=0, rtol=0)
 
     def test_all_missing_conditions_and_valid_zero_tactile(self):
+        self.activate_head()
         x = copy.deepcopy(self.batch['inputs'])
         x['tactile'].zero_()
         _, valid_zero = self.model.encode_conditions(x)
@@ -107,6 +119,7 @@ class TrainingTests(unittest.TestCase):
         self.assertTrue(all(p.grad is None or torch.isfinite(p.grad).all() for p in self.model.parameters()))
 
     def test_point_order_equivariance_and_variable_number_of_queries(self):
+        self.activate_head()
         x = self.batch['inputs']
         baseline = self.model(x)
         other = copy.deepcopy(x)
@@ -216,6 +229,32 @@ class TrainingTests(unittest.TestCase):
         train_epoch(other,other_opt,[self.raw],self.processor,renderer,cfg,'cpu')
         for a,b in zip(self.model.parameters(),other.parameters()):
             torch.testing.assert_close(a,b,atol=0,rtol=0)
+        self.assertGreater(self.model.gs_encoder[0].weight.grad.abs().sum().item(), 0.)
+
+    def test_chamfer_default_has_no_depth_gradient(self):
+        self.assertEqual(parser().parse_args(['--scene','001-rope']).depth_weight, 0.)
+        self.activate_head()
+        pred=self.model(self.batch['inputs'])
+        def metric_renderer(prediction,batch,processor):
+            self.assertFalse(torch.is_grad_enabled())
+            return DepthRenderer(fake_rasterizer)(prediction,batch,processor)
+        loss,parts=objective(pred,self.batch,self.processor,metric_renderer)
+        expected=chamfer_samples(pred,self.batch).mean()
+        torch.testing.assert_close(loss,expected,atol=0,rtol=0)
+        torch.testing.assert_close(torch.autograd.grad(loss,pred,retain_graph=True)[0],
+                                   torch.autograd.grad(expected,pred)[0],atol=0,rtol=0)
+        self.assertFalse(parts['depth_m'].requires_grad)
+
+    def test_absolute_checkpoint_rejected_before_loading_weights(self):
+        old={'version':'touch4d-position-v0'}
+        with patch('scripts.training.train.torch.load',return_value=old):
+            with self.assertRaisesRegex(ValueError,'absolute-position V0'):
+                read_checkpoint('memory/old.pt')
+        optimizer=torch.optim.AdamW(self.model.parameters())
+        with patch.object(self.model,'load_state_dict') as load:
+            with self.assertRaisesRegex(ValueError,'non-displacement-v1'):
+                restore_training(old,self.model,optimizer)
+            load.assert_not_called()
 
     def test_episode_equal_weight_and_depth_unavailability(self):
         tracker=EpisodeMetrics(.1,1.)

@@ -71,20 +71,23 @@ def depth_samples(prediction_m, target_m, valid):
     return loss, times.any(-1)
 
 
-def objective(prediction, batch, processor, renderer, depth_weight=1., chunk=512):
+def objective(prediction, batch, processor, renderer, depth_weight=0., chunk=512):
     if not math.isfinite(depth_weight) or depth_weight < 0:
         raise ValueError("depth_weight must be finite and nonnegative")
     real = batch["inputs"]["gs_mask"][:, None].expand(-1, 5, -1)
     if not torch.isfinite(prediction[real]).all():
         raise FloatingPointError("Nonfinite predicted position; refusing to call the rasterizer")
     geometry = chamfer_samples(prediction, batch, chunk)
-    rendered = renderer(prediction, batch, processor)
     y = batch["targets"]
-    depth, available = depth_samples(rendered, y["target_depth"], y["target_depth_valid"])
+    # With zero weight, depth remains a reporting metric, with no rendering
+    # graph retained and no depth contribution to the optimization objective.
+    with torch.set_grad_enabled(torch.is_grad_enabled() and depth_weight > 0):
+        rendered = renderer(prediction, batch, processor)
+        depth, available = depth_samples(rendered, y["target_depth"], y["target_depth_valid"])
     scale = processor.state_dict()["scale"]
     # Empty depth samples do not dilute the depth component of a mixed batch.
     depth_mean = depth[available].mean() if available.any() else rendered.sum() * 0.
-    loss = geometry.mean() + depth_weight * depth_mean / scale
+    loss = geometry.mean() if depth_weight == 0 else geometry.mean() + depth_weight * depth_mean / scale
     if not torch.isfinite(loss):
         raise FloatingPointError("Nonfinite training objective")
     return loss, {"geometry": geometry, "depth_m": depth, "depth_available": available}

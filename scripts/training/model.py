@@ -1,4 +1,4 @@
-"""Shared point MLPs and causal cross-attention; absolute normalized XYZ output."""
+"""Causal displacement prediction relative to initial GS; return normalized XYZ."""
 
 import torch
 from torch import nn
@@ -52,6 +52,9 @@ class PositionPredictor(nn.Module):
         self.null_token = nn.Parameter(torch.zeros(1, 1, width))
         self.blocks = nn.ModuleList(CrossBlock(width, heads) for _ in range(layers))
         self.position_head = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, 3))
+        # The head predicts displacement; every horizon starts at copy-initial GS.
+        nn.init.zeros_(self.position_head[-1].weight)
+        nn.init.zeros_(self.position_head[-1].bias)
 
     def encode_conditions(self, x):
         b = x["gs_xyz"].shape[0]
@@ -89,6 +92,7 @@ class PositionPredictor(nn.Module):
             query = features + self.prediction_time.weight[k]
             for block in self.blocks:
                 query = block(query, memory, valid)
-            # Deliberately no addition of initial XYZ and no delta parameterization.
-            outputs.append(masked(self.position_head(query), keep))
+            # Each displacement is relative to the same initial GS, not the
+            # preceding predicted frame. Keep final XYZ as the public interface.
+            outputs.append(masked(initial[..., :3] + self.position_head(query), keep))
         return torch.stack(outputs, dim=1)

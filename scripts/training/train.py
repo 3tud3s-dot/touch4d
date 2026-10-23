@@ -29,7 +29,7 @@ from .losses import objective
 from .model import PositionPredictor
 from .rendering import DepthRenderer
 
-VERSION = "touch4d-position-v0"
+VERSION = "touch4d-displacement-v1"
 PROJECT = Path(__file__).resolve().parents[2]
 
 
@@ -167,7 +167,8 @@ def read_checkpoint(path):
     # Only load checkpoints produced by this project from a trusted location.
     value = torch.load(path, map_location="cpu", weights_only=False)
     if value.get("version") != VERSION:
-        raise ValueError("Unsupported training checkpoint version")
+        raise ValueError("Unsupported checkpoint: expected displacement-v1 weights; "
+                         "absolute-position V0 checkpoints require the original V0 code")
     DataProcessor.from_state_dict(value["processor"])
     if value["config"]["scene"] != value["processor"]["scene"]:
         raise ValueError("Checkpoint scene and normalization disagree")
@@ -180,7 +181,7 @@ def recover_best_score(last_state, run):
     best.pt is published first, so a crash can leave it newer/better than last.
     Keep resuming model/optimizer/RNG from last, but never forget the better
     saved score. Missing, incompatible or regressed best files fail closed.
-    This only reads files, and is also compatible with existing V0 checkpoints.
+    This only reads files; checkpoint semantics are checked by read_checkpoint.
     """
     path = Path(run) / "best.pt"
     if not path.is_file():
@@ -209,6 +210,8 @@ def publish_checkpoints(run, state, improved):
 
 
 def restore_training(state, model, optimizer):
+    if state.get("version") != VERSION:
+        raise ValueError("Cannot resume a non-displacement-v1 checkpoint")
     model.load_state_dict(state["model"])
     optimizer.load_state_dict(state["optimizer"])
     torch.set_rng_state(state["torch_rng"])
@@ -234,7 +237,8 @@ def parser():
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--weight-decay", type=float, default=1e-4)
-    p.add_argument("--depth-weight", type=float, default=1.)
+    p.add_argument("--depth-weight", type=float, default=0.,
+                   help="Default 0: Chamfer-only training; depth is still reported")
     p.add_argument("--width", type=int, default=128)
     p.add_argument("--heads", type=int, default=4)
     p.add_argument("--layers", type=int, default=2)
