@@ -613,7 +613,7 @@ def rebuild_episode(source_root, output_root, scene, episode, plan, *, overwrite
             for key, ref in plan["source_refs"].items():
                 require(reader.refs.get(key) == ref, f"Source changed after preflight: {key}")
             output_files = sorted(partial.rglob("*.npz"))
-            protocol = PROJECT / "DATASET_PROTOCOL.md"
+            protocol = PROJECT / "docs" / "DATASET_PROTOCOL.md"
             metadata = {"schema_version": VERSION, "script_version": SCRIPT_VERSION,
                 "scene": scene, "episode": episode, "frames": frames,
                 "created_utc": datetime.now(timezone.utc).isoformat(),
