@@ -6,6 +6,7 @@
 /weights/
 /outputs/
 /results/
+/audit/
 /logs/
 /runs/
 /wandb/
