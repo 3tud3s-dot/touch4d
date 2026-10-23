@@ -19,12 +19,15 @@ def _seed_worker(worker_id):
 
 def make_dataloader(scene: str, split: str, *, root=DEFAULT_ROOT, stage="all",
                     batch_size=1, num_workers=0, seed=0, pin_memory=False,
-                    persistent_workers=False, cache_episodes=2) -> DataLoader:
+                    persistent_workers=False, cache_episodes=2, with_depth=False,
+                    depth_root=None, depth_cameras=None) -> DataLoader:
     """Train: seeded shuffle, stride 1. Val/test: fixed order, stride 5.
 
     All splits retain the final partial batch. To advance curriculum, construct
     a new training loader with stage='all'; val/test always use stage='all'.
     Seed fixes a newly constructed loader's sampling sequence, not every epoch.
+    Optional depth uses a fixed ordered camera subset; its missing/stale
+    extension raises instead of silently returning a geometry-only batch.
     """
     if type(batch_size) is not int or batch_size < 1:
         raise ValueError("batch_size must be a positive integer")
@@ -34,7 +37,8 @@ def make_dataloader(scene: str, split: str, *, root=DEFAULT_ROOT, stage="all",
         raise ValueError("seed must be an integer in [0, 2**63)")
     if persistent_workers and num_workers == 0:
         raise ValueError("persistent_workers requires num_workers > 0")
-    dataset = Touch4DDataset(scene, split, root, stage=stage, cache_episodes=cache_episodes)
+    dataset = Touch4DDataset(scene, split, root, stage=stage, cache_episodes=cache_episodes,
+                            with_depth=with_depth, depth_root=depth_root, depth_cameras=depth_cameras)
     if not len(dataset):
         raise ValueError(f"{scene}/{split}/{stage}: no complete six-frame windows")
     generator = torch.Generator().manual_seed(seed)

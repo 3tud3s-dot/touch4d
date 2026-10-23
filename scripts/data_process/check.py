@@ -120,6 +120,9 @@ def main(argv=None):
     parser.add_argument("--split", choices=("train", "val", "test"), default="train")
     parser.add_argument("--stage", choices=("single", "all"), default="all")
     parser.add_argument("--root", default=str(DEFAULT_ROOT))
+    parser.add_argument("--with-depth", action="store_true", help="Check optional metric depth targets")
+    parser.add_argument("--depth-root", help="Root containing depth extensions")
+    parser.add_argument("--depth-cameras", nargs="+", help="Camera IDs to load in the given order")
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument("--seed", type=int, default=0)
@@ -128,7 +131,9 @@ def main(argv=None):
     if args.max_batches < 0:
         parser.error("--max-batches must be >= 0")
     loader = make_dataloader(args.scene, args.split, root=args.root, stage=args.stage,
-                             batch_size=args.batch_size, num_workers=args.workers, seed=args.seed)
+                             batch_size=args.batch_size, num_workers=args.workers, seed=args.seed,
+                             with_depth=args.with_depth, depth_root=args.depth_root,
+                             depth_cameras=args.depth_cameras)
     processor = DataProcessor(args.scene)
     results, checked_samples, errors = [], 0, {}
 
@@ -150,6 +155,8 @@ def main(argv=None):
     first, last = loader.dataset[0], loader.dataset[-1]
     verify(collate_fn([first, last]))
     print(json.dumps({"status": "passed", "scene": args.scene, "split": args.split, "stage": args.stage,
+                      "with_depth": args.with_depth,
+                      "depth_cameras": first["meta"].get("depth_camera_ids"),
                       "parameters": processor.state_dict(), "episodes": loader.dataset.episode_ids,
                       "total_windows": len(loader.dataset), "normal_batches": normal_batches,
                       "normal_samples": normal_samples, "boundary_batches": 1, "boundary_samples": 2,

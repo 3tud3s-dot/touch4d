@@ -1,22 +1,29 @@
 #!/usr/bin/env python3
 """Reconstruct an audited Deform360 scene according to DATASET_PROTOCOL.md.
 
-Dependencies: Python >= 3.10, numpy, plyfile. Run reconstruction on the server.
+Dependencies: Python >= 3.10, numpy, plyfile; h5py for depth-only mode.
+Run reconstruction on the server.
 Example (not executed automatically):
   python scripts/rebuild_dataset/rebuild.py --scene 001-rope
   python scripts/rebuild_dataset/rebuild.py --scene 008-pink-cloth
   python scripts/rebuild_dataset/rebuild.py --scene 051-cube
+  python scripts/rebuild_dataset/rebuild.py --scene 001-rope --depth-only
 
 Defaults resolve relative to this project's root, not the current directory:
   --source-root datasets/deform360 (contains raw/ and processed/)
   --output-root datasets/touch4d-v1
 
-Original files are read-only. No tar extraction or download.
+Original files are read-only. Core reconstruction reads archive members in memory;
+no whole-archive extraction or download is performed.
+--depth-only streams only rendered_depth.h5 members into a separate sibling
+touch4d-depth-v1 root, preserving their bytes; it never rebuilds core arrays.
+Use --depth-root /path/to/depth-extension to override that root. Depth is the
+published camera-Z expected-depth convention, not an independently measured sensor modality.
 Existing episodes are skipped only after full source validation. --overwrite
 rebuilds selected episodes, validates replacements fully, then replaces old outputs.
 An interrupted/failed episode stays at .episode_N.incomplete for inspection;
 only a validated episode is renamed to episode_N. No training features added.
-Published robot.npy uses a pickled dictionary; source-root must be trusted.
+Published robot.npy and extrinsics.npy use pickled dictionaries; source-root must be trusted.
 All output NPZ files contain ordinary numeric/bool arrays, never pickle objects.
 """
 from __future__ import annotations
@@ -40,6 +47,8 @@ import numpy as np
 PROJECT = Path(__file__).resolve().parents[2]
 VERSION = "touch4d-v1"
 SCRIPT_VERSION = "1.4.0"
+DEPTH_VERSION = "touch4d-depth-v1"
+DEPTH_SCRIPT_VERSION = "1.0.0"
 SUPPORTED_SCRIPT_VERSIONS = ("1.1.0", "1.2.0", "1.3.0", SCRIPT_VERSION)
 # Reviewed physical identities, not an inference from episode number or R.
 # New scenes/episodes require a reviewed entry before reconstruction.
@@ -545,6 +554,415 @@ def write_npz(path, arrays):
         np.savez_compressed(stream, **arrays)
 
 
+def require_h5py():
+    """Depth is optional; ordinary reconstruction never imports h5py."""
+    try:
+        import h5py
+    except ImportError as exc:
+        raise ImportError("Depth mode requires h5py in the server environment; install it before --depth-only") from exc
+    return h5py
+
+
+def checked_path(path):
+    """Reject linked components before resolving paths (including missing targets)."""
+    path = Path(path).absolute()
+    for component in (path, *path.parents):
+        require(not component.is_symlink(), f"Refusing symbolic-link path: {component}")
+        require(not getattr(component, "is_junction", lambda: False)(), f"Refusing junction: {component}")
+    return path.resolve()
+
+
+def depth_roots(source_root, core_root, depth_root):
+    source_root, core_root, depth_root = map(checked_path, (source_root, core_root, depth_root))
+    require(source_root.is_dir() and core_root.is_dir(), "Depth mode requires existing source and core roots")
+    for protected in (source_root, core_root):
+        require(not depth_root.is_relative_to(protected) and not protected.is_relative_to(depth_root),
+                f"Depth root must be disjoint from core/source data: {depth_root}, {protected}")
+    require(not depth_root.exists() or depth_root.is_dir(), f"Depth root is not a directory: {depth_root}")
+    return source_root, core_root, depth_root
+
+
+def read_core_depth_binding(directory, *, expected_scene=None, expected_episode=None):
+    directory = checked_path(directory)
+    require(directory.is_dir(), f"Core episode must already exist: {directory}")
+    meta_path = checked_path(directory / "metadata.json")
+    time_path = checked_path(directory / "timestamps.npz")
+    require(meta_path.is_file() and time_path.is_file(), f"Missing core metadata/timestamps: {directory}")
+    metadata_hash, timestamp_hash = hash_file(meta_path), hash_file(time_path)
+    with meta_path.open(encoding="utf-8") as stream:
+        metadata = json.load(stream)
+    scene, episode, frames = metadata["scene"], metadata["episode"], metadata["frames"]
+    require(metadata["schema_version"] == VERSION and scene in SCENE_BINDINGS, "Unsupported core schema/scene")
+    require(type(episode) is int and episode in SCENE_BINDINGS[scene], "Unreviewed core episode")
+    require(type(frames) is int and frames > 0, "Invalid core frame count")
+    require(expected_scene is None or expected_scene == scene, "Core scene mismatch")
+    require(expected_episode is None or expected_episode == episode, "Core episode mismatch")
+    require(directory.name == f"episode_{episode}" and directory.parent.name == scene,
+            "Core directory does not match scene/episode")
+    cameras = metadata["observation_cameras"]
+    require(isinstance(cameras, list) and cameras and all(isinstance(c, str) and
+            re.fullmatch(r"[A-Za-z0-9_-]+", c) for c in cameras) and cameras == sorted(set(cameras)),
+            "Invalid core camera list")
+    require(metadata["output_files"].get("timestamps.npz") == timestamp_hash, "Core timestamp SHA-256 mismatch")
+    with np.load(time_path, allow_pickle=False) as archive:
+        require(len(archive.files) == len(set(archive.files)), "Duplicate core timestamp fields")
+        obs = archive["observation_timestamp_us"]
+    require(obs.shape == (frames,) and obs.dtype == np.int64 and np.all(obs >= 0)
+            and np.all(np.diff(obs) > 0), "Invalid core observation timeline")
+    require(hash_file(meta_path) == metadata_hash and hash_file(time_path) == timestamp_hash,
+            "Core binding changed while reading")
+    return metadata, obs, {"metadata_sha256": metadata_hash, "timestamps_sha256": timestamp_hash}
+
+
+def check_camera_arrays(intrinsics, camera_to_world, cameras):
+    require(intrinsics.shape == (len(cameras), 3, 3) and intrinsics.dtype == np.float64,
+            "intrinsics must be float64 [V,3,3]")
+    require(camera_to_world.shape == (len(cameras), 4, 4) and camera_to_world.dtype == np.float64,
+            "camera_to_world must be float64 [V,4,4]")
+    require(np.isfinite(intrinsics).all() and np.isfinite(camera_to_world).all(), "Non-finite calibration")
+    require(np.all(intrinsics[:, 0, 0] > 0) and np.all(intrinsics[:, 1, 1] > 0)
+            and np.allclose(intrinsics[:, 2, :], [0, 0, 1], atol=1e-8, rtol=0)
+            and np.all(np.abs(np.linalg.det(intrinsics)) > 1e-12), "Invalid camera intrinsics")
+    rotation = camera_to_world[:, :3, :3]
+    require(np.allclose(camera_to_world[:, 3, :], [0, 0, 0, 1], atol=RIGID_TOL, rtol=0)
+            and np.allclose(rotation.transpose(0, 2, 1) @ rotation, np.eye(3), atol=RIGID_TOL, rtol=0)
+            and np.allclose(np.linalg.det(rotation), 1, atol=RIGID_TOL, rtol=0),
+            "Extrinsics must be right-handed rigid camera-to-world transforms")
+
+
+def read_depth_metadata(directory, core_directory, *, expected_scene=None, expected_episode=None):
+    """Lightweight loader check: binding, manifest, calibration, timeline; no depth hashes/reads."""
+    directory = checked_path(directory)
+    core, obs, binding = read_core_depth_binding(core_directory, expected_scene=expected_scene,
+                                                expected_episode=expected_episode)
+    with checked_path(directory / "metadata.json").open(encoding="utf-8") as stream:
+        metadata = json.load(stream)
+    scene, episode, frames, cameras = core["scene"], core["episode"], core["frames"], core["observation_cameras"]
+    require(metadata["schema_version"] == DEPTH_VERSION and metadata["script_version"] == DEPTH_SCRIPT_VERSION,
+            "Unsupported depth schema/script version")
+    require(type(metadata["episode"]) is int and type(metadata["frames"]) is int,
+            "Depth episode/frame count must be integers")
+    require(metadata["scene"] == scene and metadata["episode"] == episode and metadata["frames"] == frames,
+            "Depth/core scene, episode or frames mismatch")
+    require(directory.parent.name == scene and directory.name in
+            (f"episode_{episode}", f".episode_{episode}.incomplete"), "Depth directory scene/episode mismatch")
+    require(metadata["cameras"] == cameras and metadata["core_binding"] == binding,
+            "Stale depth extension: core binding or camera list changed")
+    require(metadata["depth_unit"] == "mm" and type(metadata["invalid_value"]) is int
+            and metadata["invalid_value"] == 0
+            and metadata["depth_kind"] == "camera_z_expected"
+            and metadata["extrinsics_convention"] == "camera_to_world"
+            and metadata["coordinate_system"] == "native_world_metres",
+            "Unsupported depth/calibration convention")
+    require(all(type(metadata[key]) is int and metadata[key] > 0 for key in ("height", "width")),
+            "Invalid depth image dimensions")
+    expected_files = {"camera_parameters.npz", *(f"{c}/rendered_depth.h5" for c in cameras)}
+    files = metadata["output_files"]
+    require(isinstance(files, dict) and set(files) == expected_files and all(
+        isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) for value in files.values()),
+        "Incomplete or invalid depth output manifest")
+    actual_files = set()
+    for path in directory.rglob("*"):
+        checked_path(path)
+        if path.is_file():
+            actual_files.add(path.relative_to(directory).as_posix())
+    require(actual_files == expected_files | {"metadata.json"}, "Missing or unexpected depth files")
+    parameters_path = directory / "camera_parameters.npz"
+    require(hash_file(parameters_path) == files["camera_parameters.npz"], "Camera parameter SHA-256 mismatch")
+    with np.load(parameters_path, allow_pickle=False) as archive:
+        require(len(archive.files) == 3 and set(archive.files) ==
+                {"intrinsics", "camera_to_world", "observation_timestamp_us"}, "Bad camera parameter fields")
+        intrinsics, extrinsics, timestamps = (archive[k] for k in
+                                             ("intrinsics", "camera_to_world", "observation_timestamp_us"))
+    check_camera_arrays(intrinsics, extrinsics, cameras)
+    require(timestamps.dtype == np.int64 and np.array_equal(timestamps, obs), "Depth/core timeline mismatch")
+    return metadata
+
+
+class DepthSourceReader(SourceReader):
+    """Strict archive access plus bounded-memory, byte-preserving depth copying."""
+
+    def archive(self, relative):
+        relative = safe_relative(relative)
+        checked_path(self.root / relative)
+        if relative not in self.archives:
+            path = self.root / relative
+            before = path.stat()
+            tar = self.stack.enter_context(tarfile.open(path, "r:*"))
+            members, seen = {}, set()
+            for member in tar.getmembers():
+                name = safe_relative(member.name)
+                require(name not in seen, f"Duplicate archive member: {relative}!{name}")
+                seen.add(name)
+                require(member.isfile() or member.isdir(), f"Linked/special archive member: {relative}!{name}")
+                if member.isfile():
+                    members[name] = member
+            self.archives[relative] = (tar, members, (before.st_size, before.st_mtime_ns))
+        return self.archives[relative]
+
+    def read(self, key, relative, member=None):
+        checked_path(self.root / safe_relative(relative))
+        return super().read(key, relative, member)
+
+    def stream(self, key, relative, member=None, *, destination=None):
+        relative = safe_relative(relative)
+        path = checked_path(self.root / relative)
+        before = path.stat()
+        with ExitStack() as stack:
+            if member is None:
+                source = stack.enter_context(path.open("rb"))
+                size = before.st_size
+            else:
+                member = safe_relative(member)
+                tar, members, signature = self.archive(relative)
+                require(signature == (before.st_size, before.st_mtime_ns), f"Source changed: {path}")
+                require(member in members, f"Missing depth archive member: {member}")
+                source = stack.enter_context(tar.extractfile(members[member]))
+                size = members[member].size
+            target = stack.enter_context(Path(destination).open("xb")) if destination is not None else None
+            digest, count = hashlib.sha256(), 0
+            for block in iter(lambda: source.read(4 * 1024 * 1024), b""):
+                digest.update(block)
+                count += len(block)
+                if target is not None:
+                    target.write(block)
+        after = path.stat()
+        require(count == size and (before.st_size, before.st_mtime_ns) == (after.st_size, after.st_mtime_ns),
+                f"Source changed/truncated while streaming: {path}")
+        ref = {"path": relative, "member": member, "bytes": count, "sha256": digest.hexdigest()}
+        require(key not in self.refs or self.refs[key] == ref, f"Source changed: {key}")
+        self.refs[key] = ref
+        return ref
+
+
+def depth_camera_source(reader, key, prefix, relative, recorded_refs):
+    """Keep a recorded source location; discover only sources not yet recorded."""
+    loose, archive = f"{prefix}/{relative}", f"{prefix}/cameras.tar"
+    if key in recorded_refs:
+        ref = recorded_refs[key]
+        require(isinstance(ref, dict) and set(ref) == {"path", "member", "bytes", "sha256"},
+                f"Malformed recorded depth source: {key}")
+        require((ref["path"], ref["member"]) in ((loose, None), (archive, relative)),
+                f"Wrong recorded depth source path: {key}")
+        require(type(ref["bytes"]) is int and ref["bytes"] >= 0
+                and isinstance(ref["sha256"], str) and re.fullmatch(r"[0-9a-f]{64}", ref["sha256"]),
+                f"Invalid recorded depth source hash/size: {key}")
+        path, member = ref["path"], ref["member"]
+    else:
+        path, member = (loose, None) if checked_path(reader.root / loose).is_file() else (archive, relative)
+    # Missing or changed recorded sources fail; an unrecorded copy cannot replace them.
+    source = checked_path(reader.root / path)
+    require(source.is_file(), f"Missing depth source: {path}")
+    if member is not None:
+        _, members, _ = reader.archive(path)
+        require(member in members, f"Missing depth archive member: {path}!{member}")
+    return path, member
+
+
+def depth_source_layout(reader, core, obs, *, source_refs=None):
+    """New depth uses core timeline provenance; existing depth uses its own manifest."""
+    scene, episode, cameras = core["scene"], core["episode"], core["observation_cameras"]
+    core_refs = core.get("source_files", {})
+    require(isinstance(core_refs, dict), "Malformed core source manifest")
+    if source_refs is not None:
+        expected = {"episode_metadata", "extrinsics", *(f"camera_timestamps_{c}" for c in cameras),
+                    *(f"depth_{c}" for c in cameras)}
+        require(isinstance(source_refs, dict) and set(source_refs) == expected,
+                "Incomplete or unexpected recorded depth source manifest")
+    prefix = safe_relative(core["source_episode_directory"])
+    match = re.fullmatch(re.escape(f"processed/{scene}/episode_") + r"(\d+)", prefix)
+    require(match is not None and int(match[1]) == episode, "Wrong core source episode directory")
+    metadata = json.loads(reader.read("episode_metadata", f"{prefix}/metadata.json").decode("utf-8"))
+    source_cameras = metadata["cameras"]
+    require(isinstance(source_cameras, list) and sorted(source_cameras) == cameras, "Source/core cameras mismatch")
+    wh = metadata["WH"]
+    require(isinstance(wh, list) and len(wh) == 2 and all(type(x) is int and x > 0 for x in wh),
+            "Invalid source WH")
+    all_intrinsics = np.asarray(metadata["intrinsics"], dtype=np.float64)
+    require(all_intrinsics.shape == (len(cameras), 3, 3), "Bad source intrinsics dimensions")
+    intrinsics = all_intrinsics[[source_cameras.index(c) for c in cameras]]
+    payload = reader.read("extrinsics", f"raw/{scene}/calibration_refined/extrinsics.npy")
+    # Like the published robot.npy, the trusted original calibration is a pickled dictionary.
+    value = np.load(io.BytesIO(payload), allow_pickle=True)
+    require(isinstance(value, np.ndarray) and value.shape == (), "Unsupported extrinsics container")
+    extrinsics = value.item()
+    require(isinstance(extrinsics, dict) and all(c in extrinsics for c in cameras), "Missing camera extrinsics")
+    camera_to_world = np.asarray([extrinsics[c] for c in cameras], dtype=np.float64)
+    check_camera_arrays(intrinsics, camera_to_world, cameras)
+    depth_refs = {}
+    for camera in cameras:
+        for filename in ("aligned_timestamps.txt", "rendered_depth.h5"):
+            relative = f"{camera}/{filename}"
+            key = f"camera_timestamps_{camera}" if filename == "aligned_timestamps.txt" else f"depth_{camera}"
+            recorded = source_refs if source_refs is not None else core_refs
+            ref = depth_camera_source(reader, key, prefix, relative, recorded)
+            if filename == "aligned_timestamps.txt":
+                timeline = timestamp_array(reader.read(key, *ref), strict=True)
+                require(np.array_equal(timeline, obs), f"Full published depth/core timeline differs: {camera}")
+            else:
+                depth_refs[camera] = ref
+    for key in ("episode_metadata", *(f"camera_timestamps_{c}" for c in cameras)):
+        if key in core_refs:
+            require(reader.refs[key] == core_refs[key], f"Depth source differs from core provenance: {key}")
+    if source_refs is not None:
+        for key, ref in reader.refs.items():
+            require(ref == source_refs[key], f"Depth source hashes/paths changed: {key}")
+    return {"width": wh[0], "height": wh[1], "intrinsics": intrinsics,
+            "camera_to_world": camera_to_world, "depth_refs": depth_refs}
+
+
+def check_depth_h5(path, frames, height, width, *, read_pixels=True):
+    h5py = require_h5py()
+    with h5py.File(checked_path(path), "r") as archive:
+        require(set(archive.keys()) == {"data"}, f"Expected one H5 data array: {path}")
+        require(isinstance(archive.get("data", getlink=True), h5py.HardLink), f"External/soft H5 data link: {path}")
+        data = archive["data"]
+        require(isinstance(data, h5py.Dataset) and data.dtype == np.uint16
+                and data.shape == (frames, height, width), f"Expected uint16 [F,H,W] depth: {path}")
+        require(not data.is_virtual and not data.external, f"External/virtual H5 storage: {path}")
+        if read_pixels:
+            # Released videos are frame-chunked: one ~1.8 MB frame at a time avoids
+            # repeatedly decompressing that chunk when it exceeds the HDF5 cache.
+            for frame in range(frames):
+                data[frame]
+
+
+def depth_output_paths(depth_root, scene, episode, *, allow_existing=True):
+    require(scene in SCENE_BINDINGS and type(episode) is int and episode in SCENE_BINDINGS[scene],
+            "Unreviewed depth scene/episode")
+    target = Path(depth_root) / scene / f"episode_{episode}"
+    partial, backup = (target.with_name(f".episode_{episode}.{suffix}") for suffix in ("incomplete", "previous"))
+    for path in (target, partial, backup):
+        checked_path(path)
+        require(not path.exists() or path.is_dir(), f"Depth output is not a directory: {path}")
+    if target.exists():
+        for path in target.rglob("*"):
+            checked_path(path)
+    require(not partial.exists(), f"Inspect existing unfinished depth output: {partial}")
+    require(allow_existing or not target.exists(), f"Depth output already exists: {target}")
+    require(not backup.exists() or target.exists(), f"Recover depth backup before rebuilding: {backup}")
+    return target, partial, backup
+
+
+def _validators():
+    if __package__:
+        from . import validate
+    else:
+        import validate
+    return validate
+
+
+def rebuild_depth_episode(source_root, core_root, depth_root, scene, episode, *, overwrite=False):
+    """Copy only the depth extension. Never writes or fully revalidates core arrays."""
+    require_h5py()
+    source_root, core_root, depth_root = depth_roots(source_root, core_root, depth_root)
+    core_directory = core_root / scene / f"episode_{episode}"
+    core, obs, binding = read_core_depth_binding(core_directory, expected_scene=scene, expected_episode=episode)
+    target, partial, backup = depth_output_paths(depth_root, scene, episode)
+    if target.exists() and not overwrite:
+        result = _validators().validate_depth_episode(target, core_directory=core_directory,
+                    expected_scene=scene, expected_episode=episode, source_root=source_root, verify_sources=True)
+        print(f"Skipped (full depth validation passed): {target}", flush=True)
+        return {**result, "skipped": True}
+    require(not backup.exists(), f"Inspect previous depth backup before overwriting: {backup}")
+    old_identity = (target.stat().st_dev, target.stat().st_ino) if target.exists() else None
+    with DepthSourceReader(source_root) as reader:
+        plan = depth_source_layout(reader, core, obs)
+        partial.mkdir(parents=True, exist_ok=False)
+        try:
+            output_files = {}
+            for camera in core["observation_cameras"]:
+                (partial / camera).mkdir()
+                destination = partial / camera / "rendered_depth.h5"
+                ref = reader.stream(f"depth_{camera}", *plan["depth_refs"][camera], destination=destination)
+                check_depth_h5(destination, len(obs), plan["height"], plan["width"], read_pixels=False)
+                output_files[f"{camera}/rendered_depth.h5"] = ref["sha256"]
+            params = partial / "camera_parameters.npz"
+            write_npz(params, {"intrinsics": plan["intrinsics"], "camera_to_world": plan["camera_to_world"],
+                               "observation_timestamp_us": obs})
+            output_files["camera_parameters.npz"] = hash_file(params)
+            metadata = {"schema_version": DEPTH_VERSION, "script_version": DEPTH_SCRIPT_VERSION,
+                "scene": scene, "episode": episode, "frames": len(obs), "cameras": core["observation_cameras"],
+                "height": plan["height"], "width": plan["width"], "depth_unit": "mm", "invalid_value": 0,
+                "depth_kind": "camera_z_expected", "extrinsics_convention": "camera_to_world",
+                "coordinate_system": "native_world_metres", "core_binding": binding,
+                "source_root": str(source_root), "source_episode_directory": core["source_episode_directory"],
+                "source_files": reader.refs, "output_files": output_files,
+                "created_utc": datetime.now(timezone.utc).isoformat()}
+            with (partial / "metadata.json").open("x", encoding="utf-8") as stream:
+                json.dump(metadata, stream, ensure_ascii=False, indent=2, allow_nan=False)
+                stream.write("\n")
+            result = _validators().validate_depth_episode(partial, core_directory=core_directory,
+                        expected_scene=scene, expected_episode=episode, source_root=source_root, verify_sources=True)
+            checked_path(target)
+            if old_identity is None:
+                require(not target.exists(), f"Depth output appeared during copying: {target}")
+                partial.rename(target)
+            else:
+                require(target.is_dir() and (target.stat().st_dev, target.stat().st_ino) == old_identity,
+                        f"Depth output changed during copying: {target}")
+                require(not backup.exists(), f"Depth backup appeared during copying: {backup}")
+                target.rename(backup)
+                try:
+                    partial.rename(target)
+                except Exception:
+                    backup.rename(target)
+                    raise
+        except Exception:
+            print(f"Depth supplement failed; core data untouched. Inspect {partial}, {target}, {backup}", file=sys.stderr)
+            raise
+    print(f"Completed depth only: {target}", flush=True)
+    if old_identity is not None:
+        try:
+            shutil.rmtree(backup)
+        except Exception as exc:
+            print(f"WARNING: depth publication succeeded; old backup cleanup failed at {backup}: {exc}. "
+                  "Validation and default skipping remain available.", file=sys.stderr, flush=True)
+    return {**result, "skipped": False}
+
+
+def run_depth_only(args):
+    require_h5py()
+    source_root, core_root, depth_root = depth_roots(args.source_root, args.output_root,
+        args.depth_root if args.depth_root is not None else args.output_root.parent / DEPTH_VERSION)
+    available = discover_episodes(core_root / args.scene)
+    episodes = args.episodes if args.episodes is not None else list(available)
+    require(set(episodes) <= set(available), "Depth mode cannot create missing core episodes; rebuild core separately")
+    import fcntl
+    scene_dir = depth_root / args.scene
+    with ExitStack() as stack:
+        # Core reconstruction locks this same directory exclusively. Hold a shared
+        # lock through publication so a concurrently replaced core cannot bind stale depth.
+        core_descriptor = os.open(core_root / args.scene, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        stack.callback(os.close, core_descriptor)
+        try:
+            fcntl.flock(core_descriptor, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise ValueError(f"A core reconstruction is using {core_root / args.scene}") from exc
+        # Preflight every selected episode before any mutation. No robot/GS/tactile reads.
+        for episode in episodes:
+            core, obs, _ = read_core_depth_binding(available[episode], expected_scene=args.scene, expected_episode=episode)
+            target, _, _ = depth_output_paths(depth_root, args.scene, episode)
+            source_refs = None
+            if target.exists() and not args.overwrite:
+                metadata = read_depth_metadata(target, available[episode], expected_scene=args.scene,
+                                               expected_episode=episode)
+                _validators().check_depth_sources_schema(metadata)
+                source_refs = metadata["source_files"]
+            with DepthSourceReader(source_root) as reader:
+                depth_source_layout(reader, core, obs, source_refs=source_refs)
+        scene_dir.mkdir(parents=True, exist_ok=True)
+        descriptor = os.open(scene_dir, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        stack.callback(os.close, descriptor)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise ValueError(f"Another depth supplement is using {scene_dir}") from exc
+        for episode in episodes:
+            rebuild_depth_episode(source_root, core_root, depth_root, args.scene, episode, overwrite=args.overwrite)
+    return 0
+
+
 def parameters():
     return {"max_age_us": MAX_AGE_US, "max_age_status": "provisional", "rigid_atol": RIGID_TOL,
             "rigid_rtol": 0, "opening_clip_m": list(OPENING_LIMITS), "surface_offset_m": .007,
@@ -638,8 +1056,7 @@ def rebuild_episode(source_root, output_root, scene, episode, plan, *, overwrite
                 json.dump(metadata, stream, ensure_ascii=False, indent=2, allow_nan=False)
                 stream.write("\n")
         # Replacements must pass full source verification before touching old output.
-        from validate import validate_episode
-        validate_episode(partial, expected_scene=scene, source_root=source_root, verify_sources=overwrite)
+        _validators().validate_episode(partial, expected_scene=scene, source_root=source_root, verify_sources=overwrite)
         require(not target.is_symlink(), f"Output became a symlink: {target}")
         if old_identity is None:
             require(not target.exists(), f"Output appeared during rebuild: {target}")
@@ -675,16 +1092,23 @@ def main(argv=None):
     parser.add_argument("--scene", required=True, choices=sorted(SCENE_BINDINGS), help="Full audited scene name")
     parser.add_argument("--source-root", type=Path, default=PROJECT / "datasets/deform360")
     parser.add_argument("--output-root", type=Path, default=PROJECT / "datasets/touch4d-v1")
+    parser.add_argument("--depth-only", action="store_true",
+                        help="Only supplement depth and camera metadata for existing core episodes")
+    parser.add_argument("--depth-root", type=Path,
+                        help="Separate depth extension root; default: output-root sibling touch4d-depth-v1")
     parser.add_argument("--episodes", type=parse_episodes, metavar="0-9 or 0,5",
                         help="Optional subset; default: every discovered source episode")
     parser.add_argument("--overwrite", action="store_true",
                         help="Rebuild selected episodes; replace existing outputs only after full validation")
     args = parser.parse_args(argv)
+    require(args.depth_only or args.depth_root is None, "--depth-root requires --depth-only")
     require(os.name != "nt", "Reconstruction outputs belong on the server; do not run on local Windows")
+    if args.depth_only:
+        return run_depth_only(args)
     source_root, output_root = args.source_root.resolve(), args.output_root.resolve()
     # Resolve dependencies before creating any directories or partial outputs.
     from plyfile import PlyData
-    from validate import validate_episode
+    validate_episode = _validators().validate_episode
     available = discover_episodes(source_root / "processed" / args.scene)
     episodes = args.episodes if args.episodes is not None else list(available)
     require(set(episodes) <= set(available), "Requested episodes are absent from the source scene")

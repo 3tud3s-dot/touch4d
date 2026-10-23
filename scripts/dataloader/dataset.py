@@ -68,6 +68,78 @@ class EpisodeInfo:
     point_counts: tuple
 
 
+@dataclass
+class DepthInfo:
+    path: Path
+    frames: int
+    cameras: tuple
+    height: int
+    width: int
+    intrinsics: np.ndarray
+    camera_to_world: np.ndarray
+
+
+def _depth_info(directory: Path, core: EpisodeInfo, scene: str) -> DepthInfo:
+    # The optional extension is bound to the exact core metadata/timestamps.
+    # Its reader hashes only small metadata/calibration files, never full H5s.
+    from ..rebuild_dataset.rebuild import read_depth_metadata
+
+    try:
+        meta = read_depth_metadata(directory, core.path, expected_scene=scene,
+                                   expected_episode=core.episode_id)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise DataFormatError(f"{directory}: invalid depth extension: {exc}") from exc
+    frames, cameras = meta["frames"], tuple(meta["cameras"])
+    if frames != core.frames:
+        raise DataFormatError(f"{directory}: depth/core frame counts disagree")
+    path = directory / "camera_parameters.npz"
+    arrays = read_npz(path)
+    intrinsics = require_array(arrays, "intrinsics", (len(cameras), 3, 3), np.float64, path, finite=True)
+    camera_to_world = require_array(arrays, "camera_to_world", (len(cameras), 4, 4),
+                                    np.float64, path, finite=True)
+    timestamps = require_array(arrays, "observation_timestamp_us", (frames,), np.int64, path)
+    if not np.array_equal(timestamps, core.timestamps):
+        raise DataFormatError(f"{path}: depth timestamps disagree with the core observation timeline")
+    return DepthInfo(directory, frames, cameras, meta["height"], meta["width"], intrinsics, camera_to_world)
+
+
+def read_depth(info: DepthInfo, start: int, cameras: tuple) -> dict:
+    """Read only the five future frames; all HDF5 handles close before return."""
+    try:
+        import h5py
+    except ImportError as exc:
+        raise DataFormatError("Depth loading requires optional dependency h5py") from exc
+    values = []
+    for camera in cameras:
+        path = info.path / camera / "rendered_depth.h5"
+        try:
+            with h5py.File(path, "r") as archive:
+                if set(archive.keys()) != {"data"}:
+                    raise DataFormatError(f"{path}: expected one H5 data array")
+                if not isinstance(archive.get("data", getlink=True), h5py.HardLink):
+                    raise DataFormatError(f"{path}: external/soft H5 data links are not supported")
+                data = archive["data"]
+                if (not isinstance(data, h5py.Dataset)
+                        or data.shape != (info.frames, info.height, info.width)
+                        or data.dtype != np.dtype("uint16")):
+                    raise DataFormatError(f"{path}: data must be uint16 [F,H,W] matching depth metadata")
+                if data.is_virtual or data.external:
+                    raise DataFormatError(f"{path}: external/virtual H5 storage is not supported")
+                future = data[start + 1:start + HORIZON + 1]
+        except (OSError, ValueError, KeyError) as exc:
+            raise DataFormatError(f"{path}: cannot read required depth frames: {exc}") from exc
+        if future.shape != (HORIZON, info.height, info.width):
+            raise DataFormatError(f"{path}: incomplete five-frame depth target")
+        values.append(future)
+    # H5 preserves millimetres; only the selected sample is converted to metres.
+    depth_mm = np.stack(values, axis=1)
+    selected = [info.cameras.index(camera) for camera in cameras]
+    return {"target_depth": torch.from_numpy(depth_mm.astype(np.float32) / np.float32(1000.0)),
+            "target_depth_valid": torch.from_numpy(depth_mm != 0),
+            "camera_intrinsics": torch.from_numpy(info.intrinsics[selected].astype(np.float32)),
+            "camera_to_world": torch.from_numpy(info.camera_to_world[selected].astype(np.float32))}
+
+
 def _episode_info(path: Path, scene: str, episode: int) -> EpisodeInfo:
     metadata_path = path / "metadata.json"
     try:
@@ -188,13 +260,32 @@ class Touch4DDataset(Dataset):
     stage='single' or 'all' controls training curriculum. Recreate the loader to
     change stages; validation/test always use 'all'. cache_episodes limits the
     number of fixed-array episodes in each worker (GS frames are not cached).
+    with_depth reads only t+1..t+5 from a separate, verified depth extension.
+    depth_cameras preserves explicit order; otherwise the first two sorted
+    cameras common to all selected episodes are used (or one if only one exists).
+    Depth stays in metres and calibration stays in native world coordinates.
     """
 
-    def __init__(self, scene: str, split: str, root=DEFAULT_ROOT, *, stage="all", cache_episodes=2):
+    def __init__(self, scene: str, split: str, root=DEFAULT_ROOT, *, stage="all", cache_episodes=2,
+                 with_depth=False, depth_root=None, depth_cameras=None):
         selected = episode_ids(scene, split, stage)
         if type(cache_episodes) is not int or cache_episodes < 1:
             raise ValueError("cache_episodes must be a positive integer")
+        if type(with_depth) is not bool:
+            raise ValueError("with_depth must be bool")
+        if not with_depth and (depth_root is not None or depth_cameras is not None):
+            raise ValueError("depth_root/depth_cameras require with_depth=True")
+        if depth_cameras is not None:
+            if (not isinstance(depth_cameras, (list, tuple)) or not depth_cameras
+                    or any(not isinstance(camera, str) or not camera for camera in depth_cameras)
+                    or len(set(depth_cameras)) != len(depth_cameras)):
+                raise ValueError("depth_cameras must be a nonempty sequence of unique camera names")
         self.root = Path(root).expanduser().resolve()
+        self.with_depth = with_depth
+        self.depth_root = (self.root.parent / "touch4d-depth-v1" if depth_root is None
+                           else Path(depth_root).expanduser().resolve())
+        self.depth_cameras = None
+        self.depth_episodes = {}
         self.scene, self.split, self.stage = scene, split, stage
         self.cache_episodes = cache_episodes
         self.episode_ids = selected
@@ -207,7 +298,18 @@ class Touch4DDataset(Dataset):
                 raise DataFormatError(f"{info.path}: reviewed single-hand curriculum conflicts with metadata")
             self.episodes[episode] = info
             self.windows.extend((episode, start) for start in window_starts(info.frames, split))
+            if with_depth:
+                self.depth_episodes[episode] = _depth_info(
+                    self.depth_root / scene / f"episode_{episode}", info, scene)
         self.windows = tuple(self.windows)
+        if with_depth:
+            common = set.intersection(*(set(info.cameras) for info in self.depth_episodes.values()))
+            cameras = tuple(sorted(common)[:2] if depth_cameras is None else depth_cameras)
+            if not cameras or any(camera not in common for camera in cameras):
+                raise DataFormatError("Selected depth cameras must exist in every selected episode")
+            if len({(info.height, info.width) for info in self.depth_episodes.values()}) != 1:
+                raise DataFormatError("Selected depth episodes must have matching image dimensions")
+            self.depth_cameras = cameras
 
     def __len__(self):
         return len(self.windows)
@@ -240,10 +342,14 @@ class Touch4DDataset(Dataset):
         inputs["gs_xyz"] = torch.from_numpy(initial["xyz"].copy())
         inputs["gs_attr"] = torch.from_numpy(np.concatenate(
             [initial[key] for key in ("log_scales", "quaternions", "opacity_logits", "sh_dc")], axis=-1))
-        targets = [torch.from_numpy(read_gs(info, frame)["xyz"].copy())
-                   for frame in range(start + 1, start + HORIZON + 1)]
-        return {"inputs": inputs, "targets": {"target_xyz": targets}, "meta": {
+        targets = {"target_xyz": [torch.from_numpy(read_gs(info, frame)["xyz"].copy())
+                                   for frame in range(start + 1, start + HORIZON + 1)]}
+        meta = {
             "scene": self.scene, "episode_id": episode,
             "frame_ids": torch.arange(start, start + HORIZON + 1, dtype=torch.int64),
             "observation_timestamp_us": torch.from_numpy(info.timestamps[start:start + HORIZON + 1].copy()),
-        }}
+        }
+        if self.with_depth:
+            targets.update(read_depth(self.depth_episodes[episode], start, self.depth_cameras))
+            meta["depth_camera_ids"] = list(self.depth_cameras)
+        return {"inputs": inputs, "targets": targets, "meta": meta}

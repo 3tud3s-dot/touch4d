@@ -14,7 +14,7 @@ from types import MappingProxyType
 
 import torch
 
-from ..dataloader.collate import FIXED_FIELDS
+from ..dataloader.collate import FIXED_FIELDS, validate_depth_batch
 from ..dataloader.splits import HORIZON
 
 
@@ -74,6 +74,11 @@ class DataProcessor:
     acquire a normalization flag; callers own the raw/normalized distinction.
     Values follow the loader's float32 contract; inverse prediction helpers also
     accept float64. Masks must explicitly match prediction point/time dimensions.
+
+    Optional depth targets stay in metres and camera matrices stay in the native
+    world frame. Before rendering a prediction against them, restore its XYZ
+    with denormalize_xyz and its log_scales by adding log(state_dict()['scale']).
+    Depth validity is independent of the point-padding masks.
     """
 
     scene: str
@@ -129,6 +134,7 @@ class DataProcessor:
             _require_tensor(meta["episode_id"], (b,), torch.int64, "episode_id")
             for key in ("frame_ids", "observation_timestamp_us"):
                 _require_tensor(meta[key], (b, HORIZON+1), torch.int64, key)
+            validate_depth_batch(batch)
         except (KeyError, TypeError) as exc:
             raise ValueError(f"Malformed DataLoader batch: {exc}") from exc
 

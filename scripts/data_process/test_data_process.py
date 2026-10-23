@@ -39,7 +39,73 @@ def make_batch(scene="001-rope", split="train"):
     return batch
 
 
+def add_depth_targets(batch):
+    """Tiny metric images and static cameras; no files or renderer required."""
+    b = len(batch["meta"]["scene"])
+    depth = torch.full((b, 5, 2, 3, 4), .5, dtype=torch.float32)
+    depth += torch.arange(5, dtype=torch.float32)[None, :, None, None, None] * .01
+    depth[..., -1, -1] = 0
+    k = torch.tensor([[100., 0., 1.5], [0., 110., 1.], [0., 0., 1.]])
+    c2w = torch.eye(4).repeat(b, 2, 1, 1)
+    c2w[..., :3, 3] = torch.tensor([.2, -.1, .3])
+    batch["targets"].update(target_depth=depth, target_depth_valid=depth > 0,
+                            camera_intrinsics=k.repeat(b, 2, 1, 1), camera_to_world=c2w)
+    batch["meta"]["depth_camera_ids"] = [["cam_a", "cam_b"] for _ in range(b)]
+    return batch
+
+
 class ProcessorTests(unittest.TestCase):
+    def test_depth_and_world_cameras_remain_metric_and_independent(self):
+        for scene in SUPPORTED_SCENES:
+            batch = add_depth_targets(make_batch(scene))
+            saved = copy.deepcopy(batch)
+            p = DataProcessor(scene)
+            out = p(batch)
+            check_processed_batch(batch, out, p)
+            require_unchanged(saved, batch)
+            for name in ("target_depth", "target_depth_valid", "camera_intrinsics", "camera_to_world"):
+                self.assertTrue(torch.equal(out["targets"][name], batch["targets"][name]))
+                self.assertNotEqual(out["targets"][name].data_ptr(), batch["targets"][name].data_ptr())
+            self.assertEqual(out["meta"]["depth_camera_ids"], batch["meta"]["depth_camera_ids"])
+            out["targets"]["target_depth"].fill_(9)
+            out["meta"]["depth_camera_ids"][0][0] = "changed"
+            require_unchanged(saved, batch)
+
+    def test_restored_prediction_projects_into_metric_depth_camera(self):
+        batch = add_depth_targets(make_batch())
+        p = DataProcessor("001-rope")
+        target = batch["targets"]
+        k, c2w = target["camera_intrinsics"][0, 0], target["camera_to_world"][0, 0]
+        pixel = torch.tensor([2., 1., 1.])
+        camera_point = torch.linalg.solve(k, pixel) * target["target_depth"][0, 0, 0, 1, 2]
+        world = c2w[:3, :3] @ camera_point + c2w[:3, 3]
+        batch["inputs"]["gs_xyz"][0, 0] = world
+        normalized = p(batch)
+        predicted = normalized["inputs"]["gs_xyz"].clone().requires_grad_()
+        restored = p.denormalize_xyz(predicted, normalized["inputs"]["gs_mask"])
+        projected = torch.linalg.inv(c2w) @ torch.cat((restored[0, 0], torch.ones(1)))
+        torch.testing.assert_close(projected[2], target["target_depth"][0, 0, 0, 1, 2])
+        projected[2].backward()
+        self.assertTrue(torch.isfinite(predicted.grad).all())
+        self.assertGreater(predicted.grad[0, 0].abs().sum().item(), 0)
+
+    def test_depth_semantic_errors_fail_before_normalization(self):
+        mutations = [
+            lambda b: b["targets"].pop("target_depth_valid"),
+            lambda b: b["targets"].update(target_depth=b["targets"]["target_depth"].double()),
+            lambda b: b["targets"]["target_depth"].fill_(float("nan")),
+            lambda b: b["targets"]["target_depth_valid"].fill_(True),
+            lambda b: b["targets"]["camera_to_world"][..., 3, 3].fill_(0),
+            lambda b: b["targets"]["camera_intrinsics"][..., 0, 0].fill_(0),
+            lambda b: b["meta"].pop("depth_camera_ids"),
+        ]
+        for change in mutations:
+            with self.subTest(mutation=change):
+                batch = add_depth_targets(make_batch())
+                change(batch)
+                with self.assertRaises(ValueError):
+                    DataProcessor("001-rope")(batch)
+
     def test_frozen_parameters_and_checkpoint_roundtrip(self):
         expected = {
             "001-rope": ([.210834337570, .013140156253, .157411820790], .157037090510),

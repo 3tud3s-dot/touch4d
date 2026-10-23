@@ -1,24 +1,53 @@
 """Local, disk-free tests: python -B -m unittest scripts.dataloader.test_dataloader -v"""
 
 from contextlib import ExitStack, contextmanager
+import copy
+import hashlib
 from io import BytesIO, StringIO
 import json
 from pathlib import Path
 import pickle
+import tarfile
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import torch
 
+try:
+    import h5py
+except ImportError:  # Existing point-only tests remain usable without the optional reader.
+    h5py = None
+
 from . import dataset as dataset_module
 from .check import check_batch, main as check_main
-from .collate import collate_fn
+from .collate import collate_fn, validate_depth_batch
 from .dataset import DataFormatError, Touch4DDataset
 from .geometry import (HAND_ORDER, STREAM_ORDER, action_conditions, hand_slots,
                        pose_validity, tactile_world_coordinates)
 from .loader import make_dataloader
 from .splits import SPLITS, episode_ids, window_starts
+from ..rebuild_dataset import rebuild as rebuild_module
+from ..rebuild_dataset import validate as validate_module
+
+
+def encoded_file(name, value):
+    """Serialize test sources in memory, including bytes used by hash checks."""
+    if isinstance(value, bytes):
+        return value
+    if str(name).endswith(".json"):
+        return json.dumps(value, sort_keys=True).encode("utf-8")
+    stream = BytesIO()
+    np.savez(stream, **value)
+    return stream.getvalue()
+
+
+def depth_h5_bytes(values):
+    stream = BytesIO()
+    with h5py.File(stream, "w") as archive:
+        archive.create_dataset("data", data=values, chunks=(1, *values.shape[1:]), compression="gzip")
+    return stream.getvalue()
 
 
 def metadata(scene="001-rope", episode=0, frames=12, hands=("right",)):
@@ -106,6 +135,8 @@ class MemoryReconstruction:
             return json.dumps(self.files[path])
 
         def load(path, **kwargs):
+            if hasattr(path, "read"):
+                return original_load(path, **kwargs)
             if Path(path) not in self.files:
                 raise FileNotFoundError(str(path))
             values = self.files[Path(path)]
@@ -135,6 +166,131 @@ class MemoryBackedDataset(Touch4DDataset):
     def __getitem__(self, index):
         with self.memory_source.mounted():
             return super().__getitem__(index)
+
+
+class MemoryDepthReconstruction(MemoryReconstruction):
+    """The core and its optional depth extension exist only as memory buffers."""
+
+    cameras = ("brics-odroid-001_cam0", "brics-odroid-002_cam0", "brics-odroid-003_cam0")
+
+    def __init__(self, scene="001-rope", frames=12):
+        super().__init__(scene, frames)
+        self.depth_root = self.root.parent / "touch4d-depth-v1"
+        self.source_root = self.root.parent / "__memory_only_deform360__"
+        for episode in range(10):
+            self.add_depth(episode, frames)
+
+    def depth_path(self, episode, name):
+        return self.depth_root / self.scene / f"episode_{episode}" / name
+
+    def digest(self, path):
+        return hashlib.sha256(encoded_file(path, self.files[path])).hexdigest()
+
+    def add_depth(self, episode, frames, cameras=None):
+        cameras = self.cameras if cameras is None else tuple(cameras)
+        parent = self.depth_path(episode, "metadata.json").parent
+        for path in list(self.files):
+            if parent in path.parents:
+                del self.files[path]
+        core = self.get(episode, "metadata.json")
+        core["observation_camera"] = cameras[0]
+        core["observation_cameras"] = list(cameras)
+        core["source_episode_directory"] = f"processed/{self.scene}/episode_{episode}"
+        core["output_files"] = {"timestamps.npz": self.digest(self.path(episode, "timestamps.npz"))}
+        times = self.get(episode, "timestamps.npz")["observation_timestamp_us"]
+        intrinsic = np.repeat(np.array([[[700., 0., 2.], [0., 710., 1.5], [0., 0., 1.]]]), len(cameras), axis=0)
+        camera_to_world = np.repeat(np.eye(4, dtype=np.float64)[None], len(cameras), axis=0)
+        for i in range(len(cameras)):
+            intrinsic[i, 0, 0] += i
+            camera_to_world[i, 0, 3] = i / 10
+        self.files[self.depth_path(episode, "camera_parameters.npz")] = {
+            "intrinsics": intrinsic, "camera_to_world": camera_to_world,
+            "observation_timestamp_us": times.copy()}
+        for i, camera in enumerate(cameras):
+            values = np.broadcast_to((1000 + np.arange(frames) * 20 + 100 * i)[:, None, None],
+                                     (frames, 3, 4)).astype(np.uint16).copy()
+            values[:, 0, 0] = 0
+            self.files[self.depth_path(episode, f"{camera}/rendered_depth.h5")] = depth_h5_bytes(values)
+        names = ["camera_parameters.npz"] + [f"{camera}/rendered_depth.h5" for camera in cameras]
+        prefix = core["source_episode_directory"]
+        source_values = {
+            "episode_metadata": (f"{prefix}/metadata.json", {
+                "cameras": list(cameras), "WH": [4, 3], "intrinsics": intrinsic.tolist()}),
+        }
+        extrinsics = BytesIO()
+        np.save(extrinsics, dict(zip(cameras, camera_to_world)), allow_pickle=True)
+        source_values["extrinsics"] = (f"raw/{self.scene}/calibration_refined/extrinsics.npy", extrinsics.getvalue())
+        for camera in cameras:
+            source_values[f"camera_timestamps_{camera}"] = (f"{prefix}/{camera}/aligned_timestamps.txt",
+                "\n".join(f"frame_{int(value)}_{i}" for i, value in enumerate(times)).encode("utf-8"))
+            source_values[f"depth_{camera}"] = (f"{prefix}/{camera}/rendered_depth.h5",
+                self.files[self.depth_path(episode, f"{camera}/rendered_depth.h5")])
+        refs = {}
+        for key, (relative, value) in source_values.items():
+            path = self.source_root / relative
+            self.files[path] = value
+            payload = encoded_file(path, value)
+            refs[key] = {"path": relative, "member": None, "bytes": len(payload),
+                         "sha256": hashlib.sha256(payload).hexdigest()}
+        # Production core metadata retains these references. Keep the fixture honest
+        # so depth validation exercises timeline provenance, not only equal arrays.
+        core["source_files"] = {key: copy.deepcopy(refs[key]) for key in
+                                ("episode_metadata", *(f"camera_timestamps_{c}" for c in cameras))}
+        core["source_files"]["observation"] = copy.deepcopy(refs[f"camera_timestamps_{cameras[0]}"])
+        self.files[self.depth_path(episode, "metadata.json")] = {
+            "schema_version": "touch4d-depth-v1", "script_version": "1.0.0",
+            "scene": self.scene, "episode": episode,
+            "frames": frames, "cameras": list(cameras), "height": 3, "width": 4,
+            "depth_unit": "mm", "invalid_value": 0, "depth_kind": "camera_z_expected",
+            "extrinsics_convention": "camera_to_world", "coordinate_system": "native_world_metres",
+            "source_root": str(self.source_root),
+            "source_episode_directory": core["source_episode_directory"],
+            "core_binding": {"metadata_sha256": self.digest(self.path(episode, "metadata.json")),
+                             "timestamps_sha256": self.digest(self.path(episode, "timestamps.npz"))},
+            "output_files": {name: self.digest(self.depth_path(episode, name)) for name in names},
+            "source_files": refs}
+
+    @contextmanager
+    def mounted(self):
+        original_h5 = h5py.File
+
+        def open_file(path, mode="r", *args, **kwargs):
+            if mode not in ("r", "rb"):
+                raise AssertionError(f"Test attempted a filesystem write: {path} ({mode})")
+            if path not in self.files:
+                raise FileNotFoundError(str(path))
+            payload = encoded_file(path, self.files[path])
+            return BytesIO(payload) if "b" in mode else StringIO(payload.decode("utf-8"))
+
+        def open_h5(path, mode="r", *args, **kwargs):
+            if isinstance(path, (Path, str)):
+                path = Path(path)
+                if path not in self.files:
+                    raise FileNotFoundError(str(path))
+                return original_h5(BytesIO(encoded_file(path, self.files[path])), mode, *args, **kwargs)
+            return original_h5(path, mode, *args, **kwargs)
+
+        def is_dir(path):
+            return any(path in file.parents for file in self.files)
+
+        original_stat = Path.stat
+
+        def stat(path, *args, **kwargs):
+            if path in self.files:
+                return SimpleNamespace(st_size=len(encoded_file(path, self.files[path])),
+                                       st_mtime_ns=1, st_dev=1, st_ino=1)
+            return original_stat(path, *args, **kwargs)
+
+        with super().mounted(), ExitStack() as stack:
+            stack.enter_context(patch.object(Path, "open", open_file))
+            stack.enter_context(patch.object(Path, "is_dir", is_dir))
+            stack.enter_context(patch.object(Path, "exists", lambda path: path in self.files or is_dir(path)))
+            stack.enter_context(patch.object(Path, "is_symlink", lambda path: False))
+            stack.enter_context(patch.object(Path, "stat", stat))
+            stack.enter_context(patch.object(Path, "rglob", lambda path, pattern: iter(
+                file for file in self.files if path in file.parents)))
+            stack.enter_context(patch.object(h5py, "File", open_h5))
+            yield self
 
 
 class SplitTests(unittest.TestCase):
@@ -422,6 +578,554 @@ class CollateAndLoaderTests(unittest.TestCase):
         self.assertEqual(result["checked_samples"], 4)
         self.assertTrue(result["all_windows_checked"])
         self.assertEqual(result["status"], "passed")
+
+
+@unittest.skipIf(h5py is None, "Optional depth tests require h5py")
+class DepthDatasetTests(unittest.TestCase):
+    def test_old_mode_does_not_open_or_require_depth(self):
+        data = MemoryReconstruction()
+        with data.mounted(), patch.object(h5py, "File", side_effect=AssertionError("Unexpected H5 read")):
+            ds = Touch4DDataset(data.scene, "train", data.root)
+            sample = ds[0]
+            self.assertEqual(set(sample["targets"]), {"target_xyz"})
+            self.assertNotIn("depth_camera_ids", sample["meta"])
+            validate_depth_batch(collate_fn([sample]))
+
+    def test_all_three_scenes_future_offsets_units_masks_and_camera_order(self):
+        for scene in SPLITS:
+            with self.subTest(scene=scene):
+                data = MemoryDepthReconstruction(scene)
+                chosen = [data.cameras[2], data.cameras[0]]
+                with data.mounted():
+                    ds = Touch4DDataset(scene, "train", data.root, with_depth=True, depth_cameras=chosen)
+                    sample = ds[ds.windows.index((5, 2))]
+                    target = sample["targets"]
+                    self.assertEqual(sample["meta"]["frame_ids"].tolist(), list(range(2, 8)))
+                    self.assertEqual(sample["meta"]["depth_camera_ids"], chosen)
+                    self.assertEqual(target["target_depth"].shape, (5, 2, 3, 4))
+                    self.assertEqual(target["target_depth"].dtype, torch.float32)
+                    self.assertEqual(target["target_depth_valid"].dtype, torch.bool)
+                    torch.testing.assert_close(target["target_depth"][:, 0, 1, 1],
+                                               torch.tensor([1.26, 1.28, 1.30, 1.32, 1.34]))
+                    torch.testing.assert_close(target["target_depth"][:, 1, 1, 1],
+                                               torch.tensor([1.06, 1.08, 1.10, 1.12, 1.14]))
+                    self.assertTrue(torch.equal(target["target_depth_valid"], target["target_depth"] > 0))
+                    self.assertFalse(target["target_depth_valid"][:, :, 0, 0].any())
+                    torch.testing.assert_close(target["camera_intrinsics"][:, 0, 0], torch.tensor([702., 700.]))
+                    torch.testing.assert_close(target["camera_to_world"][:, 0, 3], torch.tensor([0.2, 0.0]))
+                    self.assertEqual(ds.depth_root, data.depth_root)
+                    check_batch(collate_fn([sample]))
+
+    def test_default_camera_selection_uses_common_ordered_subset_and_lazy_reads(self):
+        data = MemoryDepthReconstruction()
+        data.add_depth(1, 12, cameras=data.cameras[1:])
+        with data.mounted(), patch.object(h5py, "File", wraps=h5py.File) as reader:
+            ds = Touch4DDataset(data.scene, "train", data.root, with_depth=True)
+            self.assertEqual(tuple(ds.depth_cameras), data.cameras[1:])
+            self.assertEqual(reader.call_count, 0)
+            sample = ds[0]
+            self.assertEqual(reader.call_count, 2)
+            self.assertEqual(sample["meta"]["depth_camera_ids"], list(data.cameras[1:]))
+
+    def test_depth_samples_are_independent_and_dataset_pickle_has_no_open_h5(self):
+        data = MemoryDepthReconstruction()
+        with data.mounted():
+            ds = Touch4DDataset(data.scene, "train", data.root, with_depth=True)
+            sample = ds[0]
+            sample["targets"]["target_depth"].zero_()
+            sample["targets"]["camera_to_world"].zero_()
+            restored = pickle.loads(pickle.dumps(ds))
+            again = restored[0]
+            self.assertTrue(again["targets"]["target_depth_valid"].any())
+            self.assertGreater(again["targets"]["target_depth"][0, 0, 1, 1].item(), 0)
+            self.assertEqual(again["targets"]["camera_to_world"][0, 3, 3].item(), 1)
+
+    def test_invalid_camera_options_and_missing_extension_fail_explicitly(self):
+        data = MemoryDepthReconstruction()
+        options = [
+            {"depth_root": data.depth_root},
+            {"with_depth": True, "depth_cameras": []},
+            {"with_depth": True, "depth_cameras": [data.cameras[0]] * 2},
+            {"with_depth": True, "depth_cameras": ["missing_camera"]},
+        ]
+        with data.mounted():
+            for kwargs in options:
+                with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                    Touch4DDataset(data.scene, "train", data.root, **kwargs)
+        del data.files[data.depth_path(1, "metadata.json")]
+        with data.mounted(), self.assertRaisesRegex(DataFormatError, "depth|metadata"):
+            Touch4DDataset(data.scene, "train", data.root, with_depth=True)
+
+    def test_depth_schema_binding_and_calibration_failures_are_detected(self):
+        def parameters(data):
+            return data.files[data.depth_path(1, "camera_parameters.npz")]
+
+        def rehash_parameters(data):
+            name = "camera_parameters.npz"
+            data.files[data.depth_path(1, "metadata.json")]["output_files"][name] = data.digest(data.depth_path(1, name))
+
+        def corrupt_timeline(data):
+            parameters(data)["observation_timestamp_us"][2] += 1
+            rehash_parameters(data)
+
+        def corrupt_rotation(data):
+            parameters(data)["camera_to_world"][0, 0, 0] = -1
+            rehash_parameters(data)
+
+        def corrupt_core_timeline(data):
+            times = data.get(1, "timestamps.npz")
+            for key in ("observation_timestamp_us", *(f"raw_tactile_timestamp_us_{i}" for i in range(4))):
+                times[key] += 1
+
+        cases = [
+            ("stale core", "binding", lambda d: d.get(1, "metadata.json").update(review_note="changed")),
+            ("changed core times", "timestamp SHA", corrupt_core_timeline),
+            ("changed parameters", "SHA", lambda d: parameters(d)["intrinsics"].fill(0)),
+            ("different timeline", "timeline", corrupt_timeline),
+            ("reflection", "rigid", corrupt_rotation),
+            ("unsupported units", "convention", lambda d: d.files[d.depth_path(1, "metadata.json")].update(depth_unit="m")),
+            ("missing camera", "Missing|manifest", lambda d: d.files.pop(d.depth_path(1, f"{d.cameras[0]}/rendered_depth.h5"))),
+        ]
+        for name, message, corrupt in cases:
+            with self.subTest(name=name):
+                data = MemoryDepthReconstruction()
+                corrupt(data)
+                with data.mounted(), self.assertRaisesRegex(DataFormatError, message):
+                    Touch4DDataset(data.scene, "train", data.root, with_depth=True)
+
+    def test_invalid_h5_dtype_shape_and_payload_fail_on_read(self):
+        cases = [
+            depth_h5_bytes(np.ones((12, 3, 4), dtype=np.float32)),
+            depth_h5_bytes(np.ones((11, 3, 4), dtype=np.uint16)),
+            b"not an HDF5 file",
+        ]
+        for payload in cases:
+            with self.subTest(payload_size=len(payload)):
+                data = MemoryDepthReconstruction()
+                data.files[data.depth_path(1, f"{data.cameras[0]}/rendered_depth.h5")] = payload
+                with data.mounted():
+                    ds = Touch4DDataset(data.scene, "train", data.root, with_depth=True)
+                    with self.assertRaisesRegex(DataFormatError, "depth|uint16"):
+                        ds[0]
+
+    def test_collate_preserves_depth_and_rejects_mixed_or_partial_fields(self):
+        data = MemoryDepthReconstruction()
+        with data.mounted():
+            ds = Touch4DDataset(data.scene, "test", data.root, with_depth=True)
+            a, b = ds[0], ds[1]
+            batch = collate_fn([a, b])
+            self.assertEqual(batch["targets"]["target_depth"].shape, (2, 5, 2, 3, 4))
+            self.assertEqual(batch["targets"]["camera_to_world"].shape, (2, 2, 4, 4))
+            torch.testing.assert_close(batch["targets"]["target_depth"][1], b["targets"]["target_depth"])
+            self.assertEqual(batch["meta"]["depth_camera_ids"], [list(data.cameras[:2])] * 2)
+            check_batch(batch)
+            old = Touch4DDataset(data.scene, "test", data.root)[0]
+            with self.assertRaisesRegex(ValueError, "mix"):
+                collate_fn([a, old])
+            broken = copy.deepcopy(b)
+            del broken["targets"]["target_depth_valid"]
+            with self.assertRaisesRegex(ValueError, "together|requires"):
+                collate_fn([a, broken])
+            broken = copy.deepcopy(b)
+            broken["meta"]["depth_camera_ids"].reverse()
+            with self.assertRaisesRegex(ValueError, "camera"):
+                collate_fn([a, broken])
+
+    def test_batch_check_rejects_nonfinite_depth_bad_mask_and_nonrigid_calibration(self):
+        data = MemoryDepthReconstruction()
+        with data.mounted():
+            sample = Touch4DDataset(data.scene, "train", data.root, with_depth=True)[0]
+            batch = collate_fn([sample])
+        for field, index, value in (
+            ("target_depth", (0, 0, 0, 1, 1), float("nan")),
+            ("target_depth", (0, 0, 0, 1, 1), -1),
+            ("target_depth_valid", (0, 0, 0, 1, 1), False),
+            ("camera_to_world", (0, 0, 0, 0), 2),
+            ("camera_intrinsics", (0, 0, 0, 0), 0),
+        ):
+            with self.subTest(field=field, value=value):
+                broken = copy.deepcopy(batch)
+                broken["targets"][field][index] = value
+                with self.assertRaises(ValueError):
+                    validate_depth_batch(broken)
+
+    def test_loader_and_read_only_cli_forward_depth_options(self):
+        data = MemoryDepthReconstruction()
+        with data.mounted():
+            loader = make_dataloader(data.scene, "val", root=data.root, with_depth=True,
+                                     depth_root=data.depth_root, depth_cameras=[data.cameras[2]], batch_size=3)
+            batches = list(loader)
+            self.assertEqual([len(b["meta"]["scene"]) for b in batches], [3, 1])
+            self.assertEqual(batches[0]["targets"]["target_depth"].shape, (3, 5, 1, 3, 4))
+            self.assertEqual(batches[0]["meta"]["depth_camera_ids"], [[data.cameras[2]]] * 3)
+            with patch("sys.stdout", new_callable=StringIO) as output:
+                check_main(["--scene", data.scene, "--root", str(data.root), "--split", "val",
+                            "--max-batches", "1", "--with-depth", "--depth-root", str(data.depth_root),
+                            "--depth-cameras", data.cameras[2]])
+                result = json.loads(output.getvalue())
+            self.assertEqual(result["status"], "passed")
+
+
+class DepthCommandTests(unittest.TestCase):
+    def test_rebuild_depth_only_dispatch_never_enters_core_pipeline(self):
+        for scene in SPLITS:
+            with self.subTest(scene=scene), ExitStack() as stack:
+                dispatch = stack.enter_context(patch.object(rebuild_module, "run_depth_only", return_value=0))
+                stack.enter_context(patch.object(rebuild_module, "os", SimpleNamespace(name="posix")))
+                core = [stack.enter_context(patch.object(rebuild_module, name,
+                        side_effect=AssertionError(f"Core path called: {name}")))
+                        for name in ("preflight", "rebuild_episode", "_validators", "discover_episodes")]
+                stack.enter_context(patch.dict("sys.modules", {"plyfile": None}))
+                self.assertEqual(rebuild_module.main(["--scene", scene, "--depth-only", "--episodes", "0,5", "--overwrite"]), 0)
+                options = dispatch.call_args.args[0]
+                self.assertEqual(options.scene, scene)
+                self.assertEqual(options.episodes, [0, 5])
+                self.assertTrue(options.overwrite)
+                for mocked in core:
+                    mocked.assert_not_called()
+
+    def test_validate_depth_only_dispatch_never_enters_core_validation(self):
+        with patch.object(validate_module, "validate_depth_main", return_value=0) as dispatch, \
+             patch.object(validate_module, "validate_episode", side_effect=AssertionError("Core validation")) as core, \
+             patch.object(validate_module, "discover_episodes", side_effect=AssertionError("Core discovery")):
+            self.assertEqual(validate_module.main(["--scene", "008-pink-cloth", "--depth-only", "--structure-only"]), 0)
+            self.assertTrue(dispatch.call_args.args[0].structure_only)
+            core.assert_not_called()
+
+
+@unittest.skipIf(h5py is None, "Optional depth tests require h5py")
+class DepthValidationTests(unittest.TestCase):
+    @staticmethod
+    def archive_bytes(entries):
+        stream = BytesIO()
+        with tarfile.open(fileobj=stream, mode="w") as archive:
+            for name, payload, kind in entries:
+                info = tarfile.TarInfo(name)
+                info.type = kind
+                if kind in (tarfile.SYMTYPE, tarfile.LNKTYPE):
+                    info.linkname = "elsewhere/rendered_depth.h5"
+                if kind == tarfile.REGTYPE:
+                    info.size = len(payload)
+                    archive.addfile(info, BytesIO(payload))
+                else:
+                    archive.addfile(info)
+        return stream.getvalue()
+
+    @contextmanager
+    def memory_tar_reader(self, data, relative, payload):
+        """Let the real tar parser inspect archive bytes without opening disk files."""
+        data.files[data.source_root / relative] = payload
+        original_open = tarfile.open
+
+        def open_tar(name=None, mode="r", **kwargs):
+            if name is not None:
+                path = Path(name)
+                if path not in data.files:
+                    raise AssertionError(f"Unexpected archive read: {path}")
+                return original_open(fileobj=BytesIO(data.files[path]), mode=mode, **kwargs)
+            return original_open(mode=mode, **kwargs)
+
+        with data.mounted(), patch.object(tarfile, "open", side_effect=open_tar):
+            with rebuild_module.DepthSourceReader(data.source_root) as reader:
+                yield reader
+
+    def recorded_camera_archive(self, data, episode=0):
+        """Record tar provenance while keeping identical loose copies alongside it."""
+        core = data.get(episode, "metadata.json")
+        extension = data.files[data.depth_path(episode, "metadata.json")]
+        relative = f"{core['source_episode_directory']}/cameras.tar"
+        members = {}
+        for camera in core["observation_cameras"]:
+            for key, filename in ((f"camera_timestamps_{camera}", "aligned_timestamps.txt"),
+                                  (f"depth_{camera}", "rendered_depth.h5")):
+                member = f"{camera}/{filename}"
+                old = extension["source_files"][key]
+                members[member] = data.files[data.source_root / old["path"]]
+                ref = {**old, "path": relative, "member": member}
+                extension["source_files"][key] = ref
+                if key.startswith("camera_timestamps_"):
+                    core["source_files"][key] = copy.deepcopy(ref)
+        core["source_files"]["observation"] = copy.deepcopy(
+            core["source_files"][f"camera_timestamps_{core['observation_camera']}"])
+        extension["core_binding"]["metadata_sha256"] = data.digest(data.path(episode, "metadata.json"))
+        return relative, members
+
+    def test_first_depth_layout_keeps_core_tar_timestamps_with_loose_copies(self):
+        data = MemoryDepthReconstruction()
+        relative, members = self.recorded_camera_archive(data)
+        archive = self.archive_bytes([(name, payload, tarfile.REGTYPE) for name, payload in members.items()])
+        core = data.get(0, "metadata.json")
+        obs = data.get(0, "timestamps.npz")["observation_timestamp_us"]
+        with self.memory_tar_reader(data, relative, archive) as reader:
+            plan = rebuild_module.depth_source_layout(reader, core, obs)
+            for camera in data.cameras:
+                key = f"camera_timestamps_{camera}"
+                self.assertEqual(reader.refs[key], core["source_files"][key])
+                self.assertEqual(reader.refs[key]["member"], f"{camera}/aligned_timestamps.txt")
+                # H5 has no core reference: new/overwrite discovery may use loose data.
+                self.assertEqual(plan["depth_refs"][camera],
+                    (f"{core['source_episode_directory']}/{camera}/rendered_depth.h5", None))
+
+    def test_recorded_tar_depth_validates_and_skips_despite_added_loose_copies(self):
+        data = MemoryDepthReconstruction()
+        relative, members = self.recorded_camera_archive(data)
+        archive = self.archive_bytes([(name, payload, tarfile.REGTYPE) for name, payload in members.items()])
+        before = {path: data.digest(path) for path in data.files
+                  if data.root in path.parents or data.depth_root in path.parents}
+        with self.memory_tar_reader(data, relative, archive), patch("sys.stdout", new_callable=StringIO):
+            result = validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                core_directory=data.path(0, "metadata.json").parent, source_root=data.source_root,
+                verify_sources=True)
+            self.assertEqual(result["status"], "PASS")
+            # Exercise the real skip validator/path guards, unlike publication_sandbox.
+            skipped = rebuild_module.rebuild_depth_episode(data.source_root, data.root, data.depth_root,
+                                                           data.scene, 0)
+            self.assertTrue(skipped["skipped"])
+            self.assertEqual(skipped["source_verification"], "full")
+        self.assertEqual({path: data.digest(path) for path in before}, before)
+
+    def test_changed_recorded_tar_bytes_fail_even_with_correct_loose_copies(self):
+        for filename in ("aligned_timestamps.txt", "rendered_depth.h5"):
+            with self.subTest(filename=filename):
+                data = MemoryDepthReconstruction()
+                relative, members = self.recorded_camera_archive(data)
+                member = f"{data.cameras[0]}/{filename}"
+                members[member] += b"\n"  # Timestamp values stay equal; provenance bytes must still fail.
+                archive = self.archive_bytes([(name, payload, tarfile.REGTYPE) for name, payload in members.items()])
+                with self.memory_tar_reader(data, relative, archive):
+                    with self.assertRaisesRegex(ValueError, "provenance|hashes|SHA-256"):
+                        validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                            core_directory=data.path(0, "metadata.json").parent, source_root=data.source_root,
+                            verify_sources=True)
+
+    def test_missing_recorded_tar_source_or_member_never_falls_back_to_loose(self):
+        for missing in ("archive", "timestamp_member", "depth_member"):
+            with self.subTest(missing=missing):
+                data = MemoryDepthReconstruction()
+                relative, members = self.recorded_camera_archive(data)
+                if missing != "archive":
+                    filename = "aligned_timestamps.txt" if missing == "timestamp_member" else "rendered_depth.h5"
+                    del members[f"{data.cameras[0]}/{filename}"]
+                archive = self.archive_bytes([(name, payload, tarfile.REGTYPE) for name, payload in members.items()])
+                with self.memory_tar_reader(data, relative, archive):
+                    if missing == "archive":
+                        del data.files[data.source_root / relative]
+                    with self.assertRaisesRegex(ValueError, "Missing depth"):
+                        validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                            core_directory=data.path(0, "metadata.json").parent, source_root=data.source_root,
+                            verify_sources=True)
+
+    def test_camera_tar_stream_preserves_selected_member_bytes_and_hash(self):
+        data = MemoryDepthReconstruction()
+        camera = data.cameras[0]
+        member = f"{camera}/rendered_depth.h5"
+        payload = data.files[data.depth_path(0, member)]
+        relative = f"processed/{data.scene}/episode_0/cameras.tar"
+        archive = self.archive_bytes([
+            (camera, b"", tarfile.DIRTYPE),
+            (member, payload, tarfile.REGTYPE),
+            (f"{data.cameras[1]}/rendered_depth.h5", b"unselected bytes", tarfile.REGTYPE),
+        ])
+        destination = data.depth_path(0, "copied_depth.h5")
+        written = {}
+
+        class CapturedOutput(BytesIO):
+            def close(self):
+                if not self.closed:
+                    written[destination] = self.getvalue()
+                super().close()
+
+        with self.memory_tar_reader(data, relative, archive) as reader:
+            original_open = Path.open
+
+            def open_file(path, mode="r", *args, **kwargs):
+                if path == destination and mode == "xb":
+                    return CapturedOutput()
+                return original_open(path, mode, *args, **kwargs)
+
+            with patch.object(Path, "open", open_file):
+                ref = reader.stream(f"depth_{camera}", relative, member, destination=destination)
+                again = reader.stream(f"depth_{camera}", relative, member)
+            self.assertEqual(written, {destination: payload})
+            self.assertEqual(ref, {"path": relative, "member": member, "bytes": len(payload),
+                                   "sha256": hashlib.sha256(payload).hexdigest()})
+            self.assertEqual(again, ref)
+            self.assertEqual(reader.refs, {f"depth_{camera}": ref})
+            self.assertEqual(len(reader.archives), 1)
+
+    def test_camera_tar_rejects_traversal_duplicates_and_links_before_copy(self):
+        member = "brics-odroid-001_cam0/rendered_depth.h5"
+        cases = {
+            "traversal": [("../escape.h5", b"bad", tarfile.REGTYPE)],
+            "duplicate": [(member, b"first", tarfile.REGTYPE), (member, b"second", tarfile.REGTYPE)],
+            "symlink": [(member, b"", tarfile.SYMTYPE)],
+            "hardlink": [(member, b"", tarfile.LNKTYPE)],
+        }
+        for label, entries in cases.items():
+            with self.subTest(label=label):
+                data = MemoryDepthReconstruction()
+                relative = f"processed/{data.scene}/episode_0/cameras.tar"
+                with self.memory_tar_reader(data, relative, self.archive_bytes(entries)) as reader:
+                    with self.assertRaises(ValueError):
+                        reader.stream("depth", relative, member,
+                                      destination=data.depth_path(0, "must_not_be_written.h5"))
+                    self.assertEqual(reader.refs, {})
+
+    def test_full_depth_validation_reads_only_depth_calibration_and_core_binding(self):
+        for scene in SPLITS:
+            with self.subTest(scene=scene):
+                data = MemoryDepthReconstruction(scene)
+                before = {path: data.digest(path) for path in data.files if data.root in path.parents}
+                with data.mounted(), ExitStack() as stack:
+                    for name in ("preflight", "rebuild_episode", "gs_arrays", "tactile_arrays", "load_robot"):
+                        stack.enter_context(patch.object(rebuild_module, name, side_effect=AssertionError(name)))
+                    stack.enter_context(patch.object(validate_module, "validate_episode", side_effect=AssertionError("core validator")))
+                    result = validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                        core_directory=data.path(0, "metadata.json").parent, expected_scene=scene,
+                        expected_episode=0, source_root=data.source_root, verify_sources=True)
+                    self.assertEqual(result["status"], "PASS")
+                    self.assertTrue(result["depth_only"])
+                    self.assertEqual(result["source_verification"], "full")
+                self.assertEqual({path: data.digest(path) for path in before}, before)
+
+    def test_output_and_source_hashes_are_independently_verified(self):
+        for corrupt_output in (True, False):
+            with self.subTest(corrupt_output=corrupt_output):
+                data = MemoryDepthReconstruction()
+                relative = f"{data.cameras[0]}/rendered_depth.h5"
+                path = (data.depth_path(0, relative) if corrupt_output else
+                        data.source_root / f"processed/{data.scene}/episode_0/{relative}")
+                data.files[path] += b"changed"
+                with data.mounted(), self.assertRaisesRegex(ValueError, "SHA-256|source hashes"):
+                    validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                        core_directory=data.path(0, "metadata.json").parent,
+                        source_root=data.source_root, verify_sources=True)
+
+    def test_structure_only_still_checks_h5_and_exact_copy_provenance(self):
+        data = MemoryDepthReconstruction()
+        meta = data.files[data.depth_path(0, "metadata.json")]
+        meta["source_files"][f"depth_{data.cameras[0]}"]["sha256"] = "f" * 64
+        with data.mounted(), self.assertRaisesRegex(ValueError, "exact source H5 bytes"):
+            validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                core_directory=data.path(0, "metadata.json").parent, verify_sources=False)
+
+    def test_depth_root_cannot_overlap_core_or_source(self):
+        data = MemoryDepthReconstruction()
+        with data.mounted():
+            for protected in (data.root, data.source_root):
+                with self.subTest(protected=protected), self.assertRaisesRegex(ValueError, "disjoint"):
+                    rebuild_module.depth_roots(data.source_root, data.root, protected / "depth")
+
+    @contextmanager
+    def publication_sandbox(self, *, fail_publish=False, fail_cleanup=False):
+        """Exercise publication decisions against an in-memory directory state."""
+        base = Path("__memory_only_publication__").resolve()
+        source, core, depth = (base / name for name in ("source", "core", "depth"))
+        target = depth / "001-rope" / "episode_0"
+        partial, backup = (target.with_name(f".episode_0.{suffix}") for suffix in ("incomplete", "previous"))
+        directories = {target}
+        renames, created, writes = [], [], []
+        reader = MagicMock()
+        reader.__enter__.return_value = reader
+        reader.refs = {}
+        camera = "brics-odroid-001_cam0"
+        metadata = {"scene": "001-rope", "episode": 0, "observation_cameras": [camera],
+                    "source_episode_directory": "processed/001-rope/episode_0"}
+        plan = {"depth_refs": {camera: ("ignored", None)}, "height": 3, "width": 4,
+                "intrinsics": np.eye(3)[None], "camera_to_world": np.eye(4)[None]}
+        validator = MagicMock()
+        validator.validate_depth_episode.return_value = {"status": "PASS", "depth_only": True}
+
+        def mkdir(path, *args, **kwargs):
+            if not path.is_relative_to(partial):
+                raise AssertionError(f"Attempted to create outside the depth staging directory: {path}")
+            created.append(path)
+            directories.add(path)
+
+        def record_write(path, *args, **kwargs):
+            if not path.is_relative_to(partial):
+                raise AssertionError(f"Attempted to write outside the depth staging directory: {path}")
+            writes.append(path)
+
+        def open_output(path, *args, **kwargs):
+            record_write(path)
+            return StringIO()
+
+        def copy_depth(*args, destination=None, **kwargs):
+            record_write(destination)
+            return {"sha256": "a" * 64}
+
+        reader.stream.side_effect = copy_depth
+
+        def rename(path, destination):
+            renames.append((path, destination))
+            if fail_publish and path == partial and destination == target:
+                raise OSError("publication rejected")
+            directories.remove(path)
+            directories.add(destination)
+            return destination
+
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(rebuild_module, "depth_roots", return_value=(source, core, depth)))
+            stack.enter_context(patch.object(rebuild_module, "read_core_depth_binding",
+                return_value=(metadata, np.arange(6, dtype=np.int64), {"metadata_sha256": "a" * 64,
+                                                                       "timestamps_sha256": "b" * 64})))
+            stack.enter_context(patch.object(rebuild_module, "depth_output_paths", return_value=(target, partial, backup)))
+            stack.enter_context(patch.object(rebuild_module, "DepthSourceReader", return_value=reader))
+            stack.enter_context(patch.object(rebuild_module, "depth_source_layout", return_value=plan))
+            stack.enter_context(patch.object(rebuild_module, "check_depth_h5"))
+            stack.enter_context(patch.object(rebuild_module, "write_npz", side_effect=record_write))
+            stack.enter_context(patch.object(rebuild_module, "hash_file", return_value="a" * 64))
+            stack.enter_context(patch.object(rebuild_module, "checked_path", side_effect=lambda p: p))
+            stack.enter_context(patch.object(rebuild_module, "_validators", return_value=validator))
+            stack.enter_context(patch.object(Path, "exists", lambda path: path in directories))
+            stack.enter_context(patch.object(Path, "is_dir", lambda path: path in directories))
+            stack.enter_context(patch.object(Path, "stat", lambda path: SimpleNamespace(st_dev=1, st_ino=9)))
+            stack.enter_context(patch.object(Path, "mkdir", mkdir))
+            stack.enter_context(patch.object(Path, "rename", rename))
+            stack.enter_context(patch.object(Path, "open", open_output))
+            cleanup = stack.enter_context(patch.object(rebuild_module.shutil, "rmtree",
+                side_effect=OSError("cleanup rejected") if fail_cleanup else lambda path: directories.remove(path)))
+            output = stack.enter_context(patch("sys.stdout", new_callable=StringIO))
+            errors = stack.enter_context(patch("sys.stderr", new_callable=StringIO))
+            yield SimpleNamespace(source=source, core=core, depth=depth, target=target, partial=partial,
+                backup=backup, directories=directories, renames=renames, created=created, writes=writes,
+                cleanup=cleanup, reader=reader, validator=validator, output=output, errors=errors)
+
+    def test_default_skip_validates_without_copying_sources_or_creating_output(self):
+        with self.publication_sandbox() as state:
+            result = rebuild_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0)
+            self.assertTrue(result["skipped"])
+            self.assertEqual(state.created, [])
+            self.assertEqual(state.writes, [])
+            self.assertEqual(state.renames, [])
+            state.reader.stream.assert_not_called()
+            self.assertTrue(state.validator.validate_depth_episode.call_args.kwargs["verify_sources"])
+
+    def test_overwrite_publication_failure_restores_old_directory(self):
+        with self.publication_sandbox(fail_publish=True) as state:
+            with self.assertRaisesRegex(OSError, "publication rejected"):
+                rebuild_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0,
+                                                     overwrite=True)
+            self.assertIn(state.target, state.directories)
+            self.assertNotIn(state.backup, state.directories)
+            self.assertEqual(state.renames, [(state.target, state.backup), (state.partial, state.target),
+                                             (state.backup, state.target)])
+            state.cleanup.assert_not_called()
+            self.assertTrue(all(path.is_relative_to(state.depth) for path in state.created))
+
+    def test_cleanup_failure_does_not_fail_publication_or_next_default_skip(self):
+        with self.publication_sandbox(fail_cleanup=True) as state:
+            result = rebuild_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0,
+                                                         overwrite=True)
+            self.assertEqual(result["status"], "PASS")
+            self.assertFalse(result["skipped"])
+            self.assertIn(state.target, state.directories)
+            self.assertIn(state.backup, state.directories)
+            self.assertIn("WARNING", state.errors.getvalue())
+            again = rebuild_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0)
+            self.assertTrue(again["skipped"])
+            self.assertEqual(state.validator.validate_depth_episode.call_count, 2)
 
 
 if __name__ == "__main__":
