@@ -8,13 +8,13 @@ import torch
 from ..data_process import DataProcessor
 from .model import PositionPredictor
 from .rendering import DepthRenderer
-from .train import atomic_json, build_loader, evaluate_loader, read_checkpoint
+from .train import MODEL_KEYS, atomic_json, build_loader, evaluate_loader, read_checkpoint
 
 
 def load_model(path, device):
     state = read_checkpoint(path)
     config = state["config"]
-    model = PositionPredictor(**{k: config[k] for k in ("width", "heads", "layers")}).to(device)
+    model = PositionPredictor(**{k: config[k] for k in MODEL_KEYS}).to(device)
     model.load_state_dict(state["model"])
     model.eval()
     return model, DataProcessor.from_state_dict(state["processor"]), config

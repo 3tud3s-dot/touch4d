@@ -29,7 +29,9 @@ from .losses import objective
 from .model import PositionPredictor
 from .rendering import DepthRenderer
 
-VERSION = "touch4d-displacement-v1"
+VERSION = "touch4d-displacement-v2"
+LEGACY_VERSION = "touch4d-displacement-v1"
+MODEL_KEYS = ("width", "heads", "layers", "controller_features")
 PROJECT = Path(__file__).resolve().parents[2]
 
 
@@ -156,19 +158,52 @@ def train_epoch(model, optimizer, loader, processor, renderer, config, device):
 
 
 def checkpoint_state(model, optimizer, processor, config, epoch, best, history):
-    return dict(version=VERSION, config=dict(config), processor=processor.state_dict(),
+    config = dict(config)
+    for key in MODEL_KEYS:
+        if key in config and config[key] != model.config[key]:
+            raise ValueError(f"Checkpoint config disagrees with model: {key}")
+        config[key] = model.config[key]
+    return dict(version=VERSION, config=config, processor=processor.state_dict(),
                 model=model.state_dict(), optimizer=optimizer.state_dict(), epoch=epoch,
                 best=best, history=history, torch_rng=torch.get_rng_state(),
                 cuda_rng=torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
                 python_rng=random.getstate())
 
 
+def checkpoint_config(value):
+    """Interpret legacy metadata without changing the checkpoint on disk."""
+    version = value.get("version")
+    if version not in (LEGACY_VERSION, VERSION):
+        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2 weights; "
+                         "absolute-position V0 checkpoints require the original V0 code")
+    config = dict(value["config"])
+    if version == LEGACY_VERSION:
+        if config.get("controller_features", 3) != 3:
+            raise ValueError("Legacy checkpoint must use 3 controller features")
+        config["controller_features"] = 3
+    features = config.get("controller_features")
+    if type(features) is not int or features not in (3, 7):
+        raise ValueError("Checkpoint requires explicit controller_features of 3 or 7")
+    weight = value["model"].get("controller_encoder.0.weight")
+    if not isinstance(weight, torch.Tensor) or tuple(weight.shape) != (config["width"], features):
+        raise ValueError("Checkpoint controller weights disagree with feature configuration")
+    return config
+
+
+def resolve_controller_features(requested, state=None):
+    """Fresh runs default to 7; resume inherits and cannot change architecture."""
+    saved = checkpoint_config(state)["controller_features"] if state is not None else None
+    if requested is not None and (type(requested) is not int or requested not in (3, 7)):
+        raise ValueError("controller_features must be 3 or 7")
+    if saved is not None and requested is not None and requested != saved:
+        raise ValueError("Cannot resume with different controller_features; start a new run")
+    return saved if saved is not None else (7 if requested is None else requested)
+
+
 def read_checkpoint(path):
     # Only load checkpoints produced by this project from a trusted location.
     value = torch.load(path, map_location="cpu", weights_only=False)
-    if value.get("version") != VERSION:
-        raise ValueError("Unsupported checkpoint: expected displacement-v1 weights; "
-                         "absolute-position V0 checkpoints require the original V0 code")
+    value = dict(value, config=checkpoint_config(value))
     DataProcessor.from_state_dict(value["processor"])
     if value["config"]["scene"] != value["processor"]["scene"]:
         raise ValueError("Checkpoint scene and normalization disagree")
@@ -187,7 +222,9 @@ def recover_best_score(last_state, run):
     if not path.is_file():
         raise ValueError(f"Cannot safely resume: missing best checkpoint {path}")
     saved = read_checkpoint(path)
-    comparable = lambda c: {k: v for k, v in c.items() if k != "epochs"}
+    # Legacy configs omitted controller_features; explicit 3 means the same model.
+    comparable = lambda c: {k: v for k, v in {"controller_features": 3, **c}.items()
+                            if k != "epochs"}
     if (comparable(saved["config"]) != comparable(last_state["config"])
             or saved["processor"] != last_state["processor"]):
         raise ValueError("Cannot safely resume: best.pt and last.pt configurations differ")
@@ -210,8 +247,9 @@ def publish_checkpoints(run, state, improved):
 
 
 def restore_training(state, model, optimizer):
-    if state.get("version") != VERSION:
-        raise ValueError("Cannot resume a non-displacement-v1 checkpoint")
+    config = checkpoint_config(state)
+    if any(config[k] != model.config[k] for k in MODEL_KEYS):
+        raise ValueError("Cannot resume: model architecture differs from checkpoint")
     model.load_state_dict(state["model"])
     optimizer.load_state_dict(state["optimizer"])
     torch.set_rng_state(state["torch_rng"])
@@ -242,6 +280,8 @@ def parser():
     p.add_argument("--width", type=int, default=128)
     p.add_argument("--heads", type=int, default=4)
     p.add_argument("--layers", type=int, default=2)
+    p.add_argument("--controller-features", type=int, choices=(3, 7), default=None,
+                   help="Fresh runs default to 7; resume inherits checkpoint (legacy: 3)")
     p.add_argument("--chamfer-chunk", type=int, default=512)
     p.add_argument("--max-train-batches", type=int, default=0, help="0 means full epoch")
     p.add_argument("--max-val-batches", type=int, default=0, help="0 means full validation")
@@ -268,6 +308,12 @@ def main(argv=None):
         p.error("Real training requires a server CUDA allocation; CPU unit tests are separate")
     torch.manual_seed(args.seed)
     random.seed(args.seed)
+    state = None
+    if args.resume:
+        if Path(args.resume).name != "last.pt":
+            p.error("Resume from last.pt to preserve the completed-epoch history; best.pt is for evaluation")
+        state = read_checkpoint(args.resume)
+    args.controller_features = resolve_controller_features(args.controller_features, state)
     root = Path(args.root).resolve()
     depth_root = Path(args.depth_root).resolve() if args.depth_root else root.parent / "touch4d-depth-v1"
     config = vars(args).copy()
@@ -276,16 +322,14 @@ def main(argv=None):
     config.update(root=str(root), depth_root=str(depth_root),
                   depth_cameras=choose_cameras(args.scene, depth_root, args.depth_cameras))
     processor = DataProcessor(args.scene)
-    model = PositionPredictor(args.width, args.heads, args.layers).to(device)
+    model = PositionPredictor(args.width, args.heads, args.layers,
+                              controller_features=args.controller_features).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     renderer = DepthRenderer()
     # Fail before creating a run when the renderer dependency is absent.
     import gsplat
     start, best, history = 0, float("inf"), []
     if args.resume:
-        if Path(args.resume).name != "last.pt":
-            p.error("Resume from last.pt to preserve the completed-epoch history; best.pt is for evaluation")
-        state = read_checkpoint(args.resume)
         changes = [k for k in config if k != "epochs" and config[k] != state["config"].get(k)]
         if changes:
             raise ValueError(f"Resume options differ from checkpoint: {changes}")

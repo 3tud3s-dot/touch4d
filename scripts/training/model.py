@@ -34,16 +34,19 @@ class PositionPredictor(nn.Module):
     provide the spatial context; no hard pixel-to-controller assignment is made.
     """
 
-    def __init__(self, width=128, heads=4, layers=2):
+    def __init__(self, width=128, heads=4, layers=2, controller_features=7):
         super().__init__()
         if min(width, heads, layers) < 1 or width % heads:
             raise ValueError("Positive dimensions required; width must be divisible by heads")
-        self.config = dict(width=width, heads=heads, layers=layers)
+        if type(controller_features) is not int or controller_features not in (3, 7):
+            raise ValueError("controller_features must be 3 (legacy) or 7 (relative motion)")
+        self.config = dict(width=width, heads=heads, layers=layers,
+                           controller_features=controller_features)
         def mlp(n):
             return nn.Sequential(nn.Linear(n, width), nn.GELU(), nn.Linear(width, width))
         self.gs_encoder = mlp(14)
         self.state_encoder = mlp(13)
-        self.controller_encoder = mlp(3)
+        self.controller_encoder = mlp(controller_features)
         self.tactile_encoder = mlp(384 * 3 + 1)
         # Each controller ID encodes hand, finger and within-finger point index.
         self.token_identity = nn.Embedding(66, width)
@@ -56,10 +59,26 @@ class PositionPredictor(nn.Module):
         nn.init.zeros_(self.position_head[-1].weight)
         nn.init.zeros_(self.position_head[-1].bias)
 
+    def controller_inputs(self, x):
+        """Same-frame XYZ, optional displacement from t0 and endpoint validity.
+
+        Sanitize operands before subtraction. A missing reference disables only
+        the displacement; current valid coordinates still produce a token.
+        Coordinates are already normalized, so differences need no rescaling.
+        """
+        valid = x["controller_mask"]
+        coordinates = masked(x["controller_points"], valid)
+        if self.config["controller_features"] == 3:
+            return coordinates
+        endpoints = valid & valid[:, :1]
+        displacement = masked(coordinates - coordinates[:, :1], endpoints)
+        return torch.cat((coordinates, displacement,
+                          endpoints.unsqueeze(-1).to(coordinates.dtype)), dim=-1)
+
     def encode_conditions(self, x):
         b = x["gs_xyz"].shape[0]
         state = self.state_encoder(masked(x["action_state"], x["action_valid"]))
-        controllers = self.controller_encoder(masked(x["controller_points"], x["controller_mask"]))
+        controllers = self.controller_encoder(self.controller_inputs(x))
         controllers = controllers.reshape(b, 5, 60, -1)
         valid = x["valid_mask"]
         fingers_valid = valid.flatten(-2).any(-1)

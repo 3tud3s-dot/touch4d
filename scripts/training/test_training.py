@@ -21,9 +21,11 @@ from ..data_process import DataProcessor
 from ..data_process.test_data_process import make_batch, add_depth_targets
 from .losses import chamfer_samples, depth_samples, nearest_distances, objective
 from .model import PositionPredictor
+from .evaluate import load_model
 from .rendering import DepthRenderer, assemble_gaussians
 from .train import (EpisodeMetrics, checkpoint_state, evaluate_loader, restore_training,
-                    train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser)
+                    train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser,
+                    VERSION, LEGACY_VERSION, resolve_controller_features)
 from .visualize import png_bytes, viewer_html, main as visualize_main
 
 
@@ -60,6 +62,131 @@ class TrainingTests(unittest.TestCase):
         # Exercise the learned path; a zero head would make causality and
         # invariance tests pass even if the condition path were broken.
         torch.nn.init.normal_(self.model.position_head[-1].weight, std=.02)
+
+    def test_relative_controller_features_masks_and_scale(self):
+        coordinates = torch.arange(5, dtype=torch.float32)[None, :, None, None, None].expand(1, 5, 2, 30, 3).clone() * .125
+        valid = torch.ones(1, 5, 2, 30, dtype=torch.bool)
+        valid[:, 0, 0, 0] = False  # Missing reference, later coordinates remain usable.
+        valid[:, 2, 0, 1] = False  # Missing current sample.
+        valid[:, :, 1] = False    # Entire missing hand.
+        coordinates[~valid] = float('nan')
+        x = dict(controller_points=coordinates, controller_mask=valid)
+        u = self.model.controller_inputs(x)
+        self.assertEqual(tuple(u.shape), (1, 5, 2, 30, 7))
+        self.assertTrue(torch.isfinite(u).all())
+        torch.testing.assert_close(u[0, 4, 0, 2], torch.tensor([.5, .5, .5, .5, .5, .5, 1.]))
+        torch.testing.assert_close(u[0, 4, 0, 0], torch.tensor([.5, .5, .5, 0., 0., 0., 0.]))
+        self.assertTrue(torch.all(u[~valid] == 0))
+        self.assertTrue(torch.all(u[:, 0, ..., 3:6] == 0))
+        torch.testing.assert_close(u[:, 0, ..., 6], valid[:, 0].float())
+        # A common coordinate offset cancels; do not scale the difference twice.
+        moved = dict(x, controller_points=coordinates + 7.)
+        torch.testing.assert_close(self.model.controller_inputs(moved)[..., 3:], u[..., 3:], atol=0, rtol=0)
+        legacy = PositionPredictor(32, 4, 2, controller_features=3)
+        torch.testing.assert_close(legacy.controller_inputs(x), u[..., :3], atol=0, rtol=0)
+        full = copy.deepcopy(self.batch['inputs'])
+        full['controller_mask'][:, 0, 1, 0] = False
+        full['controller_mask'][:, 1, 1, 0] = True
+        full['controller_points'][:, 0, 1, 0] = float('nan')
+        _, token_mask = self.model.encode_conditions(full)
+        self.assertTrue(token_mask[:, 1, 2 + 30].all())
+        self.assertTrue(torch.all(self.model.controller_inputs(full)[:, 1, 1, 0, 3:] == 0))
+
+    def test_relative_features_static_motion_gradients_and_first_horizon(self):
+        self.activate_head()
+        x = copy.deepcopy(self.batch['inputs'])
+        x['controller_mask'].fill_(True)
+        x['action_valid'].fill_(True)
+        x['controller_points'] = x['controller_points'][:, :1].expand_as(x['controller_points']).clone()
+        x['controller_points'] += torch.arange(5)[None, :, None, None, None] * .1
+        before = self.model(x)
+        frozen = copy.deepcopy(x)
+        for key in ('controller_points', 'action_state'):
+            frozen[key] = x[key][:, :1].expand_as(x[key]).clone()
+        u = self.model.controller_inputs(frozen)
+        self.assertTrue(torch.all(u[..., 3:6] == 0))
+        self.assertTrue(torch.all(u[..., 6] == 1))
+        torch.testing.assert_close(self.model(frozen)[:, 0], before[:, 0], atol=0, rtol=0)
+        before.square().sum().backward()
+        gradient = self.model.controller_encoder[0].weight.grad
+        self.assertTrue(torch.isfinite(gradient).all())
+        self.assertGreater(gradient[:, 3:6].abs().sum().item(), 0.)
+        legacy = PositionPredictor(32, 4, 2, controller_features=3)
+        count = lambda m: sum(p.numel() for p in m.parameters())
+        self.assertEqual(count(self.model) - count(legacy), 4 * 32)
+
+    def test_checkpoint_old_and_new_loading_and_resume(self):
+        for features, version in ((3, LEGACY_VERSION), (3, VERSION), (7, VERSION)):
+            with self.subTest(features=features, version=version):
+                model = PositionPredictor(32, 4, 2, controller_features=features)
+                torch.nn.init.normal_(model.position_head[-1].weight, std=.02)
+                optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+                # Populate optimizer moments using synthetic, in-memory data.
+                def step(m, opt):
+                    opt.zero_grad(set_to_none=True)
+                    m(self.batch['inputs']).square().sum().backward()
+                    opt.step()
+                step(model, optimizer)
+                state = copy.deepcopy(checkpoint_state(model, optimizer, self.processor, config(), 2, .5, []))
+                state['version'] = version
+                if version == LEGACY_VERSION:
+                    del state['config']['controller_features']
+                with patch('scripts.training.train.torch.load', return_value=state):
+                    loaded, _, cfg = load_model('memory/checkpoint.pt', 'cpu')
+                    canonical = read_checkpoint('memory/checkpoint.pt')
+                self.assertEqual(cfg['controller_features'], features)
+                self.assertEqual('controller_features' in state['config'], version != LEGACY_VERSION)
+                torch.testing.assert_close(loaded(self.batch['inputs']), model(self.batch['inputs']), atol=0, rtol=0)
+                self.assertEqual(resolve_controller_features(None, state), features)
+                self.assertEqual(resolve_controller_features(features, state), features)
+                with self.assertRaisesRegex(ValueError, 'different controller_features'):
+                    resolve_controller_features(10 - features, state)
+                other_opt = torch.optim.AdamW(loaded.parameters(), lr=1e-3)
+                restore_training(state, loaded, other_opt)
+                step(model, optimizer)
+                step(loaded, other_opt)
+                for a, b in zip(model.parameters(), loaded.parameters()):
+                    torch.testing.assert_close(a, b, atol=0, rtol=0)
+                # An old best may coexist with a newly saved last in the same 3D run.
+                resaved = checkpoint_state(loaded, other_opt, self.processor, cfg, 3, .5, [])
+                self.assertEqual(resaved['version'], VERSION)
+                with patch('pathlib.Path.is_file', return_value=True), \
+                     patch('scripts.training.train.read_checkpoint', return_value=canonical):
+                    self.assertEqual(recover_best_score(state, 'memory'), .5)
+                    self.assertEqual(recover_best_score(resaved, 'memory'), .5)
+        args = parser().parse_args(['--scene', '001-rope'])
+        self.assertEqual(resolve_controller_features(args.controller_features), 7)
+        self.assertEqual(resolve_controller_features(3), 3)
+
+    def test_checkpoint_feature_mismatches_fail_before_restore(self):
+        optimizer = torch.optim.AdamW(self.model.parameters())
+        state = checkpoint_state(self.model, optimizer, self.processor, config(), 0, .4, [])
+        for mutation in ('missing', 'bad_mode', 'wrong_shape', 'legacy_seven'):
+            broken = copy.deepcopy(state)
+            if mutation == 'missing': del broken['config']['controller_features']
+            elif mutation == 'bad_mode': broken['config']['controller_features'] = 4
+            elif mutation == 'wrong_shape': broken['model']['controller_encoder.0.weight'] = torch.zeros(32, 3)
+            else: broken['version'] = LEGACY_VERSION
+            with self.subTest(mutation=mutation), patch('scripts.training.train.torch.load', return_value=broken):
+                with self.assertRaises(ValueError): read_checkpoint('memory/broken.pt')
+            with patch.object(self.model, 'load_state_dict') as load, patch.object(optimizer, 'load_state_dict') as opt_load:
+                with self.assertRaises(ValueError): restore_training(broken, self.model, optimizer)
+                load.assert_not_called()
+                opt_load.assert_not_called()
+        wrong = PositionPredictor(32, 4, 2, controller_features=3)
+        with patch.object(wrong, 'load_state_dict') as load, patch.object(optimizer, 'load_state_dict') as opt_load:
+            with self.assertRaisesRegex(ValueError, 'architecture differs'):
+                restore_training(state, wrong, optimizer)
+            load.assert_not_called()
+            opt_load.assert_not_called()
+        with self.assertRaisesRegex(ValueError, 'disagrees with model'):
+            checkpoint_state(self.model, optimizer, self.processor, dict(config(), controller_features=3), 0, .4, [])
+        other = copy.deepcopy(state)
+        other['config']['controller_features'] = 3
+        with patch('pathlib.Path.is_file', return_value=True), \
+             patch('scripts.training.train.read_checkpoint', return_value=other):
+            with self.assertRaisesRegex(ValueError, 'configurations differ'):
+                recover_best_score(state, 'memory')
 
     def test_zero_initialized_displacement_and_initial_reference(self):
         x = self.batch['inputs']
@@ -103,7 +230,10 @@ class TrainingTests(unittest.TestCase):
             other[field][~x['gs_mask']] = float('nan')
         for field, valid in [('action_state', 'action_valid'), ('controller_points', 'controller_mask'), ('tactile', 'valid_mask')]:
             other[field][~x[valid]] = float('nan')
-        torch.testing.assert_close(baseline, self.model(other), atol=0, rtol=0)
+        prediction = self.model(other)
+        torch.testing.assert_close(baseline, prediction, atol=0, rtol=0)
+        prediction.square().sum().backward()
+        self.assertTrue(all(p.grad is None or torch.isfinite(p.grad).all() for p in self.model.parameters()))
 
     def test_all_missing_conditions_and_valid_zero_tactile(self):
         self.activate_head()
@@ -252,7 +382,7 @@ class TrainingTests(unittest.TestCase):
                 read_checkpoint('memory/old.pt')
         optimizer=torch.optim.AdamW(self.model.parameters())
         with patch.object(self.model,'load_state_dict') as load:
-            with self.assertRaisesRegex(ValueError,'non-displacement-v1'):
+            with self.assertRaisesRegex(ValueError,'absolute-position V0'):
                 restore_training(old,self.model,optimizer)
             load.assert_not_called()
 
