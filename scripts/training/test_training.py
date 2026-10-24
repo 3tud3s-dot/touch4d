@@ -5,6 +5,7 @@ TOUCH4D_TEST_CUDA_RENDER=1 python -B -m unittest scripts.training.test_training
 """
 
 import copy
+import math
 from io import BytesIO
 from contextlib import redirect_stdout
 from io import StringIO
@@ -20,13 +21,13 @@ import torch
 from ..data_process import DataProcessor
 from ..data_process.test_data_process import make_batch, add_depth_targets
 from .losses import chamfer_samples, depth_samples, nearest_distances, objective
-from .model import PositionPredictor
+from .model import PositionPredictor, rotation_vector_to_quaternion, quaternion_multiply
 from .evaluate import load_model
-from .rendering import DepthRenderer, assemble_gaussians
-from .train import (EpisodeMetrics, checkpoint_state, evaluate_loader, restore_training,
+from .rendering import DepthRenderer, GaussianRenderer, assemble_gaussians
+from .train import (EpisodeMetrics, GaussianMetrics, checkpoint_state, evaluate_loader, restore_training,
                     train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser,
-                    VERSION, LEGACY_VERSION, INDEPENDENT_VERSION,
-                    resolve_controller_features, resolve_prediction_mode)
+                    VERSION, LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
+                    resolve_controller_features, resolve_prediction_mode, resolve_output_mode)
 from .visualize import png_bytes, viewer_html, main as visualize_main
 
 
@@ -40,6 +41,27 @@ def fake_rasterizer(**args):
     value = args['means'][:, 2].mean()
     depth = value.expand(1, args['height'], args['width'], 1)
     return depth, torch.ones_like(depth), {}
+
+
+def fake_gaussian_rasterizer(**args):
+    """Analytic geometry-sensitive image; real gsplat is tested separately."""
+    q = args['quats']
+    q = q / torch.linalg.vector_norm(q, dim=-1, keepdim=True)
+    w, x, y, z = q.unbind(-1)
+    rotation = torch.stack((
+        1-2*(y*y+z*z), 2*(x*y-z*w), 2*(x*z+y*w),
+        2*(x*y+z*w), 1-2*(x*x+z*z), 2*(y*z-x*w),
+        2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)), -1).reshape(-1,3,3)
+    covariance = (rotation * args['scales'].square()[:,None,:]) @ rotation.transpose(-1,-2)
+    shape = covariance[:,0,1] + covariance[:,0,2] + covariance[:,1,2]
+    geometry = args['means'].mean() + args['scales'].mean() + shape.mean()
+    alpha_value = torch.sigmoid(geometry)
+    rgb_value = torch.sigmoid(geometry + torch.arange(3, device=q.device)*.1)
+    h, width = args['height'], args['width']
+    rgb = rgb_value.expand(1,h,width,3)
+    depth = args['means'][:,2].mean().expand(1,h,width,1)
+    alpha = alpha_value.expand(1,h,width,1)
+    return torch.cat((rgb,depth),-1), alpha, {}
 
 
 class TrainingTests(unittest.TestCase):
@@ -119,6 +141,8 @@ class TrainingTests(unittest.TestCase):
     def test_checkpoint_old_and_new_loading_and_resume(self):
         cases = [(3, LEGACY_VERSION, 'independent'),
                  (3, INDEPENDENT_VERSION, 'independent'), (7, INDEPENDENT_VERSION, 'independent'),
+                 (3, DISPLACEMENT_VERSION, 'independent'), (7, DISPLACEMENT_VERSION, 'independent'),
+                 (3, DISPLACEMENT_VERSION, 'autoregressive'), (7, DISPLACEMENT_VERSION, 'autoregressive'),
                  (3, VERSION, 'independent'), (7, VERSION, 'independent'),
                  (3, VERSION, 'autoregressive'), (7, VERSION, 'autoregressive')]
         for features, version, mode in cases:
@@ -136,15 +160,21 @@ class TrainingTests(unittest.TestCase):
                 state['version'] = version
                 if version == LEGACY_VERSION:
                     del state['config']['controller_features']
-                if version != VERSION:
+                if version in (LEGACY_VERSION, INDEPENDENT_VERSION):
                     del state['config']['prediction_mode']
+                if version != VERSION:
+                    del state['config']['output_mode']
                 with patch('scripts.training.train.torch.load', return_value=state):
                     loaded, _, cfg = load_model('memory/checkpoint.pt', 'cpu')
                     canonical = read_checkpoint('memory/checkpoint.pt')
                 self.assertEqual(cfg['controller_features'], features)
                 self.assertEqual('controller_features' in state['config'], version != LEGACY_VERSION)
-                self.assertEqual('prediction_mode' in state['config'], version == VERSION)
+                self.assertEqual('prediction_mode' in state['config'], version in (DISPLACEMENT_VERSION, VERSION))
                 self.assertEqual(cfg['prediction_mode'], mode)
+                self.assertEqual(cfg['output_mode'], 'position')
+                self.assertEqual(resolve_output_mode(None, state), 'position')
+                with self.assertRaisesRegex(ValueError, 'different output_mode'):
+                    resolve_output_mode('gs_geometry', state)
                 torch.testing.assert_close(loaded(self.batch['inputs']), model(self.batch['inputs']), atol=0, rtol=0)
                 self.assertEqual(resolve_controller_features(None, state), features)
                 self.assertEqual(resolve_controller_features(features, state), features)
@@ -172,6 +202,7 @@ class TrainingTests(unittest.TestCase):
         self.assertEqual(resolve_controller_features(3), 3)
         self.assertEqual(resolve_prediction_mode(args.prediction_mode), 'autoregressive')
         self.assertEqual(resolve_prediction_mode('independent'), 'independent')
+        self.assertEqual(resolve_output_mode(args.output_mode), 'gs_geometry')
 
     def test_checkpoint_feature_mismatches_fail_before_restore(self):
         optimizer = torch.optim.AdamW(self.model.parameters())
@@ -588,6 +619,367 @@ class TrainingTests(unittest.TestCase):
         def forbidden(*args):raise AssertionError('Renderer must not be called')
         with self.assertRaisesRegex(FloatingPointError,'predicted position'):
             objective(pred,self.batch,self.processor,forbidden)
+
+    def geometry_fixture(self):
+        model = PositionPredictor(32,4,2,output_mode='gs_geometry')
+        batch = copy.deepcopy(self.batch)
+        # Unequal principal scales make orientation observable.
+        keep = batch['inputs']['gs_mask']
+        batch['inputs']['gs_attr'][...,:3] = torch.tensor([-1.5,-2.,-2.5])
+        batch['inputs']['gs_attr'][~keep] = 0
+        if 'target_attr' not in batch['targets']:
+            batch['targets']['target_attr'] = []
+            for xyz, valid in zip(batch['targets']['target_xyz'], batch['targets']['target_mask']):
+                attr = torch.zeros(*xyz.shape[:-1],11)
+                attr[...,:3] = torch.tensor([-1.5,-2.,-2.5])
+                attr[...,3] = 1
+                attr[~valid] = 0
+                batch['targets']['target_attr'].append(attr)
+        return model, batch
+
+    def activate_geometry_heads(self, model):
+        for head in (model.position_head, model.scale_head, model.rotation_head):
+            torch.nn.init.normal_(head[-1].weight,std=.02)
+
+    def test_rotation_vector_zero_derivative_and_world_left_composition(self):
+        zero = torch.zeros(3,requires_grad=True)
+        q = rotation_vector_to_quaternion(zero)
+        torch.testing.assert_close(q,torch.tensor([1.,0,0,0]),atol=0,rtol=0)
+        jacobian = torch.autograd.functional.jacobian(rotation_vector_to_quaternion,zero)
+        self.assertTrue(torch.isfinite(jacobian).all())
+        torch.testing.assert_close(jacobian,torch.cat((torch.zeros(1,3),.5*torch.eye(3))),atol=1e-7,rtol=0)
+        qx = rotation_vector_to_quaternion(torch.tensor([math.pi/2,0.,0.]))
+        qz = rotation_vector_to_quaternion(torch.tensor([0.,0.,math.pi/2]))
+        torch.testing.assert_close(quaternion_multiply(qz,qx),torch.full((4,),.5),atol=1e-6,rtol=0)
+        # Opposite order gives a different rotation; detect an accidental right product.
+        self.assertFalse(torch.allclose(quaternion_multiply(qx,qz),torch.full((4,),.5)))
+
+    def test_geometry_zero_identity_and_increment_accumulation(self):
+        model,batch = self.geometry_fixture()
+        x=batch['inputs']; keep=x['gs_mask'][:,None].expand(-1,5,-1)
+        initial = {'xyz':x['gs_xyz'],'log_scales':x['gs_attr'][...,:3],
+                   'quaternions':x['gs_attr'][...,3:7], 'opacity_logits':x['gs_attr'][...,7:8],
+                   'sh_dc':x['gs_attr'][...,8:11]}
+        output=model(x)
+        for head in (model.position_head,model.scale_head,model.rotation_head):
+            self.assertTrue(torch.all(head[-1].weight==0))
+            self.assertTrue(torch.all(head[-1].bias==0))
+        for key,value in initial.items():
+            torch.testing.assert_close(output[key],value[:,None].expand_as(output[key]),atol=0,rtol=0)
+        with torch.no_grad():
+            model.position_head[-1].bias.fill_(.25)
+            model.scale_head[-1].bias.copy_(torch.tensor([.1,-.1,.2]))
+            model.rotation_head[-1].bias.copy_(torch.tensor([0.,0.,math.pi/12]))
+        output=model(x)
+        steps=torch.arange(1,6)[None,:,None,None]
+        torch.testing.assert_close(output['xyz'][keep],(initial['xyz'][:,None]+.25*steps)[keep])
+        expected_scale=initial['log_scales'][:,None]+steps*torch.tensor([.1,-.1,.2])
+        torch.testing.assert_close(output['log_scales'][keep],expected_scale[keep])
+        delta=rotation_vector_to_quaternion(torch.tensor([0.,0.,math.pi/12]))
+        expected=initial['quaternions']
+        for k in range(5):
+            expected=quaternion_multiply(delta.expand_as(expected),expected)
+            torch.testing.assert_close(output['quaternions'][:,k][x['gs_mask']],expected[x['gs_mask']],atol=1e-6,rtol=0)
+        for key in ('opacity_logits','sh_dc'):
+            torch.testing.assert_close(output[key],initial[key][:,None].expand_as(output[key]),atol=0,rtol=0)
+        for value in output.values():
+            self.assertTrue(torch.all(value[~keep]==0))
+        # Changing orientation does not implicitly rotate the Gaussian center.
+        with self.assertRaises(ValueError):
+            PositionPredictor(32,4,2,output_mode='gs_geometry',prediction_mode='independent')
+
+    def test_geometry_reencodes_updated_attributes_and_full_cross_step_gradients(self):
+        model,batch=self.geometry_fixture();self.activate_geometry_heads(model)
+        encoded=[];increments={key:[] for key in ('xyz','scale','rotation')}
+        hooks=[model.gs_encoder.register_forward_pre_hook(lambda _,args:encoded.append(args[0]))]
+        for name,head in zip(increments,(model.position_head,model.scale_head,model.rotation_head)):
+            hooks.append(head.register_forward_hook(lambda _,args,out,key=name:increments[key].append(out)))
+        try:out=model(batch['inputs'])
+        finally:
+            for hook in hooks:hook.remove()
+        keep=batch['inputs']['gs_mask']
+        self.assertEqual(len(encoded),5)
+        for k in range(1,5):
+            torch.testing.assert_close(encoded[k][...,:3],out['xyz'][:,k-1],atol=0,rtol=0)
+            torch.testing.assert_close(encoded[k][...,3:6],out['log_scales'][:,k-1],atol=0,rtol=0)
+            torch.testing.assert_close(encoded[k][...,6:10],out['quaternions'][:,k-1],atol=0,rtol=0)
+        # Last-step supervision must reach every earlier geometric update.
+        loss=out['xyz'][:,-1][keep].square().sum()+out['log_scales'][:,-1][keep].square().sum()
+        loss+=(out['quaternions'][:,-1][keep]*torch.tensor([.2,.3,.5,.7])).sum()
+        nodes=[v for values in increments.values() for v in values]+encoded[1:]
+        grads=torch.autograd.grad(loss,nodes,retain_graph=True,allow_unused=True)
+        for gradient in grads:
+            self.assertIsNotNone(gradient)
+            self.assertTrue(torch.isfinite(gradient).all())
+            self.assertGreater(gradient.abs().sum().item(),0.)
+        loss.backward()
+        self.assertTrue(all(p.grad is None or torch.isfinite(p.grad).all() for p in model.parameters()))
+
+    def test_geometry_causality_padding_and_point_order(self):
+        model,batch=self.geometry_fixture();self.activate_geometry_heads(model)
+        x=batch['inputs'];base=model(x)
+        for k in range(4):
+            other=copy.deepcopy(x)
+            for key in ('action_state','controller_points','tactile'):
+                other[key][:,k+1:]+=torch.randn_like(other[key][:,k+1:])*20
+            for key in ('action_valid','controller_mask','valid_mask','tactile_spatial_mask'):
+                other[key][:,k+1:]=~other[key][:,k+1:]
+            other['tactile_age_us'][:,k+1:]+=10000
+            result=model(other)
+            for key in base:
+                torch.testing.assert_close(result[key][:,:k+1],base[key][:,:k+1],atol=0,rtol=0)
+        poison=copy.deepcopy(x)
+        for key in ('gs_xyz','gs_attr'):poison[key][~x['gs_mask']]=float('nan')
+        for key,mask in (('action_state','action_valid'),('controller_points','controller_mask'),('tactile','valid_mask')):
+            poison[key][~x[mask]]=float('nan')
+        result=model(poison)
+        for key in base:torch.testing.assert_close(result[key],base[key],atol=0,rtol=0)
+        result['quaternions'].sum().backward()
+        self.assertTrue(all(p.grad is None or torch.isfinite(p.grad).all() for p in model.parameters()))
+        order=torch.arange(x['gs_xyz'].shape[1]-1,-1,-1)
+        shuffled=copy.deepcopy(x)
+        for key in ('gs_xyz','gs_attr','gs_mask'):shuffled[key]=shuffled[key][:,order]
+        for key,value in model(shuffled).items():
+            torch.testing.assert_close(value,base[key][:,:,order])
+
+    def test_geometry_renderer_live_attributes_target_stopgrad_and_camera(self):
+        model,batch=self.geometry_fixture()
+        out={key:value.detach().requires_grad_() for key,value in model(batch['inputs']).items()}
+        for value in batch['targets']['target_attr']:value.requires_grad_()
+        for value in batch['targets']['target_xyz']:value.requires_grad_()
+        calls=[]
+        def record(**kwargs):
+            calls.append((kwargs,torch.is_grad_enabled()))
+            return fake_gaussian_rasterizer(**kwargs)
+        renderer=GaussianRenderer(record)
+        rendered=renderer(out,batch,self.processor)
+        first=calls[0][0];keep=batch['inputs']['gs_mask'][0]
+        self.assertEqual(first['render_mode'],'RGB+ED')
+        torch.testing.assert_close(first['backgrounds'],torch.zeros(1,3),atol=0,rtol=0)
+        expected_colors=(batch['inputs']['gs_attr'][0,keep,8:11]*.28209479177387814+.5).clamp(0,1)
+        torch.testing.assert_close(first['colors'],expected_colors,atol=0,rtol=0)
+        torch.testing.assert_close(first['viewmats'][0],torch.linalg.inv(batch['targets']['camera_to_world'][0,0]))
+        torch.testing.assert_close(first['scales'],out['log_scales'][0,0,keep].exp()*self.processor.state_dict()['scale'])
+        self.assertEqual(tuple(rendered['rgb'].shape),(*batch['targets']['target_depth'].shape,3))
+        self.assertEqual(tuple(rendered['alpha'].shape),tuple(batch['targets']['target_depth'].shape))
+        self.assertEqual(len(first['means']),int(keep.sum()))
+        target=renderer.render_targets(batch,self.processor)
+        self.assertTrue(all(not value.requires_grad for value in target.values()))
+        self.assertTrue(any(not enabled for _,enabled in calls))
+        (rendered['rgb'].sum()+rendered['alpha'].sum()).backward()
+        for key in ('xyz','log_scales','quaternions'):
+            self.assertTrue(torch.isfinite(out[key].grad).all())
+            self.assertGreater(out[key].grad.abs().sum().item(),0.)
+            self.assertTrue(torch.all(out[key].grad[~batch['inputs']['gs_mask'][:,None].expand(-1,5,-1)]==0))
+        self.assertTrue(all(value.grad is None for value in batch['targets']['target_attr']))
+        self.assertTrue(all(value.grad is None for value in batch['targets']['target_xyz']))
+        # Recorded full-resolution calibration cannot silently render a batch
+        # at another size without correspondingly changing the intrinsics.
+        full_resolution=GaussianRenderer(fake_gaussian_rasterizer,image_size=(720,1280))
+        with self.assertRaisesRegex(ValueError,'resolution'):
+            full_resolution(out,batch,self.processor)
+        with self.assertRaisesRegex(ValueError,'resolution'):
+            full_resolution.render_targets(batch,self.processor)
+
+    def test_geometry_objective_uses_rgb_alpha_gradients_with_depth_disabled(self):
+        model,batch=self.geometry_fixture();self.activate_geometry_heads(model)
+        prediction=model(batch['inputs'])
+        loss,parts=objective(prediction,batch,self.processor,GaussianRenderer(fake_gaussian_rasterizer),
+                             depth_weight=0.,chunk=2,rgb_weight=1.,alpha_weight=.1,scale_weight=.01)
+        expected=(parts['rgb']+.1*parts['alpha']+.01*parts['scale_regularization'])[parts['render_available']].mean()
+        torch.testing.assert_close(loss,expected)
+        self.assertFalse(parts['geometry'].requires_grad)
+        self.assertFalse(parts['depth_m'].requires_grad)
+        self.assertTrue(parts['rgb'].requires_grad)
+        self.assertTrue(parts['alpha'].requires_grad)
+        loss.backward()
+        for head in (model.position_head,model.scale_head,model.rotation_head):
+            grad=head[-1].weight.grad
+            self.assertTrue(torch.isfinite(grad).all())
+            self.assertGreater(grad.abs().sum().item(),0.)
+
+    def test_geometry_render_mask_equal_averaging_and_empty_samples(self):
+        model,batch=self.geometry_fixture()
+        pred=model(batch['inputs'])
+        pred['log_scales']=pred['log_scales']+.2
+        valid=batch['targets']['target_depth_valid']
+        valid.zero_()
+        # Pixel counts differ by view and time. Each valid view/time is equal,
+        # so the expected RGB average is mean(mean(2,10),20)=13, not 8.5.
+        pixels=[(0,0,0,0,0),(0,0,0,0,1),(0,0,1,0,0),(0,1,0,0,0)]
+        rgb=torch.zeros(*valid.shape,3,requires_grad=True)
+        alpha=torch.full(valid.shape,.25,requires_grad=True)
+        with torch.no_grad():
+            for index,value in zip(pixels,(1.,3.,10.,20.)):
+                valid[index]=True;rgb[index]=value
+        target_rgb=torch.zeros_like(rgb);target_alpha=torch.zeros_like(alpha)
+        target_rgb[~valid]=99.;target_alpha[~valid]=1.
+        class Renderer:
+            def __call__(self,*_):return dict(rgb=rgb,alpha=alpha,depth=torch.zeros_like(alpha))
+            def render_targets(self,*_):return dict(rgb=target_rgb,alpha=target_alpha,depth=torch.zeros_like(alpha))
+        loss,parts=objective(pred,batch,self.processor,Renderer(),chunk=2)
+        self.assertEqual(parts['render_available'].tolist(),[True,False])
+        torch.testing.assert_close(parts['rgb'],torch.tensor([13.,0.]))
+        torch.testing.assert_close(parts['rgb_by_horizon'][0],torch.tensor([6.,20.,0.,0.,0.]))
+        self.assertEqual(parts['render_time_available'][0].tolist(),[True,True,False,False,False])
+        self.assertAlmostEqual(loss.item(),13.+.1*.25+.01*.04,places=5)
+        loss.backward()
+        self.assertTrue(torch.isfinite(rgb.grad).all())
+        self.assertTrue(torch.isfinite(alpha.grad).all())
+        self.assertEqual(rgb.grad[~valid].abs().sum().item(),0.)
+        self.assertEqual(alpha.grad[~valid].abs().sum().item(),0.)
+        self.assertGreater(rgb.grad[valid].abs().sum().item(),0.)
+        # Empty samples also exclude scale regularization from the objective.
+        valid.zero_();rgb.grad=None;alpha.grad=None
+        empty,parts=objective(model(batch['inputs']),batch,self.processor,Renderer(),chunk=2)
+        self.assertEqual(empty.item(),0.)
+        self.assertFalse(parts['render_available'].any())
+        empty.backward()
+        self.assertTrue(rgb.grad is None or torch.all(rgb.grad==0))
+        self.assertTrue(alpha.grad is None or torch.all(alpha.grad==0))
+
+    def test_geometry_all_empty_batch_skips_optimizer_and_validation_rejects(self):
+        model,_=self.geometry_fixture()
+        raw=copy.deepcopy(self.raw)
+        raw['targets']['target_depth'].zero_()
+        raw['targets']['target_depth_valid'].zero_()
+        cfg=dict(config(),**model.config,rgb_weight=1.,alpha_weight=.1,scale_weight=.01)
+        optimizer=torch.optim.AdamW(model.parameters(),lr=1e-3,weight_decay=.1)
+        before={key:value.clone() for key,value in model.state_dict().items()}
+        # A training epoch with no observations must not silently be considered
+        # successful; crucially there must be no AdamW decay-only update either.
+        with patch.object(optimizer,'step',wraps=optimizer.step) as step:
+            with self.assertRaises(ValueError):
+                train_epoch(model,optimizer,[raw],self.processor,GaussianRenderer(fake_gaussian_rasterizer),cfg,'cpu')
+            step.assert_not_called()
+        for key,value in model.state_dict().items():
+            torch.testing.assert_close(value,before[key],atol=0,rtol=0)
+        with self.assertRaises(ValueError):
+            evaluate_loader(model,[raw],self.processor,GaussianRenderer(fake_gaussian_rasterizer),cfg,'cpu')
+
+    def test_geometry_visualization_exports_properties_and_real_renders(self):
+        model,_=self.geometry_fixture();self.activate_geometry_heads(model)
+        cfg=dict(config(),**model.config,rgb_weight=1.,alpha_weight=.1,scale_weight=.01)
+        sample=object();captured={};written={}
+        class Dataset:
+            windows=[(3,0)]
+            def __getitem__(self,index):return sample
+        def capture(path,**arrays):captured.update(arrays)
+        def capture_text(path,text,**kwargs):written[str(path)]=text
+        fake=GaussianRenderer(fake_gaussian_rasterizer)
+        with patch('scripts.training.visualize.load_model',return_value=(model,self.processor,cfg)), \
+             patch('scripts.training.visualize.build_loader',return_value=SimpleNamespace(dataset=Dataset())), \
+             patch('scripts.training.visualize.collate_fn',return_value=self.raw), \
+             patch('scripts.training.visualize.GaussianRenderer',return_value=fake), \
+             patch('scripts.training.visualize.np.savez_compressed',side_effect=capture), \
+             patch('pathlib.Path.mkdir'),patch('pathlib.Path.write_bytes'), \
+             patch('pathlib.Path.write_text',autospec=True,side_effect=capture_text), \
+             redirect_stdout(StringIO()):
+            visualize_main(['--checkpoint','memory/gs.pt','--episode','3','--start','0','--device','cpu'])
+        count=int(self.raw['inputs']['gs_mask'][0].sum())
+        for key,dim in (('xyz',3),('log_scales',3),('quaternions',4),('opacity_logits',1),('sh_dc',3)):
+            self.assertEqual(captured['predicted_'+key].shape,(5,count,dim))
+        expected=model(self.batch['inputs'])
+        world_scale=expected['log_scales'][0,:,:count].detach().numpy()+math.log(self.processor.state_dict()['scale'])
+        np.testing.assert_allclose(captured['predicted_log_scales'],world_scale,atol=1e-6,rtol=0)
+        self.assertEqual(captured['target_attr_1'].shape[0],int(self.raw['targets']['target_lengths'][0,0]))
+        text='\n'.join(written.values())
+        self.assertIn('RGB',text)
+        self.assertIn('alpha',text)
+        self.assertNotIn('https://',text)
+
+    @unittest.skipUnless(os.environ.get('TOUCH4D_TEST_CUDA_RENDER')=='1', 'Real gsplat CUDA backward test requires explicit server GPU run')
+    def test_real_gsplat_rgb_alpha_geometry_backward(self):
+        from .train import to_device
+        self.assertTrue(torch.cuda.is_available())
+        raw=copy.deepcopy(self.raw);keep=raw['inputs']['gs_mask']
+        raw['inputs']['gs_xyz'].zero_();raw['inputs']['gs_xyz'][...,2]=.6
+        raw['inputs']['gs_xyz'][~keep]=0
+        raw['inputs']['gs_attr'][...,:3]=torch.tensor([-3.,-3.5,-4.])
+        raw['inputs']['gs_attr'][...,3:7]=torch.tensor([.9238795,0.,0.,.3826834])
+        raw['inputs']['gs_attr'][~keep]=0
+        raw['targets']['camera_to_world']=torch.eye(4).repeat(2,2,1,1)
+        batch=self.processor(to_device(raw,'cuda'))
+        model=PositionPredictor(32,4,2,output_mode='gs_geometry').cuda()
+        output={key:value.detach().requires_grad_() for key,value in model(batch['inputs']).items()}
+        rendered=GaussianRenderer()(output,batch,self.processor)
+        h,w=rendered['alpha'].shape[-2:]
+        weights=torch.arange(h*w,device='cuda').reshape(h,w).float()+1
+        loss=(rendered['rgb']*weights[...,None]).sum()+.1*(rendered['alpha']*weights).sum()
+        loss.backward()
+        for key in ('xyz','log_scales','quaternions'):
+            grad=output[key].grad
+            self.assertTrue(torch.isfinite(grad).all())
+            self.assertGreater(grad.abs().sum().item(),0.)
+
+    def test_geometry_checkpoint_roundtrip_and_output_mode_conflicts(self):
+        model,batch=self.geometry_fixture();self.activate_geometry_heads(model)
+        optimizer=torch.optim.AdamW(model.parameters(),lr=1e-3)
+        def step(network,opt):
+            opt.zero_grad(set_to_none=True)
+            loss,_=objective(network(batch['inputs']),batch,self.processor,GaussianRenderer(fake_gaussian_rasterizer),chunk=2)
+            loss.backward();opt.step()
+        step(model,optimizer)
+        cfg=dict(config(),**model.config,rgb_weight=1.,alpha_weight=.1,scale_weight=.01)
+        state=copy.deepcopy(checkpoint_state(model,optimizer,self.processor,cfg,3,.2,[]))
+        self.assertEqual(state['version'],VERSION)
+        self.assertEqual(state['config']['render_settings']['width'],1280)
+        self.assertEqual(state['config']['render_settings']['height'],720)
+        self.assertEqual(state['config']['render_settings']['background'],[0.,0.,0.])
+        with patch('scripts.training.train.torch.load',return_value=state):
+            loaded,_,loaded_cfg=load_model('memory/geometry.pt','cpu')
+        self.assertEqual(loaded_cfg['output_mode'],'gs_geometry')
+        expected=model(batch['inputs']);actual=loaded(batch['inputs'])
+        for key in expected:torch.testing.assert_close(expected[key],actual[key],atol=0,rtol=0)
+        other_opt=torch.optim.AdamW(loaded.parameters(),lr=1e-3)
+        restore_training(state,loaded,other_opt)
+        step(model,optimizer);step(loaded,other_opt)
+        for a,b in zip(model.parameters(),loaded.parameters()):
+            torch.testing.assert_close(a,b,atol=0,rtol=0)
+        legacy=PositionPredictor(32,4,2)
+        with patch.object(legacy,'load_state_dict') as load:
+            with self.assertRaisesRegex(ValueError,'architecture differs'):
+                restore_training(state,legacy,optimizer)
+            load.assert_not_called()
+        for mutation in ('missing','unknown','legacy_version'):
+            broken=copy.deepcopy(state)
+            if mutation=='missing':del broken['config']['output_mode']
+            elif mutation=='unknown':broken['config']['output_mode']='unknown'
+            else:broken['version']=DISPLACEMENT_VERSION
+            with self.subTest(mutation=mutation),patch('scripts.training.train.torch.load',return_value=broken):
+                with self.assertRaises(ValueError):read_checkpoint('memory/broken.pt')
+        for mutation in ('missing','resolution','background','rasterizer'):
+            broken=copy.deepcopy(state)
+            if mutation=='missing':del broken['config']['render_settings']
+            elif mutation=='resolution':broken['config']['render_settings']['width']=640
+            elif mutation=='background':broken['config']['render_settings']['background']=[1.,1.,1.]
+            else:broken['config']['render_settings']['eps2d']=.1
+            with self.subTest(render_settings=mutation),patch('scripts.training.train.torch.load',return_value=broken):
+                with self.assertRaisesRegex(ValueError,'render settings'):
+                    read_checkpoint('memory/broken.pt')
+        incompatible=copy.deepcopy(state)
+        incompatible['config']['alpha_weight']=.2
+        with patch('pathlib.Path.is_file',return_value=True),patch('scripts.training.train.read_checkpoint',return_value=incompatible):
+            with self.assertRaisesRegex(ValueError,'configurations differ'):
+                recover_best_score(state,'memory')
+
+    def test_geometry_validation_score_excludes_regularizer_and_weights_episodes(self):
+        tracker=GaussianMetrics(.1,dict(rgb_weight=1.,alpha_weight=.1,scale_weight=.01))
+        values=dict(geometry=torch.tensor([100.,100.,100.]),depth_m=torch.zeros(3),
+            depth_available=torch.ones(3,dtype=torch.bool),render_available=torch.ones(3,dtype=torch.bool),
+            rgb=torch.tensor([0.,0.,2.]),alpha=torch.tensor([.1,.1,.5]),
+            scale_regularization=torch.tensor([30.,30.,50.]),
+            rgb_by_horizon=torch.tensor([[0.]*5,[0.]*5,[2.]*5]),
+            alpha_by_horizon=torch.tensor([[.1]*5,[.1]*5,[.5]*5]),
+            render_time_available=torch.ones(3,5,dtype=torch.bool))
+        tracker.add(torch.tensor([1,1,5]),values)
+        result=tracker.summary()
+        self.assertAlmostEqual(result['rgb'],1.)
+        self.assertAlmostEqual(result['alpha'],.3)
+        self.assertAlmostEqual(result['val_score'],1.03)
+        self.assertAlmostEqual(result['objective'],1.03)
+        self.assertAlmostEqual(result['training_objective'],1.43)
+        self.assertEqual(result['rgb_by_horizon'],[1.]*5)
 
     @unittest.skipUnless(os.environ.get('TOUCH4D_TEST_CUDA_RENDER')=='1', 'Real gsplat CUDA backward test requires explicit server GPU run')
     def test_real_gsplat_depth_backward(self):

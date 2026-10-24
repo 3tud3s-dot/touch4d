@@ -11,7 +11,7 @@ import json
 
 import torch
 
-from .collate import DEPTH_FIELDS, validate_depth_batch
+from .collate import DEPTH_FIELDS, validate_depth_batch, validate_target_attr_batch
 from .dataset import DEFAULT_ROOT
 from .geometry import STREAM_HANDS
 from .loader import make_dataloader
@@ -35,6 +35,7 @@ def check_batch(batch):
         require(torch.isfinite(xyz).all(), "nonfinite GS points")
     require(torch.all(inputs["gs_attr"][~inputs["gs_mask"]] == 0), "GS attribute padding must be zero")
     require(torch.isfinite(inputs["gs_attr"]).all(), "nonfinite GS attributes")
+    validate_target_attr_batch(batch)
     for values, mask in (("action_state", "action_valid"), ("controller_points", "controller_mask"),
                          ("tactile", "valid_mask"), ("tactile_xyz", "tactile_spatial_mask")):
         require(torch.isfinite(inputs[values]).all(), f"nonfinite {values}")
@@ -80,6 +81,8 @@ def main(argv=None):
         if first_shapes is None:
             first_shapes = {key: list(value.shape) for key, value in batch["inputs"].items()}
             first_shapes["target_xyz"] = [list(x.shape) for x in batch["targets"]["target_xyz"]]
+            if "target_attr" in batch["targets"]:
+                first_shapes["target_attr"] = [list(x.shape) for x in batch["targets"]["target_attr"]]
             if args.with_depth:
                 first_shapes.update({key: list(batch["targets"][key].shape) for key in DEPTH_FIELDS})
     print(json.dumps({"scene": args.scene, "split": args.split, "stage": args.stage,

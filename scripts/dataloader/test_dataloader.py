@@ -388,9 +388,34 @@ class DatasetTests(unittest.TestCase):
             self.assertAlmostEqual(x["gs_attr"][0, 7].item(), 0.3)
             self.assertEqual([int(t[0, 1]) for t in target["target_xyz"]], [3, 4, 5, 6, 7])
             self.assertEqual([len(t) for t in target["target_xyz"]], [1, 2, 3, 4, 1])
+            self.assertEqual([tuple(t.shape) for t in target["target_attr"]],
+                             [(1, 11), (2, 11), (3, 11), (4, 11), (1, 11)])
             self.assertNotIn("delta_xyz", target)
             self.assertNotIn("sh_rest", x)
             self.assertEqual(len(ds), 42)
+
+    def test_future_attributes_follow_native_frame_and_row_order_without_rereading(self):
+        # Unique attributes expose accidental copying of initial values or sorting
+        # coordinates independently from attributes in independently rebuilt frames.
+        for frame in range(1, 6):
+            values = self.data.get(1, f"gs/frame_{frame:06d}.npz")
+            n = len(values["xyz"])
+            values["log_scales"][:, 0] = -frame - np.arange(n) / 10
+            values["opacity_logits"][:, 0] = frame + np.arange(n) / 10
+            values["sh_dc"][:, 1] = values["xyz"][:, 2] + frame
+            permutation = np.arange(n)[::-1]
+            for key in dataset_module.GS_WIDTHS:
+                values[key] = values[key][permutation].copy()
+        with self.data.mounted(), patch.object(dataset_module, "read_gs", wraps=dataset_module.read_gs) as reader:
+            sample = Touch4DDataset(self.data.scene, "train", self.data.root)[0]
+        self.assertEqual([call.args[1] for call in reader.call_args_list], list(range(6)))
+        for k, (xyz, attr) in enumerate(zip(sample["targets"]["target_xyz"], sample["targets"]["target_attr"]), 1):
+            source = self.data.get(1, f"gs/frame_{k:06d}.npz")
+            torch.testing.assert_close(xyz, torch.from_numpy(source["xyz"]))
+            expected = np.concatenate([source[key] for key in dataset_module.GS_ATTR_FIELDS], axis=-1)
+            torch.testing.assert_close(attr, torch.from_numpy(expected))
+            attr.fill_(99)
+            self.assertFalse(np.any(source["log_scales"] == 99))
 
     def test_all_scenes_and_metadata_reversed_slots(self):
         for scene in SPLITS:
@@ -523,6 +548,9 @@ class CollateAndLoaderTests(unittest.TestCase):
                 torch.testing.assert_close(x["gs_xyz"][i, :len(sample["inputs"]["gs_xyz"])], sample["inputs"]["gs_xyz"])
                 for k, values in enumerate(sample["targets"]["target_xyz"]):
                     torch.testing.assert_close(target["target_xyz"][k][i, :len(values)], values)
+                    torch.testing.assert_close(target["target_attr"][k][i, :len(values)],
+                                               sample["targets"]["target_attr"][k])
+                    self.assertTrue(torch.all(target["target_attr"][k][i, len(values):] == 0))
             check_batch(batch)
             self.assertEqual(x["action_state"].shape, (2, 5, 2, 13))
             self.assertEqual(batch["meta"]["frame_ids"].dtype, torch.int64)
@@ -531,6 +559,33 @@ class CollateAndLoaderTests(unittest.TestCase):
                 collate_fn([a, b])
             with self.assertRaises(ValueError):
                 collate_fn([])
+
+    def test_legacy_targets_supported_but_mixed_or_misaligned_attributes_fail(self):
+        data = MemoryReconstruction()
+        with data.mounted():
+            ds = Touch4DDataset(data.scene, "test", data.root)
+            original = [ds[0], ds[1]]
+        legacy = copy.deepcopy(original)
+        for sample in legacy:
+            sample["targets"].pop("target_attr")
+        batch = collate_fn(legacy)
+        self.assertNotIn("target_attr", batch["targets"])
+        check_batch(batch)
+        with self.assertRaisesRegex(ValueError, "mix samples"):
+            collate_fn([original[0], legacy[1]])
+        mutations = [
+            lambda t: t["target_attr"].pop(),
+            lambda t: t["target_attr"].__setitem__(0, t["target_attr"][0][:-1]),
+            lambda t: t["target_attr"].__setitem__(0, t["target_attr"][0].double()),
+            lambda t: t["target_attr"][0].fill_(float("nan")),
+            lambda t: t["target_attr"][0][:, 3:7].zero_(),
+        ]
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                samples = copy.deepcopy(original)
+                mutation(samples[0]["targets"])
+                with self.assertRaisesRegex(ValueError, "target_attr"):
+                    collate_fn(samples)
 
     def test_seeded_train_and_fixed_evaluation_keep_partial_batch(self):
         data = MemoryReconstruction()
@@ -587,7 +642,7 @@ class DepthDatasetTests(unittest.TestCase):
         with data.mounted(), patch.object(h5py, "File", side_effect=AssertionError("Unexpected H5 read")):
             ds = Touch4DDataset(data.scene, "train", data.root)
             sample = ds[0]
-            self.assertEqual(set(sample["targets"]), {"target_xyz"})
+            self.assertEqual(set(sample["targets"]), {"target_xyz", "target_attr"})
             self.assertNotIn("depth_camera_ids", sample["meta"])
             validate_depth_batch(collate_fn([sample]))
 

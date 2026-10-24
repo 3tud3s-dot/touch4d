@@ -14,7 +14,7 @@ from types import MappingProxyType
 
 import torch
 
-from ..dataloader.collate import FIXED_FIELDS, validate_depth_batch
+from ..dataloader.collate import FIXED_FIELDS, validate_depth_batch, validate_target_attr_batch
 from ..dataloader.splits import HORIZON
 
 
@@ -79,6 +79,8 @@ class DataProcessor:
     world frame. Before rendering a prediction against them, restore its XYZ
     with denormalize_xyz and its log_scales by adding log(state_dict()['scale']).
     Depth validity is independent of the point-padding masks.
+    Optional target_attr uses the same 11 columns and log-scale transform as
+    initial gs_attr; old batches without it keep their original structure.
     """
 
     scene: str
@@ -131,6 +133,7 @@ class DataProcessor:
                 _require_tensor(points, (b, points.shape[1], 3), torch.float32, f"target_xyz[{k}]", device)
                 _require_tensor(targets["target_mask"][k], (b, points.shape[1]), torch.bool,
                                 f"target_mask[{k}]", device)
+            validate_target_attr_batch(batch)
             _require_tensor(meta["episode_id"], (b,), torch.int64, "episode_id")
             for key in ("frame_ids", "observation_timestamp_us"):
                 _require_tensor(meta[key], (b, HORIZON+1), torch.int64, key)
@@ -185,6 +188,12 @@ class DataProcessor:
         inputs["tactile"] = _masked(tactile, inputs["valid_mask"])
         targets["target_xyz"] = [self._xyz(xyz, mask, inverse=inverse)
                                   for xyz, mask in zip(targets["target_xyz"], targets["target_mask"])]
+        if "target_attr" in targets:
+            updated = []
+            for attr, mask in zip(targets["target_attr"], targets["target_mask"]):
+                scales = attr[..., :3] + log_scale if inverse else attr[..., :3] - log_scale
+                updated.append(_masked(torch.cat((scales, attr[..., 3:]), dim=-1), mask))
+            targets["target_attr"] = updated
         return result
 
     def __call__(self, batch):

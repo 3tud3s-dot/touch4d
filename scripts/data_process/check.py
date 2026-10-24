@@ -54,6 +54,8 @@ def check_processed_batch(raw, processed, processor):
     changed_paths = {"inputs.gs_xyz", "inputs.gs_attr", "inputs.action_state",
                      "inputs.controller_points", "inputs.tactile_xyz", "inputs.tactile"}
     changed_paths.update(f"targets.target_xyz[{k}]" for k in range(5))
+    if "target_attr" in raw["targets"]:
+        changed_paths.update(f"targets.target_attr[{k}]" for k in range(5))
     raw_leaves, out_leaves = dict(_leaves(raw)), dict(_leaves(processed))
     if raw_leaves.keys() != out_leaves.keys():
         raise ValueError("Normalized batch structure changed")
@@ -84,6 +86,14 @@ def check_processed_batch(raw, processed, processor):
     attr = x["gs_attr"].double().clone()
     attr[..., :3] -= torch.tensor(scale, dtype=torch.float64, device=attr.device).log()
     close(y["gs_attr"], torch.where(x["gs_mask"][..., None], attr, 0.))
+    if "target_attr" in raw["targets"]:
+        for k, before in enumerate(raw["targets"]["target_attr"]):
+            after = processed["targets"]["target_attr"][k]
+            expected = before.double().clone()
+            expected[..., :3] -= torch.tensor(scale, dtype=torch.float64, device=expected.device).log()
+            close(after, torch.where(raw["targets"]["target_mask"][k][..., None], expected, 0.))
+            if not torch.equal(after[..., 3:], before[..., 3:]):
+                raise ValueError(f"Target quaternion/opacity/SH changed at step {k}")
     action = x["action_state"].double().clone()
     action[..., :3] = expected_xyz(x["action_state"][..., :3], x["action_valid"])
     action[..., 12] /= scale

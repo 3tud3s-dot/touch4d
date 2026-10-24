@@ -18,6 +18,32 @@ FIXED_FIELDS = {
 DEPTH_FIELDS = ("target_depth", "target_depth_valid", "camera_intrinsics", "camera_to_world")
 
 
+def validate_target_attr_batch(batch):
+    """Optional geometry targets share XYZ padding; legacy point-only batches work."""
+    targets = batch["targets"]
+    if "target_attr" not in targets:
+        return
+    attrs = targets["target_attr"]
+    if not isinstance(attrs, list) or len(attrs) != HORIZON:
+        raise ValueError("target_attr must be a list of five tensors")
+    for step, attr in enumerate(attrs):
+        xyz, mask = targets["target_xyz"][step], targets["target_mask"][step]
+        if (not isinstance(attr, torch.Tensor) or attr.shape != (*xyz.shape[:-1], 11)
+                or attr.dtype != torch.float32 or attr.device != xyz.device):
+            raise ValueError(f"target_attr[{step}] must align with target_xyz as float32 [B,N,11]")
+        if mask.shape != xyz.shape[:-1] or mask.dtype != torch.bool or mask.device != xyz.device:
+            raise ValueError(f"target_mask[{step}] must align with target attributes")
+        lengths = targets["target_lengths"][:, step].to(device=mask.device)
+        if not torch.equal(mask.sum(1), lengths):
+            raise ValueError(f"target_attr[{step}] lengths disagree with the target mask")
+        if not torch.isfinite(attr).all() or torch.any(attr[~mask] != 0):
+            raise ValueError(f"target_attr[{step}] must be finite with zero padding")
+        quaternions = attr[..., 3:7][mask]
+        norms = torch.linalg.vector_norm(quaternions.double(), dim=-1)
+        if not torch.allclose(norms, torch.ones_like(norms), atol=1e-5, rtol=0):
+            raise ValueError(f"target_attr[{step}] requires normalized WXYZ quaternions")
+
+
 def _has_depth(targets, meta):
     present = [key in targets for key in DEPTH_FIELDS] + ["depth_camera_ids" in meta]
     if any(present) and not all(present):
@@ -110,6 +136,9 @@ def collate_fn(samples: list[dict]) -> dict:
     scenes = [sample["meta"]["scene"] for sample in samples]
     if any(not isinstance(scene, str) for scene in scenes) or len(set(scenes)) != 1:
         raise ValueError("V0 batches must belong to one scene")
+    attr_presence = ["target_attr" in sample["targets"] for sample in samples]
+    if any(attr_presence) and not all(attr_presence):
+        raise ValueError("Cannot mix samples with and without target_attr in one batch")
     initial_xyz, initial_attr = [], []
     for sample in samples:
         inputs = sample["inputs"]
@@ -119,6 +148,9 @@ def collate_fn(samples: list[dict]) -> dict:
         initial_attr.append(attr)
         if len(sample["targets"]["target_xyz"]) != HORIZON:
             raise ValueError("target_xyz must contain exactly five future frames")
+        if all(attr_presence) and (not isinstance(sample["targets"]["target_attr"], list)
+                                   or len(sample["targets"]["target_attr"]) != HORIZON):
+            raise ValueError("target_attr must contain exactly five future frames")
         if type(sample["meta"]["episode_id"]) is not int:
             raise ValueError("episode_id must be an integer")
     xyz, mask, lengths = _pad_points(initial_xyz)
@@ -126,19 +158,25 @@ def collate_fn(samples: list[dict]) -> dict:
     inputs = {"gs_xyz": xyz, "gs_attr": attr, "gs_mask": mask, "gs_lengths": lengths}
     for key, (shape, dtype) in FIXED_FIELDS.items():
         inputs[key] = torch.stack([_tensor(s["inputs"][key], shape, dtype, key) for s in samples])
-    target_xyz, target_mask, target_lengths = [], [], []
+    target_xyz, target_mask, target_lengths, target_attr = [], [], [], []
     for step in range(HORIZON):
-        xyz, mask, lengths = _pad_points([
-            _points(s["targets"]["target_xyz"][step], 3, f"target_xyz[{step}]") for s in samples])
+        points = [_points(s["targets"]["target_xyz"][step], 3, f"target_xyz[{step}]") for s in samples]
+        xyz, mask, lengths = _pad_points(points)
         target_xyz.append(xyz)
         target_mask.append(mask)
         target_lengths.append(lengths)
+        if all(attr_presence):
+            attributes = [_tensor(s["targets"]["target_attr"][step], (len(p), 11), torch.float32,
+                                  f"target_attr[{step}]") for s, p in zip(samples, points)]
+            target_attr.append(_pad_points(attributes)[0])
     meta = {"scene": scenes, "episode_id": torch.tensor(
         [s["meta"]["episode_id"] for s in samples], dtype=torch.int64)}
     for key in ("frame_ids", "observation_timestamp_us"):
         meta[key] = torch.stack([_tensor(s["meta"][key], (6,), torch.int64, key) for s in samples])
     targets = {"target_xyz": target_xyz, "target_mask": target_mask,
                "target_lengths": torch.stack(target_lengths, dim=1)}
+    if all(attr_presence):
+        targets["target_attr"] = target_attr
     depth_presence = [_has_depth(sample["targets"], sample["meta"]) for sample in samples]
     if any(depth_presence):
         if not all(depth_presence):
@@ -156,6 +194,7 @@ def collate_fn(samples: list[dict]) -> dict:
             targets[key] = torch.stack([_tensor(s["targets"][key], shape, dtype, key) for s in samples])
         meta["depth_camera_ids"] = [s["meta"]["depth_camera_ids"] for s in samples]
     batch = {"inputs": inputs, "targets": targets, "meta": meta}
+    validate_target_attr_batch(batch)
     validate_depth_batch(batch)
     if any(depth_presence):
         # Keep independently owned metadata just like the stacked tensor arrays.

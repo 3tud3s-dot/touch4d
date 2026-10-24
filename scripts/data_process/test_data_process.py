@@ -55,6 +55,55 @@ def add_depth_targets(batch):
 
 
 class ProcessorTests(unittest.TestCase):
+    def test_target_attributes_normalize_scales_preserve_rows_and_roundtrip(self):
+        for scene in SUPPORTED_SCENES:
+            batch = make_batch(scene)
+            p = DataProcessor(scene)
+            targets = batch["targets"]
+            for k, (attr, mask) in enumerate(zip(targets["target_attr"], targets["target_mask"])):
+                attr[..., 0][mask] -= k / 10
+                attr[..., 7][mask] += torch.arange(int(mask.sum()), dtype=attr.dtype) / 10
+            saved = copy.deepcopy(batch)
+            out = p(batch)
+            restored = p.denormalize_batch(out)
+            check_processed_batch(batch, out, p)
+            require_unchanged(saved, batch)
+            for before, normalized, after, mask in zip(targets["target_attr"],
+                    out["targets"]["target_attr"], restored["targets"]["target_attr"], targets["target_mask"]):
+                torch.testing.assert_close(normalized[..., :3][mask].exp(),
+                                           before[..., :3][mask].exp() / p.state_dict()["scale"])
+                self.assertTrue(torch.equal(before[..., 3:], normalized[..., 3:]))
+                self.assertTrue(torch.all(normalized[~mask] == 0))
+                self.assertNotEqual(before.data_ptr(), normalized.data_ptr())
+                torch.testing.assert_close(after, before)
+
+    def test_legacy_batch_has_identical_processing_without_optional_target_attributes(self):
+        batch = make_batch()
+        p = DataProcessor("001-rope")
+        with_attrs = p(batch)
+        batch["targets"].pop("target_attr")
+        without_attrs = p(batch)
+        with_attrs["targets"].pop("target_attr")
+        require_unchanged(with_attrs, without_attrs)
+        check_processed_batch(batch, without_attrs, p)
+
+    def test_target_attribute_alignment_finite_quaternions_and_padding_are_checked(self):
+        mutations = [
+            lambda t: t["target_attr"].pop(),
+            lambda t: t["target_attr"].__setitem__(0, t["target_attr"][0][..., :10]),
+            lambda t: t["target_attr"][0].fill_(float("nan")),
+            lambda t: t["target_attr"][0][..., 3:7].zero_(),
+            lambda t: t["target_attr"][0].__setitem__(~t["target_mask"][0], 1),
+            lambda t: t["target_lengths"].add_(1),
+        ]
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                batch = make_batch()
+                self.assertTrue((~batch["targets"]["target_mask"][0]).any())
+                mutate(batch["targets"])
+                with self.assertRaises(ValueError):
+                    DataProcessor("001-rope")(batch)
+
     def test_depth_and_world_cameras_remain_metric_and_independent(self):
         for scene in SUPPORTED_SCENES:
             batch = add_depth_targets(make_batch(scene))

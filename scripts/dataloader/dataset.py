@@ -24,6 +24,7 @@ from .splits import HORIZON, episode_ids, window_starts
 DEFAULT_ROOT = Path(__file__).resolve().parents[2] / "datasets" / "touch4d-v1"
 GS_WIDTHS = {"xyz": 3, "log_scales": 3, "quaternions": 4,
              "opacity_logits": 1, "sh_dc": 3, "sh_rest": 45}
+GS_ATTR_FIELDS = ("log_scales", "quaternions", "opacity_logits", "sh_dc")
 
 
 class DataFormatError(ValueError):
@@ -238,7 +239,7 @@ def _episode_conditions(info: EpisodeInfo) -> dict:
 
 
 def read_gs(info: EpisodeInfo, frame: int) -> dict:
-    """Check the entire frame, including preserved SH, before selecting V0 fields."""
+    """Check the entire frame, including preserved SH, before selecting fields."""
     path = info.path / "gs" / f"frame_{frame:06d}.npz"
     arrays = read_npz(path)
     frame_id = require_array(arrays, "frame_id", (), np.int64, path)
@@ -341,9 +342,15 @@ class Touch4DDataset(Dataset):
         initial = read_gs(info, start)
         inputs["gs_xyz"] = torch.from_numpy(initial["xyz"].copy())
         inputs["gs_attr"] = torch.from_numpy(np.concatenate(
-            [initial[key] for key in ("log_scales", "quaternions", "opacity_logits", "sh_dc")], axis=-1))
-        targets = {"target_xyz": [torch.from_numpy(read_gs(info, frame)["xyz"].copy())
-                                   for frame in range(start + 1, start + HORIZON + 1)]}
+            [initial[key] for key in GS_ATTR_FIELDS], axis=-1))
+        targets = {"target_xyz": [], "target_attr": []}
+        for frame in range(start + 1, start + HORIZON + 1):
+            # Read once so positions and attributes share exactly the same frame
+            # and point ordering. There is no cross-frame Gaussian ID assumption.
+            future = read_gs(info, frame)
+            targets["target_xyz"].append(torch.from_numpy(future["xyz"].copy()))
+            targets["target_attr"].append(torch.from_numpy(np.concatenate(
+                [future[key] for key in GS_ATTR_FIELDS], axis=-1)))
         meta = {
             "scene": self.scene, "episode_id": episode,
             "frame_ids": torch.arange(start, start + HORIZON + 1, dtype=torch.int64),

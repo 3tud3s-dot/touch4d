@@ -1,4 +1,6 @@
-"""Causal five-step displacement prediction; return normalized XYZ."""
+"""Causal five-step position or full Gaussian-geometry prediction."""
+
+import math
 
 import torch
 from torch import nn
@@ -6,6 +8,25 @@ from torch import nn
 
 def masked(value, mask):
     return torch.where(mask.unsqueeze(-1), value, torch.zeros_like(value))
+
+
+def rotation_vector_to_quaternion(rotation):
+    """World-axis rotation vector in radians to Hamilton WXYZ, stable at zero.
+
+    sinc avoids dividing by the angle, so a zero-initialized rotation head still
+    has a finite, nonzero derivative for each of its three output coordinates.
+    """
+    angle = torch.linalg.vector_norm(rotation, dim=-1, keepdim=True)
+    return torch.cat((torch.cos(angle * .5),
+                      rotation * (.5 * torch.sinc(angle / (2. * math.pi)))), dim=-1)
+
+
+def quaternion_multiply(left, right):
+    """Hamilton product in WXYZ order; a world-frame increment is the left input."""
+    lw, lv = left[..., :1], left[..., 1:]
+    rw, rv = right[..., :1], right[..., 1:]
+    return torch.cat((lw * rw - (lv * rv).sum(-1, keepdim=True),
+                      lw * rv + rw * lv + torch.linalg.cross(lv, rv, dim=-1)), dim=-1)
 
 
 class CrossBlock(nn.Module):
@@ -35,7 +56,7 @@ class PositionPredictor(nn.Module):
     """
 
     def __init__(self, width=128, heads=4, layers=2, controller_features=7,
-                 prediction_mode="autoregressive"):
+                 prediction_mode="autoregressive", output_mode="position"):
         super().__init__()
         if min(width, heads, layers) < 1 or width % heads:
             raise ValueError("Positive dimensions required; width must be divisible by heads")
@@ -43,8 +64,13 @@ class PositionPredictor(nn.Module):
             raise ValueError("controller_features must be 3 (legacy) or 7 (relative motion)")
         if prediction_mode not in ("independent", "autoregressive"):
             raise ValueError("prediction_mode must be independent or autoregressive")
+        if output_mode not in ("position", "gs_geometry"):
+            raise ValueError("output_mode must be position or gs_geometry")
+        if output_mode == "gs_geometry" and prediction_mode != "autoregressive":
+            raise ValueError("gs_geometry requires autoregressive prediction_mode")
         self.config = dict(width=width, heads=heads, layers=layers,
-                           controller_features=controller_features, prediction_mode=prediction_mode)
+                           controller_features=controller_features, prediction_mode=prediction_mode,
+                           output_mode=output_mode)
         def mlp(n):
             return nn.Sequential(nn.Linear(n, width), nn.GELU(), nn.Linear(width, width))
         self.gs_encoder = mlp(14)
@@ -61,6 +87,12 @@ class PositionPredictor(nn.Module):
         # A zero displacement head copies the initial GS across all five steps.
         nn.init.zeros_(self.position_head[-1].weight)
         nn.init.zeros_(self.position_head[-1].bias)
+        if output_mode == "gs_geometry":
+            self.scale_head = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, 3))
+            self.rotation_head = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, 3))
+            for head in (self.scale_head, self.rotation_head):
+                nn.init.zeros_(head[-1].weight)
+                nn.init.zeros_(head[-1].bias)
 
     def controller_inputs(self, x):
         """Same-frame XYZ, optional displacement from t0 and endpoint validity.
@@ -102,16 +134,21 @@ class PositionPredictor(nn.Module):
         keep = x["gs_mask"]
         initial = masked(torch.cat((x["gs_xyz"], x["gs_attr"]), -1), keep)
         autoregressive = self.config["prediction_mode"] == "autoregressive"
+        geometry = self.config["output_mode"] == "gs_geometry"
         current = initial[..., :3]
+        current_scales, current_quats = initial[..., 3:6], initial[..., 6:10]
         features = None if autoregressive else self.gs_encoder(initial)
         tokens, token_valid = self.encode_conditions(x)
         b = initial.shape[0]
         outputs = []
+        scale_outputs, quaternion_outputs = [], []
         for k in range(5):
             if autoregressive:
-                # Re-encode predicted positions with unchanged initial attributes.
-                # Keep the full graph through every preceding step (no detach).
-                features = self.gs_encoder(masked(torch.cat((current, initial[..., 3:]), -1), keep))
+                # GS mode feeds back updated geometry, with initial appearance.
+                # Both modes keep the full graph through every preceding step.
+                attrs = (torch.cat((current_scales, current_quats, initial[..., 10:]), -1)
+                         if geometry else initial[..., 3:])
+                features = self.gs_encoder(masked(torch.cat((current, attrs), -1), keep))
             # No condition encoder combines times before this causal slicing.
             memory = tokens[:, :k+1].flatten(1, 2)
             valid = token_valid[:, :k+1].flatten(1, 2)
@@ -123,4 +160,19 @@ class PositionPredictor(nn.Module):
             reference = current if autoregressive else initial[..., :3]
             current = masked(reference + self.position_head(query), keep)
             outputs.append(current)
-        return torch.stack(outputs, dim=1)
+            if geometry:
+                current_scales = masked(current_scales + self.scale_head(query), keep)
+                # Rotate each Gaussian's axes in world coordinates. The center
+                # is translated above and is never rotated about the origin.
+                increment = rotation_vector_to_quaternion(self.rotation_head(query))
+                current_quats = quaternion_multiply(increment, current_quats)
+                current_quats = masked(torch.nn.functional.normalize(current_quats, dim=-1), keep)
+                scale_outputs.append(current_scales)
+                quaternion_outputs.append(current_quats)
+        xyz = torch.stack(outputs, dim=1)
+        if not geometry:
+            return xyz
+        return {"xyz": xyz, "log_scales": torch.stack(scale_outputs, dim=1),
+                "quaternions": torch.stack(quaternion_outputs, dim=1),
+                "opacity_logits": initial[..., 10:11][:, None].expand(-1, 5, -1, -1),
+                "sh_dc": initial[..., 11:14][:, None].expand(-1, 5, -1, -1)}

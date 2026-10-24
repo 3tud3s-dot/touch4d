@@ -11,8 +11,8 @@ import torch
 
 from ..dataloader.collate import collate_fn
 from .evaluate import load_model
-from .rendering import DepthRenderer
-from .train import build_loader, to_device
+from .rendering import DepthRenderer, GaussianRenderer
+from .train import build_loader, to_device, copy_initial
 
 
 def png_bytes(rgb):
@@ -60,6 +60,76 @@ document.querySelectorAll('canvas').forEach(c=>{c.onpointerdown=e=>{drag=[e.clie
 slider.oninput=update;camera.onchange=update;window.onresize=update;document.getElementById('play').onclick=()=>{if(timer){clearInterval(timer);timer=null}else timer=setInterval(()=>{slider.value=(+slider.value+1)%5;update()},500)};update();</script></html>'''
 
 
+def gs_viewer_html(data, title):
+    encoded = json.dumps(data, separators=(',', ':'), allow_nan=False).replace('<', '\\u003c')
+    return '''<!doctype html><html lang="zh"><meta charset="utf-8"><title>GS 渲染对比</title>
+<style>body{font:14px system-ui;background:#f5f7fa;color:#172437;margin:20px}.row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.panel{background:white;padding:10px;border-radius:8px}img{width:100%}select,input,button{margin:8px}</style><h1>''' + html.escape(title) + '''</h1>
+<p>真实高斯光栅渲染，零阶 SH、统一黑色背景。颜色、不透明度继承初态；位置、尺度、旋转随预测更新。误差仅在目标 HDF5 有效区域计算，无效区域显示灰色，不是背景标签。</p>
+<button id="play">播放</button><input id="time" type="range" min="0" max="4" value="0"><span id="label"></span><select id="camera"></select><select id="mode"><option value="rgb">RGB</option><option value="alpha">Alpha</option><option value="depth">期望深度</option></select><p id="info"></p>
+<div class="row"><div class="panel">目标 GS<img id="gt"></div><div class="panel">预测 GS<img id="pred"></div><div class="panel">复制初态 GS<img id="copy"></div><div class="panel">预测误差<img id="err"></div></div>
+<p>RGB误差：通道平均绝对误差，0–0.1；alpha误差：0–0.1；深度误差：与HDF5比较，±5mm。深度面板前三图来自GS渲染。颜色仅用于显示，完整世界坐标GS保存在 prediction.npz。</p>
+<script>const D=''' + encoded + ''';const $=id=>document.getElementById(id);let timer=null;
+D.cameras.forEach((c,i)=>{let o=document.createElement('option');o.value=i;o.textContent=c;$('camera').append(o)});
+function update(){let k=+$('time').value,v=+$('camera').value,m=$('mode').value;$('label').textContent=`t+${k+1} / 原始帧 ${D.frame_ids[k+1]}`;$('info').textContent=`初始/预测高斯数 ${D.initial_count}；目标高斯数 ${D.target_counts[k]}；深度显示范围 ${D.depth_range.map(x=>x.toFixed(3)).join('–')}m`;for(let n of ['gt','pred','copy','err'])$(n).src=`figures/frame_${k+1}_view_${v}_${m}_${n}.png`;}
+$('time').oninput=$('camera').onchange=$('mode').onchange=update;$('play').onclick=()=>{if(timer){clearInterval(timer);timer=null}else timer=setInterval(()=>{$('time').value=(+$('time').value+1)%5;update()},500)};update();</script></html>'''
+
+
+def export_gaussians(args, config, raw, batch, prediction, processor):
+    settings = config.get('render_settings')
+    size = (settings['height'], settings['width']) if settings is not None else None
+    renderer = GaussianRenderer(image_size=size)
+    renders = dict(pred=renderer(prediction, batch, processor),
+                   copy=renderer(copy_initial(batch['inputs'], 'gs_geometry'), batch, processor),
+                   gt=renderer.render_targets(batch, processor))
+    for value in renders.values():
+        if any(not torch.isfinite(image).all() for image in value.values()):
+            raise FloatingPointError('Nonfinite rendered image; no visualization written')
+    directory = Path(args.output).resolve() if args.output else Path(args.checkpoint).resolve().parent / 'visualizations' / f'{args.split}-episode-{args.episode}-frame-{args.start}'
+    print(f'Creating {directory}: prediction.npz, index.html, figures/frame_{{1..5}}_view_{{v}}_{{rgb,alpha,depth}}_{{gt,pred,copy,err}}.png', flush=True)
+    keep = batch['inputs']['gs_mask'][0]
+    arrays = {'frame_ids': raw['meta']['frame_ids'][0].numpy(),
+              'initial_xyz': raw['inputs']['gs_xyz'][0, keep.cpu()].numpy(),
+              'initial_attributes': raw['inputs']['gs_attr'][0, keep.cpu()].numpy()}
+    for field, value in prediction.items():
+        if field == 'xyz':
+            value = processor.denormalize_xyz(value, batch['inputs']['gs_mask'][:, None].expand(-1, 5, -1))
+        elif field == 'log_scales':
+            value = value + np.log(processor.state_dict()['scale'])
+        arrays['predicted_'+field] = value[0, :, keep].cpu().numpy()
+    for k, (xyz, attr, mask) in enumerate(zip(raw['targets']['target_xyz'], raw['targets']['target_attr'], raw['targets']['target_mask'])):
+        arrays[f'target_xyz_{k+1}'] = xyz[0, mask[0]].numpy()
+        arrays[f'target_attr_{k+1}'] = attr[0, mask[0]].numpy()
+    if any(not np.isfinite(value).all() for value in arrays.values()):
+        raise FloatingPointError('Nonfinite GS output; no visualization written')
+    directory.mkdir(parents=True, exist_ok=False)
+    (directory / 'figures').mkdir()
+    np.savez_compressed(directory/'prediction.npz', **arrays)
+    valid = raw['targets']['target_depth_valid'][0].numpy()
+    depth = raw['targets']['target_depth'][0].numpy()
+    lo, hi = np.percentile(depth[valid], [1, 99]) if valid.any() else (0., 1.)
+    images = {name: {key: image[0].cpu().numpy() for key, image in r.items()} for name, r in renders.items()}
+    for k in range(5):
+        for v in range(depth.shape[1]):
+            output = {}
+            for name, value in images.items():
+                output['rgb_'+name] = np.rint(np.clip(value['rgb'][k, v], 0, 1)*255).astype(np.uint8)
+                alpha = np.rint(np.clip(value['alpha'][k, v], 0, 1)*255).astype(np.uint8)
+                output['alpha_'+name] = np.repeat(alpha[..., None], 3, axis=-1)
+                output['depth_'+name] = depth_rgb(value['depth'][k, v], value['alpha'][k, v] > 0, lo, hi)
+            for mode in ('rgb', 'alpha'):
+                delta = np.abs(images['pred'][mode][k, v]-images['gt'][mode][k, v])
+                if mode == 'rgb': delta = delta.mean(-1)
+                output[mode+'_err'] = depth_rgb(delta, valid[k, v], 0., .1)
+            output['depth_err'] = depth_rgb((images['pred']['depth'][k, v]-depth[k, v])*1000, valid[k, v], -5., 5., True)
+            for name, image in output.items():
+                (directory/'figures'/f'frame_{k+1}_view_{v}_{name}.png').write_bytes(png_bytes(image))
+    data = dict(cameras=raw['meta']['depth_camera_ids'][0], frame_ids=arrays['frame_ids'].tolist(),
+                initial_count=int(keep.sum()), target_counts=raw['targets']['target_lengths'][0].tolist(),
+                depth_range=[float(lo), float(hi)])
+    (directory/'index.html').write_text(gs_viewer_html(data, f'{config["scene"]} · episode {args.episode} · start {args.start}'), encoding='utf-8')
+    print(directory/'index.html')
+
+
 @torch.no_grad()
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
@@ -83,6 +153,9 @@ def main(argv=None):
     raw = collate_fn([ds[index]])
     batch = processor(to_device(raw, device))
     prediction = model(batch['inputs'])
+    if isinstance(prediction, dict):
+        export_gaussians(args, config, raw, batch, prediction, processor)
+        return 0
     renderer = DepthRenderer()
     pred_depth = renderer(prediction, batch, processor)[0].cpu().numpy()
     copy_depth = renderer(batch['inputs']['gs_xyz'][:, None].expand(-1, 5, -1, -1), batch, processor)[0].cpu().numpy()

@@ -27,13 +27,48 @@ from ..dataloader.loader import make_dataloader
 from ..dataloader.splits import SPLITS
 from .losses import objective
 from .model import PositionPredictor
-from .rendering import DepthRenderer
+from .rendering import DepthRenderer, GaussianRenderer
 
-VERSION = "touch4d-displacement-v3"
+VERSION = "touch4d-gs-v1"
+DISPLACEMENT_VERSION = "touch4d-displacement-v3"
 LEGACY_VERSION = "touch4d-displacement-v1"
 INDEPENDENT_VERSION = "touch4d-displacement-v2"
-MODEL_KEYS = ("width", "heads", "layers", "controller_features", "prediction_mode")
+MODEL_KEYS = ("width", "heads", "layers", "controller_features", "prediction_mode", "output_mode")
 PROJECT = Path(__file__).resolve().parents[2]
+GS_CAMERAS = {
+    "001-rope": ["brics-odroid-001_cam0", "brics-odroid-011_cam0", "brics-odroid-021_cam0"],
+    "051-cube": ["brics-odroid-001_cam0", "brics-odroid-012_cam0", "brics-odroid-021_cam1"],
+}
+LOSS_DEFAULTS = dict(rgb_weight=1., alpha_weight=.1, scale_weight=.01)
+GS_CONVENTION = "world-left-wxyz-sh0-black-depth-valid-v1"
+
+
+def gs_render_settings():
+    return dict(GaussianRenderer.settings, width=1280, height=720, sh_degree=0,
+                background=[0., 0., 0.], camera_model="pinhole", depth="camera_z_expected_metres",
+                supervision_mask="target_depth_valid")
+
+
+def loss_options(config):
+    return {key: config.get(key, value) for key, value in LOSS_DEFAULTS.items()}
+
+
+def make_renderer(config):
+    if config.get("output_mode", "position") != "gs_geometry":
+        return DepthRenderer()
+    settings = config.get("render_settings")
+    size = (settings["height"], settings["width"]) if settings is not None else None
+    return GaussianRenderer(image_size=size)
+
+
+def copy_initial(inputs, output_mode="position"):
+    expand = lambda value: value[:, None].expand(-1, 5, -1, -1)
+    if output_mode == "position":
+        return expand(inputs["gs_xyz"])
+    attr = inputs["gs_attr"]
+    return dict(xyz=expand(inputs["gs_xyz"]), log_scales=expand(attr[..., :3]),
+                quaternions=expand(attr[..., 3:7]), opacity_logits=expand(attr[..., 7:8]),
+                sh_dc=expand(attr[..., 8:11]))
 
 
 def to_device(value, device):
@@ -119,20 +154,73 @@ class EpisodeMetrics:
                     objective=geometry + (self.weight*depth_mm/(1000*self.scale) if ds else 0))
 
 
+class GaussianMetrics(EpisodeMetrics):
+    """Keep diagnostics separate from the observation-only best score."""
+    def __init__(self, scale, config):
+        super().__init__(scale, 0.)
+        self.weights = loss_options(config)
+        self.render = {}
+
+    def add(self, ids, metrics):
+        super().add(ids, metrics)
+        for i, episode in enumerate(ids.tolist()):
+            row = self.render.setdefault(str(episode), dict(samples=0, rgb=0., alpha=0.,
+                scale_regularization=0., time_counts=[0]*5, rgb_by_horizon=[0.]*5,
+                alpha_by_horizon=[0.]*5))
+            if not bool(metrics["render_available"][i]):
+                continue
+            row["samples"] += 1
+            for key in ("rgb", "alpha", "scale_regularization"):
+                row[key] += float(metrics[key][i].detach())
+            for k in range(5):
+                if bool(metrics["render_time_available"][i, k]):
+                    row["time_counts"][k] += 1
+                    for key in ("rgb_by_horizon", "alpha_by_horizon"):
+                        row[key][k] += float(metrics[key][i, k].detach())
+
+    def summary(self):
+        result = super().summary()
+        missing = [ep for ep, row in self.render.items() if not row["samples"]]
+        if missing:
+            raise ValueError(f"No render supervision for entire episodes: {missing}")
+        for ep, row in self.render.items():
+            result["episodes"][ep].update(render_samples=row["samples"],
+                **{key: row[key]/row["samples"] for key in ("rgb", "alpha", "scale_regularization")})
+            for key in ("rgb_by_horizon", "alpha_by_horizon"):
+                result["episodes"][ep][key] = [v/n if n else None for v, n in zip(row[key], row["time_counts"])]
+        for key in ("rgb", "alpha", "scale_regularization"):
+            result[key] = sum(ep[key] for ep in result["episodes"].values())/len(self.render)
+        for key in ("rgb_by_horizon", "alpha_by_horizon"):
+            result[key] = []
+            for k in range(5):
+                values = [ep[key][k] for ep in result["episodes"].values() if ep[key][k] is not None]
+                result[key].append(sum(values)/len(values) if values else None)
+        score = self.weights["rgb_weight"]*result["rgb"] + self.weights["alpha_weight"]*result["alpha"]
+        result.update(objective=score, val_score=score,
+            training_objective=score+self.weights["scale_weight"]*result["scale_regularization"])
+        return result
+
+
+def metric_tracker(processor, config):
+    scale = processor.state_dict()["scale"]
+    return (GaussianMetrics(scale, config) if config.get("output_mode", "position") == "gs_geometry"
+            else EpisodeMetrics(scale, config["depth_weight"]))
+
+
 @torch.no_grad()
 def evaluate_loader(model, loader, processor, renderer, config, device, max_batches=0):
     was_training = model.training
     model.eval()
-    trackers = {name: EpisodeMetrics(processor.state_dict()["scale"], config["depth_weight"])
+    trackers = {name: metric_tracker(processor, config)
                 for name in ("model", "copy_initial")}
     try:
         for raw in loader if not max_batches else islice(loader, max_batches):
             batch = processor(to_device(raw, device))
             outputs = {"model": model(batch["inputs"]),
-                       "copy_initial": batch["inputs"]["gs_xyz"][:, None].expand(-1, 5, -1, -1)}
+                       "copy_initial": copy_initial(batch["inputs"], config.get("output_mode", "position"))}
             for name, prediction in outputs.items():
                 _, metrics = objective(prediction, batch, processor, renderer,
-                                       config["depth_weight"], config["chamfer_chunk"])
+                                       config["depth_weight"], config["chamfer_chunk"], **loss_options(config))
                 trackers[name].add(batch["meta"]["episode_id"], metrics)
         return {name: tracker.summary() for name, tracker in trackers.items()}
     finally:
@@ -141,20 +229,23 @@ def evaluate_loader(model, loader, processor, renderer, config, device, max_batc
 
 def train_epoch(model, optimizer, loader, processor, renderer, config, device):
     model.train()
-    metrics = EpisodeMetrics(processor.state_dict()["scale"], config["depth_weight"])
+    metrics = metric_tracker(processor, config)
     stream = loader if not config["max_train_batches"] else islice(loader, config["max_train_batches"])
     for raw in stream:
         batch = processor(to_device(raw, device))
         optimizer.zero_grad(set_to_none=True)
         prediction = model(batch["inputs"])
         loss, values = objective(prediction, batch, processor, renderer,
-                                 config["depth_weight"], config["chamfer_chunk"])
+                                 config["depth_weight"], config["chamfer_chunk"], **loss_options(config))
+        metrics.add(batch["meta"]["episode_id"], values)
+        if "render_available" in values and not bool(values["render_available"].any()):
+            # Even an AdamW zero-gradient step would change weights/optimizer state.
+            continue
         loss.backward()
         norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1., error_if_nonfinite=True)
         if not torch.isfinite(norm):
             raise FloatingPointError("Nonfinite gradient norm")
         optimizer.step()
-        metrics.add(batch["meta"]["episode_id"], values)
     return metrics.summary()
 
 
@@ -164,6 +255,16 @@ def checkpoint_state(model, optimizer, processor, config, epoch, best, history):
         if key in config and config[key] != model.config[key]:
             raise ValueError(f"Checkpoint config disagrees with model: {key}")
         config[key] = model.config[key]
+    for key, value in LOSS_DEFAULTS.items():
+        config.setdefault(key, value)
+    convention = GS_CONVENTION if config["output_mode"] == "gs_geometry" else None
+    if config.get("gs_convention", convention) != convention:
+        raise ValueError("Checkpoint GS convention disagrees with output mode")
+    config["gs_convention"] = convention
+    settings = gs_render_settings() if config["output_mode"] == "gs_geometry" else None
+    if config.get("render_settings", settings) != settings:
+        raise ValueError("Checkpoint render settings disagree with output mode")
+    config["render_settings"] = settings
     return dict(version=VERSION, config=config, processor=processor.state_dict(),
                 model=model.state_dict(), optimizer=optimizer.state_dict(), epoch=epoch,
                 best=best, history=history, torch_rng=torch.get_rng_state(),
@@ -174,10 +275,30 @@ def checkpoint_state(model, optimizer, processor, config, epoch, best, history):
 def checkpoint_config(value):
     """Interpret legacy metadata without changing the checkpoint on disk."""
     version = value.get("version")
-    if version not in (LEGACY_VERSION, INDEPENDENT_VERSION, VERSION):
-        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 weights; "
+    if version not in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION, VERSION):
+        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1 weights; "
                          "absolute-position V0 checkpoints require the original V0 code")
     config = dict(value["config"])
+    if version != VERSION:
+        if config.get("output_mode", "position") != "position":
+            raise ValueError("Legacy checkpoint must use position output")
+        config["output_mode"] = "position"
+    if config.get("output_mode") not in ("position", "gs_geometry"):
+        raise ValueError("Checkpoint requires explicit output_mode")
+    convention = GS_CONVENTION if config["output_mode"] == "gs_geometry" else None
+    if config.get("gs_convention", None) != convention:
+        raise ValueError("Checkpoint has missing or unsupported GS convention")
+    config["gs_convention"] = convention
+    settings = gs_render_settings() if config["output_mode"] == "gs_geometry" else None
+    if config.get("render_settings") != settings:
+        raise ValueError("Checkpoint has missing or unsupported render settings")
+    config["render_settings"] = settings
+    for key, default in LOSS_DEFAULTS.items():
+        if config["output_mode"] == "gs_geometry" and key not in config:
+            raise ValueError(f"GS checkpoint requires {key}")
+        config.setdefault(key, default)
+        if not math.isfinite(config[key]) or config[key] < 0:
+            raise ValueError(f"Invalid checkpoint loss weight {key}")
     if version == LEGACY_VERSION:
         if config.get("controller_features", 3) != 3:
             raise ValueError("Legacy checkpoint must use 3 controller features")
@@ -188,6 +309,9 @@ def checkpoint_config(value):
         config["prediction_mode"] = "independent"
     if config.get("prediction_mode") not in ("independent", "autoregressive"):
         raise ValueError("Checkpoint requires explicit prediction_mode: independent or autoregressive")
+    if config["output_mode"] == "gs_geometry" and (config["prediction_mode"] != "autoregressive"
+            or config.get("depth_weight", 0.) != 0 or config["rgb_weight"] <= 0):
+        raise ValueError("GS geometry requires autoregressive, positive RGB weight and diagnostic-only depth")
     features = config.get("controller_features")
     if type(features) is not int or features not in (3, 7):
         raise ValueError("Checkpoint requires explicit controller_features of 3 or 7")
@@ -217,6 +341,15 @@ def resolve_prediction_mode(requested, state=None):
     return saved if saved is not None else ("autoregressive" if requested is None else requested)
 
 
+def resolve_output_mode(requested, state=None):
+    saved = checkpoint_config(state)["output_mode"] if state is not None else None
+    if requested is not None and requested not in ("position", "gs_geometry"):
+        raise ValueError("output_mode must be position or gs_geometry")
+    if saved is not None and requested is not None and requested != saved:
+        raise ValueError("Cannot resume with different output_mode; start a new run")
+    return saved if saved is not None else ("gs_geometry" if requested is None else requested)
+
+
 def read_checkpoint(path):
     # Only load checkpoints produced by this project from a trusted location.
     value = torch.load(path, map_location="cpu", weights_only=False)
@@ -241,7 +374,8 @@ def recover_best_score(last_state, run):
     saved = read_checkpoint(path)
     # Canonical legacy defaults allow old best and newly saved last to coexist.
     comparable = lambda c: {k: v for k, v in {"controller_features": 3,
-                            "prediction_mode": "independent", **c}.items()
+                            "prediction_mode": "independent", "output_mode": "position",
+                            "gs_convention": None, "render_settings": None, **LOSS_DEFAULTS, **c}.items()
                             if k != "epochs"}
     if (comparable(saved["config"]) != comparable(last_state["config"])
             or saved["processor"] != last_state["processor"]):
@@ -294,7 +428,7 @@ def parser():
     p.add_argument("--lr", type=float, default=1e-4)
     p.add_argument("--weight-decay", type=float, default=1e-4)
     p.add_argument("--depth-weight", type=float, default=0.,
-                   help="Default 0: Chamfer-only training; depth is still reported")
+                   help="Position mode: optional depth loss; GS mode: keep 0, depth is diagnostic only")
     p.add_argument("--width", type=int, default=128)
     p.add_argument("--heads", type=int, default=4)
     p.add_argument("--layers", type=int, default=2)
@@ -302,6 +436,10 @@ def parser():
                    help="Fresh runs default to 7; resume inherits checkpoint (legacy: 3)")
     p.add_argument("--prediction-mode", choices=("independent", "autoregressive"), default=None,
                    help="Fresh runs default to autoregressive; resume inherits checkpoint")
+    p.add_argument("--output-mode", choices=("position", "gs_geometry"), default=None,
+                   help="Fresh runs default to gs_geometry; legacy resume keeps position output")
+    for name, default in LOSS_DEFAULTS.items():
+        p.add_argument("--"+name.replace("_", "-"), type=float, default=default)
     p.add_argument("--chamfer-chunk", type=int, default=512)
     p.add_argument("--max-train-batches", type=int, default=0, help="0 means full epoch")
     p.add_argument("--max-val-batches", type=int, default=0, help="0 means full validation")
@@ -321,7 +459,8 @@ def main(argv=None):
         p.error("Fixed-window overfit requires --single-epochs 0")
     if args.resume and args.run_id:
         p.error("--resume uses the existing run directory; do not also specify --run-id")
-    if any(not math.isfinite(v) or v < 0 for v in (args.lr, args.weight_decay, args.depth_weight)) or args.lr == 0:
+    if any(not math.isfinite(v) or v < 0 for v in (args.lr, args.weight_decay, args.depth_weight,
+            args.rgb_weight, args.alpha_weight, args.scale_weight)) or args.lr == 0:
         p.error("Learning rate must be positive; weights must be finite and nonnegative")
     device = torch.device(args.device)
     if device.type != "cuda" or not torch.cuda.is_available():
@@ -335,19 +474,29 @@ def main(argv=None):
         state = read_checkpoint(args.resume)
     args.controller_features = resolve_controller_features(args.controller_features, state)
     args.prediction_mode = resolve_prediction_mode(args.prediction_mode, state)
+    args.output_mode = resolve_output_mode(args.output_mode, state)
+    if args.output_mode == "gs_geometry" and (args.prediction_mode != "autoregressive"
+            or args.depth_weight != 0 or args.rgb_weight <= 0):
+        p.error("GS geometry requires autoregressive, positive RGB weight and --depth-weight 0")
     root = Path(args.root).resolve()
     depth_root = Path(args.depth_root).resolve() if args.depth_root else root.parent / "touch4d-depth-v1"
     config = vars(args).copy()
     for key in ("run_id", "resume", "device"):
         config.pop(key)
+    requested_cameras = args.depth_cameras
+    if requested_cameras is None:
+        requested_cameras = (state["config"]["depth_cameras"] if state is not None else
+                             GS_CAMERAS[args.scene] if args.output_mode == "gs_geometry" else None)
     config.update(root=str(root), depth_root=str(depth_root),
-                  depth_cameras=choose_cameras(args.scene, depth_root, args.depth_cameras))
+                  depth_cameras=choose_cameras(args.scene, depth_root, requested_cameras),
+                  gs_convention=GS_CONVENTION if args.output_mode == "gs_geometry" else None,
+                  render_settings=gs_render_settings() if args.output_mode == "gs_geometry" else None)
     processor = DataProcessor(args.scene)
     model = PositionPredictor(args.width, args.heads, args.layers,
                               controller_features=args.controller_features,
-                              prediction_mode=args.prediction_mode).to(device)
+                              prediction_mode=args.prediction_mode, output_mode=args.output_mode).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    renderer = DepthRenderer()
+    renderer = make_renderer(config)
     # Fail before creating a run when the renderer dependency is absent.
     import gsplat
     start, best, history = 0, float("inf"), []

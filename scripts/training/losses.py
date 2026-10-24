@@ -1,4 +1,4 @@
-"""Unordered point geometry and target-masked expected-depth losses."""
+"""Legacy geometry/depth losses and target-masked Gaussian RGB/alpha losses."""
 
 import math
 import torch
@@ -71,7 +71,99 @@ def depth_samples(prediction_m, target_m, valid):
     return loss, times.any(-1)
 
 
-def objective(prediction, batch, processor, renderer, depth_weight=0., chunk=512):
+def render_samples(prediction, target, valid):
+    """L1 with equal pixel, view, time means; RGB channels are averaged first.
+
+    Return sample loss, sample availability, per-time loss and time availability.
+    The target mask alone chooses observations, including absent predictions.
+    """
+    if valid.dtype != torch.bool or valid.ndim != 5 or valid.shape[1] != 5:
+        raise ValueError("Expected boolean [B,5,V,H,W] target render mask")
+    if prediction.shape != target.shape or prediction.shape[:5] != valid.shape:
+        raise ValueError("Rendered predictions, targets and target mask must match")
+    if prediction.ndim not in (5, 6) or (prediction.ndim == 6 and prediction.shape[-1] != 3):
+        raise ValueError("Rendered values must be alpha [B,5,V,H,W] or RGB with three channels")
+    if not torch.isfinite(prediction).all() or not torch.isfinite(target).all():
+        raise FloatingPointError("Nonfinite rendered prediction or target")
+    delta = (prediction - target).abs()
+    if delta.ndim == 6:
+        delta = delta.mean(-1)
+    delta = torch.where(valid, delta, torch.zeros_like(delta))
+    counts = valid.sum((-1, -2))
+    views = counts > 0
+    view_loss = delta.sum((-1, -2)) / counts.clamp_min(1)
+    time_loss = (view_loss * views).sum(-1) / views.sum(-1).clamp_min(1)
+    times = views.any(-1)
+    samples = (time_loss * times).sum(-1) / times.sum(-1).clamp_min(1)
+    return samples, times.any(-1), time_loss, times
+
+
+def gs_objective(prediction, batch, processor, renderer, depth_weight=0., chunk=512,
+                 rgb_weight=1., alpha_weight=.1, scale_weight=.01):
+    """Render supervision for full GS geometry; Chamfer/depth are diagnostics.
+
+    All-empty samples are excluded from every training component, including the
+    scale regularizer. The training loop must skip an entirely empty batch, so
+    AdamW decay/moments cannot move parameters without an observed objective.
+    """
+    if depth_weight != 0:
+        raise ValueError("gs_geometry keeps depth diagnostic only; depth_weight must be zero")
+    for name, weight in (("rgb_weight", rgb_weight), ("alpha_weight", alpha_weight),
+                         ("scale_weight", scale_weight)):
+        if not math.isfinite(weight) or weight < 0:
+            raise ValueError(f"{name} must be finite and nonnegative")
+    x, y = batch["inputs"], batch["targets"]
+    real = x["gs_mask"][:, None].expand(-1, 5, -1)
+    dimensions = {"xyz": 3, "log_scales": 3, "quaternions": 4, "opacity_logits": 1, "sh_dc": 3}
+    for key, size in dimensions.items():
+        if key not in prediction or tuple(prediction[key].shape) != (*real.shape, size):
+            raise ValueError(f"Expected predicted {key} shape {(*real.shape, size)}")
+        if not torch.isfinite(prediction[key][real]).all():
+            raise FloatingPointError(f"Nonfinite predicted {key}; refusing to call the rasterizer")
+    valid = y["target_depth_valid"]
+    if (valid.dtype != torch.bool or valid.shape != y["target_depth"].shape
+            or valid.ndim != 5 or valid.shape[1] != 5):
+        raise ValueError("Expected matching depth and boolean [B,5,V,H,W] target mask")
+    if not torch.isfinite(y["target_depth"]).all():
+        raise FloatingPointError("Nonfinite target depth")
+    # Never backpropagate through target GS or observations, even when supplied
+    # by a custom renderer in a test or evaluation tool.
+    with torch.no_grad():
+        target = renderer.render_targets(batch, processor)
+    rendered = renderer(prediction, batch, processor)
+    rgb, available, rgb_time, times = render_samples(rendered["rgb"], target["rgb"].detach(), valid)
+    alpha, alpha_available, alpha_time, alpha_times = render_samples(
+        rendered["alpha"], target["alpha"].detach(), valid)
+    if not torch.equal(available, alpha_available) or not torch.equal(times, alpha_times):
+        raise RuntimeError("RGB and alpha must use exactly the same target observation mask")
+    difference = torch.where(real.unsqueeze(-1),
+                             prediction["log_scales"] - x["gs_attr"][:, None, :, :3],
+                             torch.zeros_like(prediction["log_scales"]))
+    scale_regularization = difference.square().sum((1, 2, 3)) / (real.sum((1, 2)) * 3).clamp_min(1)
+    data_score = rgb_weight * rgb + alpha_weight * alpha
+    sample_loss = data_score + scale_weight * scale_regularization
+    if available.any():
+        loss = sample_loss[available].mean()
+    else:
+        loss = sum(prediction[key][real].sum() for key in ("xyz", "log_scales", "quaternions")) * 0.
+    if not torch.isfinite(loss):
+        raise FloatingPointError("Nonfinite Gaussian rendering objective")
+    with torch.no_grad():
+        geometry = chamfer_samples(prediction["xyz"], batch, chunk)
+        depth, depth_available = depth_samples(rendered["depth"].detach(),
+                                               y["target_depth"], valid)
+    return loss, {"geometry": geometry, "depth_m": depth, "depth_available": depth_available,
+                  "rgb": rgb, "alpha": alpha, "render_available": available,
+                  "scale_regularization": scale_regularization, "data_score": data_score,
+                  "rgb_by_horizon": rgb_time, "alpha_by_horizon": alpha_time,
+                  "render_time_available": times}
+
+
+def objective(prediction, batch, processor, renderer, depth_weight=0., chunk=512,
+              rgb_weight=1., alpha_weight=.1, scale_weight=.01):
+    if isinstance(prediction, dict):
+        return gs_objective(prediction, batch, processor, renderer, depth_weight, chunk,
+                            rgb_weight, alpha_weight, scale_weight)
     if not math.isfinite(depth_weight) or depth_weight < 0:
         raise ValueError("depth_weight must be finite and nonnegative")
     real = batch["inputs"]["gs_mask"][:, None].expand(-1, 5, -1)

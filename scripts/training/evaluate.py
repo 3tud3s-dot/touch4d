@@ -7,8 +7,7 @@ import torch
 
 from ..data_process import DataProcessor
 from .model import PositionPredictor
-from .rendering import DepthRenderer
-from .train import MODEL_KEYS, atomic_json, build_loader, evaluate_loader, read_checkpoint
+from .train import MODEL_KEYS, atomic_json, build_loader, evaluate_loader, read_checkpoint, make_renderer
 
 
 def load_model(path, device):
@@ -36,7 +35,7 @@ def main(argv=None):
     device = torch.device(args.device)
     model, processor, config = load_model(args.checkpoint, device)
     loader = build_loader(config, args.split)
-    metrics = evaluate_loader(model, loader, processor, DepthRenderer(), config, device, args.max_batches)
+    metrics = evaluate_loader(model, loader, processor, make_renderer(config), config, device, args.max_batches)
     result = dict(scene=config["scene"], split=args.split, checkpoint=str(Path(args.checkpoint).resolve()),
                   partial=bool(args.max_batches), depth_cameras=config["depth_cameras"], metrics=metrics)
     if output:
