@@ -29,9 +29,10 @@ from .losses import objective
 from .model import PositionPredictor
 from .rendering import DepthRenderer
 
-VERSION = "touch4d-displacement-v2"
+VERSION = "touch4d-displacement-v3"
 LEGACY_VERSION = "touch4d-displacement-v1"
-MODEL_KEYS = ("width", "heads", "layers", "controller_features")
+INDEPENDENT_VERSION = "touch4d-displacement-v2"
+MODEL_KEYS = ("width", "heads", "layers", "controller_features", "prediction_mode")
 PROJECT = Path(__file__).resolve().parents[2]
 
 
@@ -173,14 +174,20 @@ def checkpoint_state(model, optimizer, processor, config, epoch, best, history):
 def checkpoint_config(value):
     """Interpret legacy metadata without changing the checkpoint on disk."""
     version = value.get("version")
-    if version not in (LEGACY_VERSION, VERSION):
-        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2 weights; "
+    if version not in (LEGACY_VERSION, INDEPENDENT_VERSION, VERSION):
+        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 weights; "
                          "absolute-position V0 checkpoints require the original V0 code")
     config = dict(value["config"])
     if version == LEGACY_VERSION:
         if config.get("controller_features", 3) != 3:
             raise ValueError("Legacy checkpoint must use 3 controller features")
         config["controller_features"] = 3
+    if version in (LEGACY_VERSION, INDEPENDENT_VERSION):
+        if config.get("prediction_mode", "independent") != "independent":
+            raise ValueError("Legacy checkpoint must use independent prediction")
+        config["prediction_mode"] = "independent"
+    if config.get("prediction_mode") not in ("independent", "autoregressive"):
+        raise ValueError("Checkpoint requires explicit prediction_mode: independent or autoregressive")
     features = config.get("controller_features")
     if type(features) is not int or features not in (3, 7):
         raise ValueError("Checkpoint requires explicit controller_features of 3 or 7")
@@ -198,6 +205,16 @@ def resolve_controller_features(requested, state=None):
     if saved is not None and requested is not None and requested != saved:
         raise ValueError("Cannot resume with different controller_features; start a new run")
     return saved if saved is not None else (7 if requested is None else requested)
+
+
+def resolve_prediction_mode(requested, state=None):
+    """Identical tensor shapes do not imply identical rollout semantics."""
+    saved = checkpoint_config(state)["prediction_mode"] if state is not None else None
+    if requested is not None and requested not in ("independent", "autoregressive"):
+        raise ValueError("prediction_mode must be independent or autoregressive")
+    if saved is not None and requested is not None and requested != saved:
+        raise ValueError("Cannot resume with different prediction_mode; start a new run")
+    return saved if saved is not None else ("autoregressive" if requested is None else requested)
 
 
 def read_checkpoint(path):
@@ -222,8 +239,9 @@ def recover_best_score(last_state, run):
     if not path.is_file():
         raise ValueError(f"Cannot safely resume: missing best checkpoint {path}")
     saved = read_checkpoint(path)
-    # Legacy configs omitted controller_features; explicit 3 means the same model.
-    comparable = lambda c: {k: v for k, v in {"controller_features": 3, **c}.items()
+    # Canonical legacy defaults allow old best and newly saved last to coexist.
+    comparable = lambda c: {k: v for k, v in {"controller_features": 3,
+                            "prediction_mode": "independent", **c}.items()
                             if k != "epochs"}
     if (comparable(saved["config"]) != comparable(last_state["config"])
             or saved["processor"] != last_state["processor"]):
@@ -282,6 +300,8 @@ def parser():
     p.add_argument("--layers", type=int, default=2)
     p.add_argument("--controller-features", type=int, choices=(3, 7), default=None,
                    help="Fresh runs default to 7; resume inherits checkpoint (legacy: 3)")
+    p.add_argument("--prediction-mode", choices=("independent", "autoregressive"), default=None,
+                   help="Fresh runs default to autoregressive; resume inherits checkpoint")
     p.add_argument("--chamfer-chunk", type=int, default=512)
     p.add_argument("--max-train-batches", type=int, default=0, help="0 means full epoch")
     p.add_argument("--max-val-batches", type=int, default=0, help="0 means full validation")
@@ -314,6 +334,7 @@ def main(argv=None):
             p.error("Resume from last.pt to preserve the completed-epoch history; best.pt is for evaluation")
         state = read_checkpoint(args.resume)
     args.controller_features = resolve_controller_features(args.controller_features, state)
+    args.prediction_mode = resolve_prediction_mode(args.prediction_mode, state)
     root = Path(args.root).resolve()
     depth_root = Path(args.depth_root).resolve() if args.depth_root else root.parent / "touch4d-depth-v1"
     config = vars(args).copy()
@@ -323,7 +344,8 @@ def main(argv=None):
                   depth_cameras=choose_cameras(args.scene, depth_root, args.depth_cameras))
     processor = DataProcessor(args.scene)
     model = PositionPredictor(args.width, args.heads, args.layers,
-                              controller_features=args.controller_features).to(device)
+                              controller_features=args.controller_features,
+                              prediction_mode=args.prediction_mode).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     renderer = DepthRenderer()
     # Fail before creating a run when the renderer dependency is absent.

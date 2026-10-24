@@ -25,7 +25,8 @@ from .evaluate import load_model
 from .rendering import DepthRenderer, assemble_gaussians
 from .train import (EpisodeMetrics, checkpoint_state, evaluate_loader, restore_training,
                     train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser,
-                    VERSION, LEGACY_VERSION, resolve_controller_features)
+                    VERSION, LEGACY_VERSION, INDEPENDENT_VERSION,
+                    resolve_controller_features, resolve_prediction_mode)
 from .visualize import png_bytes, viewer_html, main as visualize_main
 
 
@@ -116,9 +117,13 @@ class TrainingTests(unittest.TestCase):
         self.assertEqual(count(self.model) - count(legacy), 4 * 32)
 
     def test_checkpoint_old_and_new_loading_and_resume(self):
-        for features, version in ((3, LEGACY_VERSION), (3, VERSION), (7, VERSION)):
-            with self.subTest(features=features, version=version):
-                model = PositionPredictor(32, 4, 2, controller_features=features)
+        cases = [(3, LEGACY_VERSION, 'independent'),
+                 (3, INDEPENDENT_VERSION, 'independent'), (7, INDEPENDENT_VERSION, 'independent'),
+                 (3, VERSION, 'independent'), (7, VERSION, 'independent'),
+                 (3, VERSION, 'autoregressive'), (7, VERSION, 'autoregressive')]
+        for features, version, mode in cases:
+            with self.subTest(features=features, version=version, mode=mode):
+                model = PositionPredictor(32, 4, 2, controller_features=features, prediction_mode=mode)
                 torch.nn.init.normal_(model.position_head[-1].weight, std=.02)
                 optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
                 # Populate optimizer moments using synthetic, in-memory data.
@@ -131,14 +136,22 @@ class TrainingTests(unittest.TestCase):
                 state['version'] = version
                 if version == LEGACY_VERSION:
                     del state['config']['controller_features']
+                if version != VERSION:
+                    del state['config']['prediction_mode']
                 with patch('scripts.training.train.torch.load', return_value=state):
                     loaded, _, cfg = load_model('memory/checkpoint.pt', 'cpu')
                     canonical = read_checkpoint('memory/checkpoint.pt')
                 self.assertEqual(cfg['controller_features'], features)
                 self.assertEqual('controller_features' in state['config'], version != LEGACY_VERSION)
+                self.assertEqual('prediction_mode' in state['config'], version == VERSION)
+                self.assertEqual(cfg['prediction_mode'], mode)
                 torch.testing.assert_close(loaded(self.batch['inputs']), model(self.batch['inputs']), atol=0, rtol=0)
                 self.assertEqual(resolve_controller_features(None, state), features)
                 self.assertEqual(resolve_controller_features(features, state), features)
+                self.assertEqual(resolve_prediction_mode(None, state), mode)
+                self.assertEqual(resolve_prediction_mode(mode, state), mode)
+                with self.assertRaisesRegex(ValueError, 'different prediction_mode'):
+                    resolve_prediction_mode('autoregressive' if mode == 'independent' else 'independent', state)
                 with self.assertRaisesRegex(ValueError, 'different controller_features'):
                     resolve_controller_features(10 - features, state)
                 other_opt = torch.optim.AdamW(loaded.parameters(), lr=1e-3)
@@ -157,6 +170,8 @@ class TrainingTests(unittest.TestCase):
         args = parser().parse_args(['--scene', '001-rope'])
         self.assertEqual(resolve_controller_features(args.controller_features), 7)
         self.assertEqual(resolve_controller_features(3), 3)
+        self.assertEqual(resolve_prediction_mode(args.prediction_mode), 'autoregressive')
+        self.assertEqual(resolve_prediction_mode('independent'), 'independent')
 
     def test_checkpoint_feature_mismatches_fail_before_restore(self):
         optimizer = torch.optim.AdamW(self.model.parameters())
@@ -188,7 +203,35 @@ class TrainingTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'configurations differ'):
                 recover_best_score(state, 'memory')
 
-    def test_zero_initialized_displacement_and_initial_reference(self):
+    def test_checkpoint_prediction_mode_mismatches_fail_before_restore(self):
+        optimizer = torch.optim.AdamW(self.model.parameters())
+        state = checkpoint_state(self.model, optimizer, self.processor, config(), 0, .4, [])
+        for mutation in ('missing', 'unknown', 'legacy_autoregressive'):
+            broken = copy.deepcopy(state)
+            if mutation == 'missing': del broken['config']['prediction_mode']
+            elif mutation == 'unknown': broken['config']['prediction_mode'] = 'unknown'
+            else: broken['version'] = INDEPENDENT_VERSION
+            with self.subTest(mutation=mutation), patch('scripts.training.train.torch.load', return_value=broken):
+                with self.assertRaises(ValueError): read_checkpoint('memory/broken.pt')
+            with patch.object(self.model, 'load_state_dict') as load, patch.object(optimizer, 'load_state_dict') as opt_load:
+                with self.assertRaises(ValueError): restore_training(broken, self.model, optimizer)
+                load.assert_not_called(); opt_load.assert_not_called()
+        # Same-sized weights must not permit a silent change in rollout semantics.
+        wrong = PositionPredictor(32, 4, 2, prediction_mode='independent')
+        self.assertEqual({k: tuple(v.shape) for k, v in wrong.state_dict().items()},
+                         {k: tuple(v.shape) for k, v in self.model.state_dict().items()})
+        with patch.object(wrong, 'load_state_dict') as load, patch.object(optimizer, 'load_state_dict') as opt_load:
+            with self.assertRaisesRegex(ValueError, 'architecture differs'):
+                restore_training(state, wrong, optimizer)
+            load.assert_not_called(); opt_load.assert_not_called()
+        other = copy.deepcopy(state)
+        other['config']['prediction_mode'] = 'independent'
+        with patch('pathlib.Path.is_file', return_value=True), \
+             patch('scripts.training.train.read_checkpoint', return_value=other):
+            with self.assertRaisesRegex(ValueError, 'configurations differ'):
+                recover_best_score(state, 'memory')
+
+    def test_zero_initialized_displacement_and_step_reference(self):
         x = self.batch['inputs']
         keep = x['gs_mask'][:, None].expand(-1, 5, -1)
         initial = x['gs_xyz'][:, None].expand(-1, 5, -1, -1)
@@ -198,11 +241,65 @@ class TrainingTests(unittest.TestCase):
         torch.nn.init.constant_(self.model.position_head[-1].bias, .25)
         out = self.model(x)
         self.assertEqual(tuple(out.shape), (*keep.shape, 3))
-        torch.testing.assert_close(out[keep], (initial+.25)[keep], atol=0, rtol=0)
+        increments = torch.arange(1, 6)[None, :, None, None] * .25
+        torch.testing.assert_close(out[keep], (initial+increments)[keep])
         self.assertTrue(torch.all(out[~keep] == 0))
         shifted = copy.deepcopy(x)
         shifted['gs_xyz'] += 100
-        torch.testing.assert_close(self.model(shifted)[keep], (initial+100+.25)[keep])
+        torch.testing.assert_close(self.model(shifted)[keep], (initial+100+increments)[keep])
+        legacy = PositionPredictor(32, 4, 2, prediction_mode='independent')
+        legacy.load_state_dict(self.model.state_dict())
+        torch.testing.assert_close(legacy(x)[keep], (initial+.25)[keep], atol=0, rtol=0)
+
+    def test_autoregressive_reencodes_each_state_and_keeps_full_gradient_chain(self):
+        self.activate_head()
+        x = self.batch['inputs']
+        encoded, deltas = [], []
+        a = self.model.gs_encoder.register_forward_pre_hook(lambda module, args: encoded.append(args[0]))
+        b = self.model.position_head.register_forward_hook(lambda module, args, out: deltas.append(out))
+        try:
+            prediction = self.model(x)
+        finally:
+            a.remove(); b.remove()
+        self.assertEqual(len(encoded), 5)
+        for k, values in enumerate(encoded):
+            previous = x['gs_xyz'] if k == 0 else prediction[:, k-1]
+            torch.testing.assert_close(values[..., :3], previous, atol=0, rtol=0)
+            torch.testing.assert_close(values[..., 3:], x['gs_attr'], atol=0, rtol=0)
+        # Only final-step Chamfer supervises this check. Its graph must still
+        # reach all previous head calls and all re-encoded predicted states.
+        p = prediction[0, -1, x['gs_mask'][0]]
+        t = self.batch['targets']['target_xyz'][-1][0, self.batch['targets']['target_mask'][-1][0]]
+        final_loss = .5 * (nearest_distances(p, t).mean() + nearest_distances(t, p).mean())
+        # encoded[0] is observed input data, not a differentiable prediction.
+        gradients = torch.autograd.grad(final_loss, deltas + encoded[1:], retain_graph=True, allow_unused=True)
+        for gradient in gradients:
+            self.assertIsNotNone(gradient)
+            self.assertTrue(torch.isfinite(gradient).all())
+            self.assertGreater(gradient.abs().sum().item(), 0.)
+        final_loss.backward()
+        self.assertGreater(self.model.gs_encoder[0].weight.grad.abs().sum().item(), 0.)
+        self.assertTrue(all(p.grad is None or torch.isfinite(p.grad).all() for p in self.model.parameters()))
+
+    def test_independent_mode_matches_original_forward(self):
+        self.activate_head()
+        model = PositionPredictor(32, 4, 2, prediction_mode='independent')
+        model.load_state_dict(self.model.state_dict())
+        x = self.batch['inputs']; keep = x['gs_mask']
+        initial = torch.where(keep[..., None], torch.cat((x['gs_xyz'], x['gs_attr']), -1), 0.)
+        features = model.gs_encoder(initial)
+        tokens, token_valid = model.encode_conditions(x)
+        expected = []
+        for k in range(5):
+            memory = torch.cat((model.null_token.expand(len(initial), -1, -1), tokens[:, :k+1].flatten(1, 2)), 1)
+            valid = torch.cat((torch.ones(len(initial), 1, dtype=torch.bool), token_valid[:, :k+1].flatten(1, 2)), 1)
+            query = features + model.prediction_time.weight[k]
+            for block in model.blocks: query = block(query, memory, valid)
+            expected.append(torch.where(keep[..., None], initial[..., :3]+model.position_head(query), 0.))
+        torch.testing.assert_close(model(x), torch.stack(expected, 1), atol=0, rtol=0)
+        rolled = self.model(x)
+        torch.testing.assert_close(rolled[:, 0], expected[0], atol=0, rtol=0)
+        self.assertFalse(torch.equal(rolled[:, 1:], torch.stack(expected, 1)[:, 1:]))
 
     def test_every_horizon_cannot_read_later_conditions(self):
         self.activate_head()

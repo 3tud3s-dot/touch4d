@@ -1,4 +1,4 @@
-"""Causal displacement prediction relative to initial GS; return normalized XYZ."""
+"""Causal five-step displacement prediction; return normalized XYZ."""
 
 import torch
 from torch import nn
@@ -26,7 +26,7 @@ class CrossBlock(nn.Module):
 
 
 class PositionPredictor(nn.Module):
-    """Each horizon sees only its own condition prefix; queries never mix horizons.
+    """Each horizon reads only its condition prefix and prior predicted states.
 
     Tokens per condition frame: two states, 60 controllers, four tactile fingers.
     Finger readings retain their fixed 12x32 order, continuous values, validity,
@@ -34,14 +34,17 @@ class PositionPredictor(nn.Module):
     provide the spatial context; no hard pixel-to-controller assignment is made.
     """
 
-    def __init__(self, width=128, heads=4, layers=2, controller_features=7):
+    def __init__(self, width=128, heads=4, layers=2, controller_features=7,
+                 prediction_mode="autoregressive"):
         super().__init__()
         if min(width, heads, layers) < 1 or width % heads:
             raise ValueError("Positive dimensions required; width must be divisible by heads")
         if type(controller_features) is not int or controller_features not in (3, 7):
             raise ValueError("controller_features must be 3 (legacy) or 7 (relative motion)")
+        if prediction_mode not in ("independent", "autoregressive"):
+            raise ValueError("prediction_mode must be independent or autoregressive")
         self.config = dict(width=width, heads=heads, layers=layers,
-                           controller_features=controller_features)
+                           controller_features=controller_features, prediction_mode=prediction_mode)
         def mlp(n):
             return nn.Sequential(nn.Linear(n, width), nn.GELU(), nn.Linear(width, width))
         self.gs_encoder = mlp(14)
@@ -55,7 +58,7 @@ class PositionPredictor(nn.Module):
         self.null_token = nn.Parameter(torch.zeros(1, 1, width))
         self.blocks = nn.ModuleList(CrossBlock(width, heads) for _ in range(layers))
         self.position_head = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, 3))
-        # The head predicts displacement; every horizon starts at copy-initial GS.
+        # A zero displacement head copies the initial GS across all five steps.
         nn.init.zeros_(self.position_head[-1].weight)
         nn.init.zeros_(self.position_head[-1].bias)
 
@@ -98,11 +101,17 @@ class PositionPredictor(nn.Module):
         x = inputs
         keep = x["gs_mask"]
         initial = masked(torch.cat((x["gs_xyz"], x["gs_attr"]), -1), keep)
-        features = self.gs_encoder(initial)
+        autoregressive = self.config["prediction_mode"] == "autoregressive"
+        current = initial[..., :3]
+        features = None if autoregressive else self.gs_encoder(initial)
         tokens, token_valid = self.encode_conditions(x)
-        b = features.shape[0]
+        b = initial.shape[0]
         outputs = []
         for k in range(5):
+            if autoregressive:
+                # Re-encode predicted positions with unchanged initial attributes.
+                # Keep the full graph through every preceding step (no detach).
+                features = self.gs_encoder(masked(torch.cat((current, initial[..., 3:]), -1), keep))
             # No condition encoder combines times before this causal slicing.
             memory = tokens[:, :k+1].flatten(1, 2)
             valid = token_valid[:, :k+1].flatten(1, 2)
@@ -111,7 +120,7 @@ class PositionPredictor(nn.Module):
             query = features + self.prediction_time.weight[k]
             for block in self.blocks:
                 query = block(query, memory, valid)
-            # Each displacement is relative to the same initial GS, not the
-            # preceding predicted frame. Keep final XYZ as the public interface.
-            outputs.append(masked(initial[..., :3] + self.position_head(query), keep))
+            reference = current if autoregressive else initial[..., :3]
+            current = masked(reference + self.position_head(query), keep)
+            outputs.append(current)
         return torch.stack(outputs, dim=1)
