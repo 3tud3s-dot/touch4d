@@ -5,6 +5,9 @@ import math
 import torch
 from torch import nn
 
+from .gs_decoder import (build_initial_anchor_field, pool_anchor_features,
+                         interpolate_anchor_displacements)
+
 
 def masked(value, mask):
     return torch.where(mask.unsqueeze(-1), value, torch.zeros_like(value))
@@ -132,7 +135,8 @@ class PositionPredictor(nn.Module):
 
     def __init__(self, width=128, heads=4, layers=2, controller_features=7,
                  prediction_mode="autoregressive", output_mode="position",
-                 gs_local_attention="none", gs_local_k=16):
+                 gs_local_attention="none", gs_local_k=16, gs_decoder="free",
+                 anchor_count=128, anchor_pool_k=16, anchor_bandwidth=1.0):
         super().__init__()
         if min(width, heads, layers) < 1 or width % heads:
             raise ValueError("Positive dimensions required; width must be divisible by heads")
@@ -148,10 +152,25 @@ class PositionPredictor(nn.Module):
             raise ValueError("gs_local_attention must be none or knn")
         if type(gs_local_k) is not int or gs_local_k < 1:
             raise ValueError("gs_local_k must be a positive integer")
+        if gs_decoder not in ("free", "anchors"):
+            raise ValueError("gs_decoder must be free or anchors")
+        if (gs_decoder == "anchors" and
+                (prediction_mode != "autoregressive" or output_mode != "gs_geometry"
+                 or gs_local_attention != "knn")):
+            raise ValueError("anchors requires autoregressive gs_geometry and knn local attention")
+        if type(anchor_count) is not int or anchor_count < 1:
+            raise ValueError("anchor_count must be a positive integer")
+        if type(anchor_pool_k) is not int or anchor_pool_k < 1:
+            raise ValueError("anchor_pool_k must be a positive integer")
+        if (isinstance(anchor_bandwidth, bool) or not isinstance(anchor_bandwidth, (int, float))
+                or not math.isfinite(anchor_bandwidth) or anchor_bandwidth <= 0):
+            raise ValueError("anchor_bandwidth must be finite and positive")
         self.config = dict(width=width, heads=heads, layers=layers,
                            controller_features=controller_features, prediction_mode=prediction_mode,
                            output_mode=output_mode, gs_local_attention=gs_local_attention,
-                           gs_local_k=gs_local_k)
+                           gs_local_k=gs_local_k, gs_decoder=gs_decoder,
+                           anchor_count=anchor_count, anchor_pool_k=anchor_pool_k,
+                           anchor_bandwidth=anchor_bandwidth)
         def mlp(n):
             return nn.Sequential(nn.Linear(n, width), nn.GELU(), nn.Linear(width, width))
         self.gs_encoder = mlp(14)
@@ -176,6 +195,11 @@ class PositionPredictor(nn.Module):
                 nn.init.zeros_(head[-1].bias)
         # Disabled legacy path creates no parameters and consumes no extra RNG.
         self.gs_local = LocalGSBlock(width, heads) if gs_local_attention == "knn" else None
+        if gs_decoder == "anchors":
+            # Construct the free geometry heads before LocalGS, then remove them.
+            # This preserves the P0 RNG stream and identical initial shared weights
+            # for paired experiments without retaining unused trainable heads.
+            del self.scale_head, self.rotation_head
 
     def controller_inputs(self, x):
         """Same-frame XYZ, optional displacement from t0 and endpoint validity.
@@ -218,11 +242,15 @@ class PositionPredictor(nn.Module):
         initial = masked(torch.cat((x["gs_xyz"], x["gs_attr"]), -1), keep)
         autoregressive = self.config["prediction_mode"] == "autoregressive"
         geometry = self.config["output_mode"] == "gs_geometry"
+        anchors = self.config["gs_decoder"] == "anchors"
         current = initial[..., :3]
         current_scales, current_quats = initial[..., 3:6], initial[..., 6:10]
         features = None if autoregressive else self.gs_encoder(initial)
         neighbors = (initial_knn(current, keep, self.config["gs_local_k"])
                      if self.gs_local is not None else None)
+        anchor_field = (build_initial_anchor_field(
+            current, keep, self.config["anchor_count"], self.config["anchor_pool_k"],
+            self.config["anchor_bandwidth"]) if anchors else None)
         if not autoregressive and self.gs_local is not None:
             features = self.gs_local(features, current, keep, neighbors)
         tokens, token_valid = self.encode_conditions(x)
@@ -246,16 +274,25 @@ class PositionPredictor(nn.Module):
             query = features + self.prediction_time.weight[k]
             for block in self.blocks:
                 query = block(query, memory, valid)
-            reference = current if autoregressive else initial[..., :3]
-            current = masked(reference + self.position_head(query), keep)
+            if anchors:
+                # The head predicts total displacement from t0 at every horizon.
+                # Previous predictions still feed the live AR encoder above; do
+                # not add this cumulative field to the previous predicted center.
+                anchor_delta = self.position_head(pool_anchor_features(query, anchor_field))
+                delta = interpolate_anchor_displacements(anchor_delta, anchor_field, keep)
+                current = masked(initial[..., :3] + delta, keep)
+            else:
+                reference = current if autoregressive else initial[..., :3]
+                current = masked(reference + self.position_head(query), keep)
             outputs.append(current)
             if geometry:
-                current_scales = masked(current_scales + self.scale_head(query), keep)
-                # Rotate each Gaussian's axes in world coordinates. The center
-                # is translated above and is never rotated about the origin.
-                increment = rotation_vector_to_quaternion(self.rotation_head(query))
-                current_quats = quaternion_multiply(increment, current_quats)
-                current_quats = masked(torch.nn.functional.normalize(current_quats, dim=-1), keep)
+                if not anchors:
+                    current_scales = masked(current_scales + self.scale_head(query), keep)
+                    # Rotate each Gaussian's axes in world coordinates. The center
+                    # is translated above and is never rotated about the origin.
+                    increment = rotation_vector_to_quaternion(self.rotation_head(query))
+                    current_quats = quaternion_multiply(increment, current_quats)
+                    current_quats = masked(torch.nn.functional.normalize(current_quats, dim=-1), keep)
                 scale_outputs.append(current_scales)
                 quaternion_outputs.append(current_quats)
         xyz = torch.stack(outputs, dim=1)

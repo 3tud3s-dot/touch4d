@@ -317,11 +317,11 @@ class FixedFitTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"reviewed"):
             fit.run(parser().parse_args(["--scene","001-rope","--protocol","fixed400"]))
 
-    def test_run_orchestration_publishes_final_evaluates_and_exports_both_checkpoints(self, diagnostic=False):
+    def test_run_orchestration_publishes_final_evaluates_and_exports_both_checkpoints(self, diagnostic=False, decoder="free"):
         # All persistence/CUDA/training are mocked. Exercise real orchestration,
         # checkpoint schema, exact manifest, fit selection and final exports.
         model=PositionPredictor(output_mode="gs_geometry",prediction_mode="autoregressive",
-                                controller_features=7,gs_local_attention="knn",gs_local_k=16)
+                                controller_features=7,gs_local_attention="knn",gs_local_k=16,gs_decoder=decoder)
         raws=[single_raw(window=w) for w in fit.WINDOWS["001-rope"]]
         for raw in raws:
             raw["meta"]["depth_camera_ids"]=[fit.GS_CAMERAS["001-rope"]]
@@ -337,7 +337,8 @@ class FixedFitTests(unittest.TestCase):
             callback=args[6]
             for update in range(20,401,20):callback(update,metrics,.5,.1)
         arguments=parser().parse_args(["--scene","001-rope","--protocol","fixed400",
-                                     "--fit-contract","memory/reviewed.json","--run-id","unit-test"])
+                                     "--fit-contract","memory/reviewed.json","--run-id","unit-test",
+                                     "--gs-decoder",decoder])
         if diagnostic:
             arguments.fit_contract=None
             arguments.fit_diagnostic=True
@@ -369,6 +370,7 @@ class FixedFitTests(unittest.TestCase):
             expected.update(f"step_{update:06d}.pt" for update in range(20,401,20))
         self.assertEqual(set(checkpoints),expected)
         self.assertEqual(checkpoints["last_400.pt"]["fit"]["completed_updates"],400)
+        self.assertEqual(checkpoints["last_400.pt"]["config"]["gs_decoder"],decoder)
         self.assertEqual(checkpoints[name]["fit"]["completed_updates"],20)
         self.assertEqual(len(outputs["metrics.json"]),20)
         self.assertEqual(export.call_count,4)
@@ -378,6 +380,9 @@ class FixedFitTests(unittest.TestCase):
 
     def test_diagnostic_run_exports_lowest_cd_and_retains_all_twenty_states(self):
         self.test_run_orchestration_publishes_final_evaluates_and_exports_both_checkpoints(True)
+
+    def test_anchor_run_reuses_fixed400_schedule_diagnostics_and_exports(self):
+        self.test_run_orchestration_publishes_final_evaluates_and_exports_both_checkpoints(True,"anchors")
 
     def test_fit_evaluation_cli_reuses_exact_windows_and_rejects_changed_manifest(self):
         from . import evaluate as evaluation

@@ -1,4 +1,4 @@
-"""Roadmap P0: exact-window fit protocol, without changing model or loss semantics.
+"""Roadmap P0/P1a: paired exact-window fit protocol with unchanged loss semantics.
 
 Entry: training.train --protocol fixed400 --scene ... --fit-contract reviewed.json.
 Alternatively --fit-diagnostic retains every 20-update checkpoint without any
@@ -36,7 +36,7 @@ from .model import PositionPredictor, initial_knn
 from .train import (PROJECT, MODEL_KEYS, GS_CAMERAS, GS_CONVENTION, atomic_json,
                     atomic_checkpoint, build_loader, choose_cameras, checkpoint_state,
                     copy_initial, gs_render_settings, make_renderer, read_checkpoint,
-                    restore_training, to_device)
+                    restore_training, to_device, DECODER_DEFAULTS, resolve_decoder)
 
 WINDOWS = {"001-rope": ((1, 85), (2, 73)), "051-cube": ((0, 109), (0, 132))}
 UPDATES, EVAL_EVERY = 400, 20
@@ -370,7 +370,8 @@ def update_loop(model, optimizer, batches, processor, renderer, config, on_evalu
             on_evaluation(completed+1, metrics, float(loss.detach()), float(norm))
 
 
-def report_html(history, best, completed):
+def report_html(history, best, completed, decoder="free"):
+    stage = "P1a shared anchor displacement" if decoder == "anchors" else "P0 free GS Head"
     best_name = "lowest_cd (diagnostic only)" if best and best.get("diagnostic_only") else "best_fit"
     rows = []
     for row in history:
@@ -407,9 +408,9 @@ def report_html(history, best, completed):
                            f'<td>{"–".join(f"{v:.3f}" for v in diagnostic["axis_ratio"])}</td>'
                            f'<td>{"–".join(f"{v:.3f}" for v in diagnostic["volume_ratio"])}</td></tr>')
             detail += '</table>'
-    return ('<!doctype html><meta charset="utf-8"><title>P0 fixed400</title>'
+    return (f'<!doctype html><meta charset="utf-8"><title>{stage} fixed400</title>'
             '<style>body{font:15px system-ui;margin:30px}td,th{padding:8px;border-bottom:1px solid #ddd}</style>'
-            f'<h1>P0 · {completed}/400 optimizer updates</h1><p>{best_name} update: '
+            f'<h1>{stage} · {completed}/400 optimizer updates</h1><p>{best_name} update: '
             f'{None if best is None else best["update"]} · manual structural review pending.</p>'
             '<p>Fixed training windows, not held-out validation. No GT particle IDs. '
             'Positive = audited target_depth_valid; Negative = none; other pixels = Ignore.</p>'
@@ -437,12 +438,16 @@ def run(args):
     optional = dict(controller_features=7, prediction_mode="autoregressive", output_mode="gs_geometry",
                     gs_local_attention="knn", gs_local_k=16, chamfer_weight=1.)
     if any(getattr(args, key) not in (None, value) for key, value in optional.items()):
-        raise ValueError("P0 requires the current 7D/k16/AR free GS Head and lambda=1")
+        raise ValueError("P0/P1a requires the current 7D/k16/AR GS settings and lambda=1")
     if args.workers < 0 or args.chamfer_chunk < 1:
         raise ValueError("Invalid worker count or Chamfer chunk")
     state = read_checkpoint(args.resume) if args.resume else None
     if state is not None and (Path(args.resume).name != "last.pt" or state["config"].get("protocol") != "fixed400"):
         raise ValueError("fixed400 resumes only its own last.pt; legacy best/last semantics are unchanged")
+    decoder = resolve_decoder(args.gs_decoder, args.anchor_count, args.anchor_pool_k,
+                              args.anchor_bandwidth, state)
+    if any(decoder[key] != value for key, value in DECODER_DEFAULTS.items() if key != "gs_decoder"):
+        raise ValueError("Paired P1a fixes anchor_count=128, anchor_pool_k=16 and anchor_bandwidth=1")
     contract = (json.loads(Path(args.fit_contract).read_text(encoding="utf-8")) if args.fit_contract else
                 state["config"]["fit_contract"] if state else None)
     diagnostic = args.fit_diagnostic or bool(state and state["config"].get("fit_diagnostic"))
@@ -461,7 +466,7 @@ def run(args):
     cameras = choose_cameras(args.scene, depth_root, args.depth_cameras or GS_CAMERAS[args.scene])
     if cameras != GS_CAMERAS[args.scene]:
         raise ValueError("P0 freezes the audited three-camera order")
-    config = dict(expected, **{k: v for k, v in optional.items() if k not in expected},
+    config = dict(expected, **{k: v for k, v in optional.items() if k not in expected}, **decoder,
         scene=args.scene, root=str(root), depth_root=str(depth_root), depth_cameras=cameras,
         workers=args.workers, chamfer_chunk=args.chamfer_chunk, overfit_windows=0, protocol="fixed400",
         fit_contract=contract, fit_diagnostic=diagnostic, gs_convention=GS_CONVENTION, render_settings=gs_render_settings())
@@ -528,7 +533,7 @@ def run(args):
         checkpoint["fit"] = dict(completed_updates=update, best_candidate=best, manifest=evidence)
         publish_fit(run_dir, checkpoint, improved)
         atomic_json(run_dir/"metrics.json", history)
-        (run_dir/"report.html").write_text(report_html(history, best, update), encoding="utf-8")
+        (run_dir/"report.html").write_text(report_html(history, best, update, config["gs_decoder"]), encoding="utf-8")
         print(json.dumps(dict(update=update, candidate=row), allow_nan=False), flush=True)
     update_loop(model, optimizer, batches, processor, renderer, config, save, start, evaluate)
     # Also repairs a crash after last.pt(400) but before last_400.pt/export publication.
@@ -538,6 +543,8 @@ def run(args):
     atomic_checkpoint(run_dir/"last_400.pt", last)
     from .visualize import export_gaussians
     summary = dict(scene=args.scene, completed_updates=UPDATES, windows=evidence,
+                   gs_decoder=config["gs_decoder"],
+                   inherited_shape=config["gs_decoder"] == "anchors",
                    acceptance="not assessed: tolerances not frozen" if diagnostic else "manual structural review pending",
                    checkpoints={})
     selected_name = "lowest_cd" if diagnostic else "best_fit"
@@ -574,7 +581,7 @@ def run(args):
         interpretation="Automatic checks are evidence only. If an earlier checkpoint also passes manual "
                        "structure review and last_400 fails, report: 表达能力验收通过，训练稳定性尚未通过。")
     atomic_json(run_dir/"fit_summary.json", summary)
-    page = report_html(history, best, UPDATES)
+    page = report_html(history, best, UPDATES, config["gs_decoder"])
     for name, result in summary["checkpoints"].items():
         for path in result.get("visualizations", []):
             relative = Path(path).relative_to(run_dir).as_posix()

@@ -62,10 +62,13 @@ slider.oninput=update;camera.onchange=update;window.onresize=update;document.get
 
 def gs_viewer_html(data, title):
     encoded = json.dumps(data, separators=(',', ':'), allow_nan=False).replace('<', '\\u003c')
+    properties = ('P1a 共享锚点位移；尺度、旋转、颜色及不透明度继承初态。'
+                  if data.get('gs_decoder', 'free') == 'anchors' else
+                  '自由 GS Head；位置、尺度、旋转随预测更新，颜色及不透明度继承初态。')
     return '''<!doctype html><html lang="zh"><meta charset="utf-8"><title>GS 渲染对比</title>
 <style>body{font:14px system-ui;background:#f5f7fa;color:#172437;margin:20px}.row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.panel{background:white;padding:10px;border-radius:8px}img{width:100%}select,input,button{margin:8px}</style><h1>''' + html.escape(title) + '''</h1>
 <p><a href="geometry.html">独立检查 Gaussian centers、ellipsoids 和五步轨迹</a></p>
-<p>真实高斯光栅渲染，零阶 SH、统一黑色背景。颜色、不透明度继承初态；位置、尺度、旋转随预测更新。误差仅在目标 HDF5 有效区域计算，无效区域显示灰色，不是背景标签。</p>
+<p>真实高斯光栅渲染，零阶 SH、统一黑色背景。''' + properties + '''误差仅在目标 HDF5 有效区域计算，无效区域显示灰色，不是背景标签。</p>
 <button id="play">播放</button><input id="time" type="range" min="0" max="4" value="0"><span id="label"></span><select id="camera"></select><select id="mode"><option value="rgb">RGB</option><option value="alpha">Alpha</option><option value="depth">期望深度</option></select><p id="info"></p>
 <div class="row"><div class="panel">目标 GS<img id="gt"></div><div class="panel">预测 GS<img id="pred"></div><div class="panel">复制初态 GS<img id="copy"></div><div class="panel">预测误差<img id="err"></div></div>
 <p>RGB误差：通道平均绝对误差，0–0.1；alpha误差：0–0.1；深度误差：与HDF5比较，±5mm。深度面板前三图来自GS渲染。颜色仅用于显示，完整世界坐标GS保存在 prediction.npz。</p>
@@ -185,7 +188,7 @@ def export_gaussians(args, config, raw, batch, prediction, processor):
                 (directory/'figures'/f'frame_{k+1}_view_{v}_{name}.png').write_bytes(png_bytes(image))
     data = dict(cameras=raw['meta']['depth_camera_ids'][0], frame_ids=arrays['frame_ids'].tolist(),
                 initial_count=int(keep.sum()), target_counts=raw['targets']['target_lengths'][0].tolist(),
-                depth_range=[float(lo), float(hi)])
+                depth_range=[float(lo), float(hi)], gs_decoder=config.get('gs_decoder', 'free'))
     title = f'{config["scene"]} · episode {args.episode} · start {args.start}'
     (directory/'geometry.html').write_text(geometry_html(geometry, title), encoding='utf-8')
     (directory/'index.html').write_text(gs_viewer_html(data, title), encoding='utf-8')
