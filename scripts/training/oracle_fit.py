@@ -84,13 +84,19 @@ def main(argv=None):
     batches = [processor(to_device(raw, "cuda")) for raw in raws]
     constructor = OracleLatent if args.kind == "latent" else OracleAnchor
     model = constructor(base, [raw["inputs"]["gs_mask"] for raw in raws]).cuda()
+    # A coordinate variable has a different optimization scale from a neural
+    # weight. Freeze one independent Anchor diagnostic, not a predictor ablation:
+    # lr=.01 can traverse the audited motion in 200 window updates; decay=0
+    # avoids an implicit penalty toward the zero-displacement initial template.
+    optimization = (dict(lr=1e-2, weight_decay=0.) if args.kind == "anchor" else
+                    dict(lr=config["lr"], weight_decay=config["weight_decay"]))
     optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad],
-                                 lr=config["lr"], weight_decay=config["weight_decay"])
+                                 **optimization)
     renderer = TargetCache(make_renderer(config))
     neighbors = [initial_knn(b["inputs"]["gs_xyz"], b["inputs"]["gs_mask"], 16) for b in batches]
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PROJECT, text=True).strip()
     atomic_json(output/"config.json", dict(training=config, manifest=evidence,
-        commit=commit, oracle_kind=args.kind, diagnostic_only=True,
+        commit=commit, oracle_kind=args.kind, diagnostic_only=True, oracle_optimizer=optimization,
         optimized_target_information=True, initial_model_sha256=initial_hash,
         processor=processor.state_dict(), source_files={str(p.relative_to(PROJECT)):
         hashlib.sha256(p.read_bytes()).hexdigest() for p in (Path(__file__), Path(__file__).with_name("oracle.py"))}))
@@ -109,7 +115,7 @@ def main(argv=None):
     saved = torch.load(stream, map_location="cpu", weights_only=False)
     restored = constructor(base, [raw["inputs"]["gs_mask"] for raw in raws]).cuda()
     restored_optimizer = torch.optim.AdamW([p for p in restored.parameters() if p.requires_grad],
-                                         lr=config["lr"], weight_decay=config["weight_decay"])
+                                         **optimization)
     restored.load_diagnostic_checkpoint(saved, restored_optimizer)
     with torch.no_grad():
         expected = model(batches[0]["inputs"], 0)
@@ -166,7 +172,8 @@ def main(argv=None):
         history.append(dict(update=update, window_updates=[update//2]*2, metrics=metrics,
                             last_train_loss=float(loss.detach()), grad_norm_before_clip=float(norm), candidate=row))
         state = model.diagnostic_checkpoint(optimizer, config=config, history=history,
-            commit=commit, completed_updates=update, best_candidate=best, manifest=evidence)
+            commit=commit, completed_updates=update, best_candidate=best, manifest=evidence,
+            oracle_optimizer=optimization)
         if improved:
             atomic_checkpoint(output/"lowest_cd.pt", state)
         atomic_checkpoint(output/f"step_{update:06d}.pt", state)
