@@ -46,6 +46,81 @@ class CrossBlock(nn.Module):
         return query + self.ff(self.ff_norm(query))
 
 
+@torch.no_grad()
+def initial_knn(xyz, keep, k=16, chunk=512):
+    """Exact initial-state neighborhoods, including self; no padded/batch edges.
+
+    Only indices are nondifferentiable. Distances are computed in query chunks,
+    once per rollout, without storing a global attention/distance matrix.
+    """
+    if type(k) is not int or k < 1 or type(chunk) is not int or chunk < 1:
+        raise ValueError("k and chunk must be positive integers")
+    b, n, _ = xyz.shape
+    slots = min(k, n)
+    indices = torch.zeros((b, n, slots), dtype=torch.long, device=xyz.device)
+    valid = torch.zeros_like(indices, dtype=torch.bool)
+    for batch in range(b):
+        ids = keep[batch].nonzero(as_tuple=True)[0]
+        count = len(ids)
+        if not count:
+            continue
+        points = xyz[batch, ids].float()
+        if not torch.isfinite(points).all():
+            raise ValueError("Nonfinite valid GS coordinates in initial neighborhood")
+        used = min(k, count)
+        indices[batch, ids, 0] = ids
+        valid[batch, ids, :used] = True
+        if used == 1:
+            continue
+        for start in range(0, count, chunk):
+            stop = min(start + chunk, count)
+            distances = torch.cdist(points[start:stop], points,
+                                    compute_mode="donot_use_mm_for_euclid_dist")
+            # Force self into slot zero even when multiple centers coincide.
+            distances[torch.arange(stop-start, device=xyz.device),
+                      torch.arange(start, stop, device=xyz.device)] = float("inf")
+            nearest = distances.topk(used-1, largest=False, sorted=True).indices
+            indices[batch, ids[start:stop], 1:used] = ids[nearest]
+    return indices, valid
+
+
+class LocalGSBlock(nn.Module):
+    """One shared local multihead attention layer with live relative geometry."""
+    def __init__(self, width, heads):
+        super().__init__()
+        self.heads, self.head_dim = heads, width // heads
+        self.norm = nn.LayerNorm(width)
+        self.qkv = nn.Linear(width, 3 * width)
+        self.relative = nn.Sequential(nn.Linear(3, width), nn.GELU(),
+                                      nn.Linear(width, width + heads))
+        self.projection = nn.Linear(width, width)
+        self.ff_norm = nn.LayerNorm(width)
+        self.ff = nn.Sequential(nn.Linear(width, 2 * width), nn.GELU(), nn.Linear(2 * width, width))
+
+    def forward(self, features, xyz, keep, neighbors):
+        indices, valid = neighbors
+        features, xyz = masked(features, keep), masked(xyz, keep)
+        b, n, width = features.shape
+        if n == 0:
+            return features
+        batch = torch.arange(b, device=features.device)[:, None, None]
+        q, key, value = self.qkv(self.norm(features)).chunk(3, dim=-1)
+        q = q.reshape(b, n, self.heads, self.head_dim)
+        key = key[batch, indices].reshape(b, n, -1, self.heads, self.head_dim)
+        value = value[batch, indices].reshape_as(key)
+        # Gradients through the current (possibly predicted) coordinates remain live.
+        position = self.relative(xyz[batch, indices] - xyz[:, :, None])
+        bias, relative_value = position[..., :self.heads], position[..., self.heads:]
+        logits = (q[:, :, None] * key).sum(-1) / math.sqrt(self.head_dim) + bias
+        logits = logits.masked_fill(~valid[..., None], float("-inf"))
+        # Empty padded queries must not produce softmax(-inf,...,-inf) NaNs.
+        logits = torch.where(valid.any(-1)[:, :, None, None], logits, 0.)
+        weights = logits.softmax(dim=2).masked_fill(~valid[..., None], 0.)
+        update = (weights[..., None] * (value + relative_value.reshape_as(value))).sum(2)
+        features = features + self.projection(update.reshape(b, n, width))
+        return masked(features + self.ff(self.ff_norm(features)), keep)
+
+
 class PositionPredictor(nn.Module):
     """Each horizon reads only its condition prefix and prior predicted states.
 
@@ -56,7 +131,8 @@ class PositionPredictor(nn.Module):
     """
 
     def __init__(self, width=128, heads=4, layers=2, controller_features=7,
-                 prediction_mode="autoregressive", output_mode="position"):
+                 prediction_mode="autoregressive", output_mode="position",
+                 gs_local_attention="none", gs_local_k=16):
         super().__init__()
         if min(width, heads, layers) < 1 or width % heads:
             raise ValueError("Positive dimensions required; width must be divisible by heads")
@@ -68,9 +144,14 @@ class PositionPredictor(nn.Module):
             raise ValueError("output_mode must be position or gs_geometry")
         if output_mode == "gs_geometry" and prediction_mode != "autoregressive":
             raise ValueError("gs_geometry requires autoregressive prediction_mode")
+        if gs_local_attention not in ("none", "knn"):
+            raise ValueError("gs_local_attention must be none or knn")
+        if type(gs_local_k) is not int or gs_local_k < 1:
+            raise ValueError("gs_local_k must be a positive integer")
         self.config = dict(width=width, heads=heads, layers=layers,
                            controller_features=controller_features, prediction_mode=prediction_mode,
-                           output_mode=output_mode)
+                           output_mode=output_mode, gs_local_attention=gs_local_attention,
+                           gs_local_k=gs_local_k)
         def mlp(n):
             return nn.Sequential(nn.Linear(n, width), nn.GELU(), nn.Linear(width, width))
         self.gs_encoder = mlp(14)
@@ -93,6 +174,8 @@ class PositionPredictor(nn.Module):
             for head in (self.scale_head, self.rotation_head):
                 nn.init.zeros_(head[-1].weight)
                 nn.init.zeros_(head[-1].bias)
+        # Disabled legacy path creates no parameters and consumes no extra RNG.
+        self.gs_local = LocalGSBlock(width, heads) if gs_local_attention == "knn" else None
 
     def controller_inputs(self, x):
         """Same-frame XYZ, optional displacement from t0 and endpoint validity.
@@ -138,6 +221,10 @@ class PositionPredictor(nn.Module):
         current = initial[..., :3]
         current_scales, current_quats = initial[..., 3:6], initial[..., 6:10]
         features = None if autoregressive else self.gs_encoder(initial)
+        neighbors = (initial_knn(current, keep, self.config["gs_local_k"])
+                     if self.gs_local is not None else None)
+        if not autoregressive and self.gs_local is not None:
+            features = self.gs_local(features, current, keep, neighbors)
         tokens, token_valid = self.encode_conditions(x)
         b = initial.shape[0]
         outputs = []
@@ -149,6 +236,8 @@ class PositionPredictor(nn.Module):
                 attrs = (torch.cat((current_scales, current_quats, initial[..., 10:]), -1)
                          if geometry else initial[..., 3:])
                 features = self.gs_encoder(masked(torch.cat((current, attrs), -1), keep))
+                if self.gs_local is not None:
+                    features = self.gs_local(features, current, keep, neighbors)
             # No condition encoder combines times before this causal slicing.
             memory = tokens[:, :k+1].flatten(1, 2)
             valid = token_valid[:, :k+1].flatten(1, 2)

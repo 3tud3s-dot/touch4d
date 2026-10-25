@@ -21,13 +21,15 @@ import torch
 from ..data_process import DataProcessor
 from ..data_process.test_data_process import make_batch, add_depth_targets
 from .losses import chamfer_samples, depth_samples, nearest_distances, objective
-from .model import PositionPredictor, rotation_vector_to_quaternion, quaternion_multiply
+from .model import (PositionPredictor, LocalGSBlock, initial_knn,
+                    rotation_vector_to_quaternion, quaternion_multiply)
 from .evaluate import load_model
 from .rendering import DepthRenderer, GaussianRenderer, assemble_gaussians
 from .train import (EpisodeMetrics, GaussianMetrics, checkpoint_state, evaluate_loader, restore_training,
                     train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser,
-                    VERSION, LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
-                    resolve_controller_features, resolve_prediction_mode, resolve_output_mode)
+                    VERSION, GS_LEGACY_VERSION, LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
+                    resolve_controller_features, resolve_prediction_mode, resolve_output_mode,
+                    resolve_local_attention)
 from .visualize import png_bytes, viewer_html, main as visualize_main
 
 
@@ -143,6 +145,7 @@ class TrainingTests(unittest.TestCase):
                  (3, INDEPENDENT_VERSION, 'independent'), (7, INDEPENDENT_VERSION, 'independent'),
                  (3, DISPLACEMENT_VERSION, 'independent'), (7, DISPLACEMENT_VERSION, 'independent'),
                  (3, DISPLACEMENT_VERSION, 'autoregressive'), (7, DISPLACEMENT_VERSION, 'autoregressive'),
+                 (3, GS_LEGACY_VERSION, 'independent'), (7, GS_LEGACY_VERSION, 'autoregressive'),
                  (3, VERSION, 'independent'), (7, VERSION, 'independent'),
                  (3, VERSION, 'autoregressive'), (7, VERSION, 'autoregressive')]
         for features, version, mode in cases:
@@ -163,13 +166,17 @@ class TrainingTests(unittest.TestCase):
                 if version in (LEGACY_VERSION, INDEPENDENT_VERSION):
                     del state['config']['prediction_mode']
                 if version != VERSION:
+                    del state['config']['gs_local_attention']
+                    del state['config']['gs_local_k']
+                if version in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION):
                     del state['config']['output_mode']
                 with patch('scripts.training.train.torch.load', return_value=state):
                     loaded, _, cfg = load_model('memory/checkpoint.pt', 'cpu')
                     canonical = read_checkpoint('memory/checkpoint.pt')
                 self.assertEqual(cfg['controller_features'], features)
                 self.assertEqual('controller_features' in state['config'], version != LEGACY_VERSION)
-                self.assertEqual('prediction_mode' in state['config'], version in (DISPLACEMENT_VERSION, VERSION))
+                self.assertEqual('prediction_mode' in state['config'], version in (DISPLACEMENT_VERSION, GS_LEGACY_VERSION, VERSION))
+                self.assertEqual(resolve_local_attention(None, None, state), ('none', 16))
                 self.assertEqual(cfg['prediction_mode'], mode)
                 self.assertEqual(cfg['output_mode'], 'position')
                 self.assertEqual(resolve_output_mode(None, state), 'position')
@@ -203,6 +210,9 @@ class TrainingTests(unittest.TestCase):
         self.assertEqual(resolve_prediction_mode(args.prediction_mode), 'autoregressive')
         self.assertEqual(resolve_prediction_mode('independent'), 'independent')
         self.assertEqual(resolve_output_mode(args.output_mode), 'gs_geometry')
+        self.assertEqual(resolve_local_attention(args.gs_local_attention, args.gs_local_k), ('knn', 16))
+        args = parser().parse_args(['--scene', '001-rope', '--gs-local-k', '32'])
+        self.assertEqual(resolve_local_attention(args.gs_local_attention, args.gs_local_k), ('knn', 32))
 
     def test_checkpoint_feature_mismatches_fail_before_restore(self):
         optimizer = torch.optim.AdamW(self.model.parameters())
@@ -620,8 +630,8 @@ class TrainingTests(unittest.TestCase):
         with self.assertRaisesRegex(FloatingPointError,'predicted position'):
             objective(pred,self.batch,self.processor,forbidden)
 
-    def geometry_fixture(self):
-        model = PositionPredictor(32,4,2,output_mode='gs_geometry')
+    def geometry_fixture(self, **model_options):
+        model = PositionPredictor(32,4,2,output_mode='gs_geometry', **model_options)
         batch = copy.deepcopy(self.batch)
         # Unequal principal scales make orientation observable.
         keep = batch['inputs']['gs_mask']
@@ -962,6 +972,184 @@ class TrainingTests(unittest.TestCase):
         with patch('pathlib.Path.is_file',return_value=True),patch('scripts.training.train.read_checkpoint',return_value=incompatible):
             with self.assertRaisesRegex(ValueError,'configurations differ'):
                 recover_best_score(state,'memory')
+
+    def test_local_knn_exact_masked_batched_and_small_inputs(self):
+        xyz = torch.randn(3, 41, 3)
+        keep = torch.ones(3, 41, dtype=torch.bool)
+        keep[1, 4:] = False
+        keep[2] = False
+        xyz[~keep] = float('nan')
+        for k in (1, 16, 32, 64):
+            indices, valid = initial_knn(xyz, keep, k, chunk=7)
+            self.assertEqual(tuple(indices.shape), (3, 41, min(k, 41)))
+            self.assertFalse(valid[~keep].any())
+            for b in range(2):
+                ids = keep[b].nonzero(as_tuple=True)[0]
+                count = min(k, len(ids))
+                torch.testing.assert_close(indices[b, ids, 0], ids)
+                self.assertTrue(torch.all(valid[b, ids].sum(-1) == count))
+                self.assertTrue(keep[b, indices[b][valid[b]]].all())
+                for i in ids:
+                    actual = indices[b, i, :count]
+                    self.assertEqual(len(actual.unique()), count)
+                    distances = ((xyz[b, ids] - xyz[b, i])**2).sum(-1)
+                    expected = ids[distances.argsort()[:count]]
+                    self.assertEqual(set(actual.tolist()), set(expected.tolist()))
+        # Coincident centers must still include self, without duplicate indices.
+        duplicate = torch.zeros(1, 40, 3)
+        idx, valid = initial_knn(duplicate, torch.ones(1, 40, dtype=torch.bool), 16)
+        torch.testing.assert_close(idx[0, :, 0], torch.arange(40))
+        self.assertTrue(all(len(row.unique()) == 16 for row in idx[0]))
+        idx, valid = initial_knn(torch.zeros(1, 1, 3), torch.ones(1, 1, dtype=torch.bool), 32)
+        self.assertEqual(idx.item(), 0)
+        self.assertTrue(valid.item())
+        for bad in (0, -1, True, 1.5):
+            with self.assertRaises(ValueError): initial_knn(duplicate, keep[:1, :40], bad)
+            with self.assertRaises(ValueError): PositionPredictor(gs_local_k=bad)
+
+    def test_local_block_neighbor_influence_relative_geometry_and_padding(self):
+        block = LocalGSBlock(32, 4)
+        xyz = torch.randn(2, 41, 3)
+        keep = torch.ones(2, 41, dtype=torch.bool)
+        keep[1] = False
+        xyz[1] = float('nan')
+        xyz.requires_grad_()
+        features = torch.randn(2, 41, 32)
+        features[1] = float('nan')
+        features.requires_grad_()
+        neighbors = initial_knn(xyz, keep, 16)
+        out = block(features, xyz, keep, neighbors)
+        self.assertTrue(torch.isfinite(out).all())
+        self.assertTrue(torch.all(out[1] == 0))
+        member = int(neighbors[0][0, 0, 1])
+        outsider = next(i for i in range(41) if i not in neighbors[0][0, 0].tolist())
+        near, far = features.detach().clone(), features.detach().clone()
+        near[0, member, 0] += 10
+        far[0, outsider, 0] += 10
+        self.assertFalse(torch.allclose(block(near, xyz, keep, neighbors)[0, 0], out[0, 0]))
+        torch.testing.assert_close(block(far, xyz, keep, neighbors)[0, 0], out[0, 0], atol=0, rtol=0)
+        moved = xyz.detach().clone()
+        moved[0, member, 0] += .2
+        self.assertFalse(torch.allclose(block(features, moved, keep, neighbors)[0, 0], out[0, 0]))
+        shifted = xyz + torch.tensor([1., -2., .5])
+        torch.testing.assert_close(block(features, shifted, keep, neighbors), out, atol=1e-6, rtol=1e-5)
+        out[0, 0].square().sum().backward()
+        for grad in (features.grad, xyz.grad):
+            self.assertTrue(torch.isfinite(grad).all())
+            self.assertGreater(grad[0, member].abs().sum().item(), 0.)
+            self.assertEqual(grad[0, outsider].abs().sum().item(), 0.)
+            self.assertEqual(grad[1].abs().sum().item(), 0.)
+        # Non-degenerate centers: rebuilding after permutation gives the same operator.
+        order = torch.randperm(41)
+        reordered = initial_knn(xyz[:, order], keep[:, order], 16)
+        result = block(features[:, order], xyz[:, order], keep[:, order], reordered)
+        torch.testing.assert_close(result, out[:, order], atol=1e-6, rtol=1e-5)
+        changed_batch = features.detach().clone()
+        changed_batch[1] = 1e6
+        torch.testing.assert_close(block(changed_batch, xyz, keep, neighbors)[0], out[0], atol=0, rtol=0)
+
+    def test_local_rollout_builds_once_and_reuses_indices_with_live_positions(self):
+        model, batch = self.geometry_fixture(gs_local_attention='knn')
+        self.activate_geometry_heads(model)
+        calls = []
+        hook = model.gs_local.register_forward_pre_hook(lambda _, args: calls.append(args))
+        try:
+            with patch('scripts.training.model.initial_knn', wraps=initial_knn) as build:
+                output = model(batch['inputs'])
+            self.assertEqual(build.call_count, 1)
+        finally:
+            hook.remove()
+        self.assertEqual(len(calls), 5)
+        for k, args in enumerate(calls):
+            self.assertIs(args[3], calls[0][3])
+            expected = batch['inputs']['gs_xyz'] if k == 0 else output['xyz'][:, k-1]
+            torch.testing.assert_close(args[1], expected, atol=0, rtol=0)
+        gradients = torch.autograd.grad(output['xyz'][:, -1].square().sum(),
+                                        [args[1] for args in calls[1:]], retain_graph=True)
+        for grad in gradients:
+            self.assertTrue(torch.isfinite(grad).all())
+            self.assertGreater(grad.abs().sum().item(), 0.)
+        output['xyz'][:, -1].square().sum().backward()
+        for module in (model.gs_local.qkv, model.gs_local.relative[0], model.gs_local.relative[2]):
+            self.assertTrue(torch.isfinite(module.weight.grad).all())
+            self.assertGreater(module.weight.grad.abs().sum().item(), 0.)
+
+    def test_local_geometry_preserves_rollout_causality_masks_and_checkpoint(self):
+        fixture = self.geometry_fixture
+        for k in (16, 32):
+            with self.subTest(k=k), patch.object(self, 'geometry_fixture',
+                    side_effect=lambda: fixture(gs_local_attention='knn', gs_local_k=k)):
+                self.test_geometry_zero_identity_and_increment_accumulation()
+                self.test_geometry_reencodes_updated_attributes_and_full_cross_step_gradients()
+                self.test_geometry_causality_padding_and_point_order()
+                self.test_geometry_checkpoint_roundtrip_and_output_mode_conflicts()
+
+    def test_local_checkpoint_configuration_and_resume_conflicts(self):
+        model, _ = self.geometry_fixture(gs_local_attention='knn', gs_local_k=32)
+        optimizer = torch.optim.AdamW(model.parameters())
+        state = checkpoint_state(model, optimizer, self.processor, config(), 1, .2, [])
+        self.assertEqual(resolve_local_attention(None, None, state), ('knn', 32))
+        for mode, k in (('none', None), (None, 16)):
+            with self.assertRaisesRegex(ValueError, 'different local GS attention'):
+                resolve_local_attention(mode, k, state)
+        for options in (dict(gs_local_attention='none'), dict(gs_local_attention='knn', gs_local_k=16)):
+            other, _ = self.geometry_fixture(**options)
+            with patch.object(other, 'load_state_dict') as load:
+                with self.assertRaisesRegex(ValueError, 'architecture differs'):
+                    restore_training(state, other, optimizer)
+                load.assert_not_called()
+        for mutation in ('missing_mode', 'missing_k', 'bad_k', 'mode_weights', 'legacy_version'):
+            broken = copy.deepcopy(state)
+            if mutation == 'missing_mode': del broken['config']['gs_local_attention']
+            elif mutation == 'missing_k': del broken['config']['gs_local_k']
+            elif mutation == 'bad_k': broken['config']['gs_local_k'] = True
+            elif mutation == 'mode_weights': broken['config']['gs_local_attention'] = 'none'
+            else: broken['version'] = GS_LEGACY_VERSION
+            with self.subTest(mutation=mutation), patch('scripts.training.train.torch.load', return_value=broken):
+                with self.assertRaises(ValueError): read_checkpoint('memory/broken.pt')
+        for key, value in (('gs_local_attention', 'none'), ('gs_local_k', 16)):
+            other = copy.deepcopy(state)
+            other['config'][key] = value
+            with patch('pathlib.Path.is_file', return_value=True), \
+                 patch('scripts.training.train.read_checkpoint', return_value=other):
+                with self.assertRaisesRegex(ValueError, 'configurations differ'):
+                    recover_best_score(state, 'memory')
+
+    def test_old_gs_checkpoint_exact_resume_and_best_preservation(self):
+        model, batch = self.geometry_fixture()
+        self.activate_geometry_heads(model)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+        def step(m, opt):
+            opt.zero_grad(set_to_none=True)
+            out = m(batch['inputs'])
+            sum(out[key].square().sum() for key in ('xyz', 'log_scales', 'quaternions')).backward()
+            opt.step()
+        step(model, optimizer)
+        old = copy.deepcopy(checkpoint_state(model, optimizer, self.processor, config(), 1, .2, []))
+        old['version'] = GS_LEGACY_VERSION
+        del old['config']['gs_local_attention']; del old['config']['gs_local_k']
+        with patch('scripts.training.train.torch.load', return_value=old):
+            loaded, _, cfg = load_model('memory/old.pt', 'cpu')
+        self.assertIsNone(loaded.gs_local)
+        self.assertEqual(list(model.state_dict()), list(loaded.state_dict()))
+        self.assertEqual(resolve_local_attention(None, None, old), ('none', 16))
+        for key, value in model(batch['inputs']).items():
+            torch.testing.assert_close(value, loaded(batch['inputs'])[key], atol=0, rtol=0)
+        other_opt = torch.optim.AdamW(loaded.parameters(), lr=1e-3)
+        restore_training(old, loaded, other_opt)
+        step(model, optimizer); step(loaded, other_opt)
+        for a, b in zip(model.parameters(), loaded.parameters()):
+            torch.testing.assert_close(a, b, atol=0, rtol=0)
+        current = checkpoint_state(loaded, other_opt, self.processor, cfg, 2, .3, [])
+        # Old best is better than last; canonical defaults permit mixed versions.
+        with patch('pathlib.Path.is_file', return_value=True), \
+             patch('scripts.training.train.torch.load', return_value=old):
+            best = recover_best_score(current, 'memory')
+        self.assertEqual(best, .2)
+        with patch('scripts.training.train.atomic_checkpoint') as save:
+            publish_checkpoints('memory', dict(current, best=best), .25 < best)
+            self.assertEqual(save.call_count, 1)
+            self.assertEqual(save.call_args.args[0].name, 'last.pt')
 
     def test_geometry_validation_score_excludes_regularizer_and_weights_episodes(self):
         tracker=GaussianMetrics(.1,dict(rgb_weight=1.,alpha_weight=.1,scale_weight=.01))
