@@ -1,13 +1,13 @@
 # touch4d 模型改造 Roadmap
 
-历史评审基准：`5098797c8630b0f648cc02d2f83c113f915ff456`。原阶段规划保留；本轮 P1a.5 的实现状态与实验结果以第 6.1 节为准。正式路线以修订后的正文为准，末尾提示词仅保留为历史记录。
+历史评审基准：`5098797c8630b0f648cc02d2f83c113f915ff456`。P1a.5 历史实验见第 6.1 节；本轮 Structural GS Representation + 15-Frame Prediction 的实际执行与证据见第 11 节。正式基线为 P1a，各向异性 RBF 仅保留作消融。末尾提示词仅保留为历史记录。
 
 ## 1. 当前核心目标
 
 当前阶段只有两个核心目标：
 
 1. **解决 Gaussian 运动分散。** 重点处理 001-rope 一端大幅运动时，相邻 Gaussian 沿不同方向散开、分叉或扇形铺展，未形成连贯局部形变的问题。
-2. **验证未来五帧轨迹的表达能力。** 每个模型、每个 scene 在固定窗口的 **400 次参数更新**内，拟合未来五帧的运动与形变：051 验证整体向上平移，001 验证一端运动、另一端相对稳定的柔性形变。
+2. **验证未来 5–15 帧轨迹的表达能力。** 每个模型、每个 scene 在固定窗口的 **400 次参数更新**内拟合运动与形变。051 检查整体平移，001 重点检查一端牵拉及局部弯曲；原五帧结果保留，十五帧结果单独报告，不直接比较不同 H 的训练 loss。
 
 当前验收关注 Encoder–Decoder 在所选窗口上的表达能力及可优化性，不要求已正确利用动作／触觉，也不要求跨 episode 泛化。过拟合成功不能直接证明架构不存在泛化、拓扑或物理建模问题。
 
@@ -22,7 +22,7 @@
 
 ## 3. 阶段顺序与推进条件
 
-**P0 → P1a → P1a.5 → P1b（按需）→ P2（按需）→ P3（后续）。** P1a.5 的本轮实现及实验结论见 6.1；其余阶段保留此前规划，后续阶段不是必须全部执行的清单。
+历史已完成 P0、P1a、P1a.5。本轮按用户确定的顺序执行：**Stage 0 冻结 P1a／审计十五帧 → Stage 1 Oracle 容量诊断 → Stage 2 P2 五帧配对 → Stage 3 P1a/P2 十五帧配对 → Stage 4 完整报告。** P1a.5 不继续调参；本轮不实施 P1b/P3，也不增加完整层级 Encoder、GNN 或新物理 loss。
 
 | 阶段 | 核心工作 | 保持不变 | 验收与推进条件 |
 | --- | --- | --- | --- |
@@ -30,21 +30,23 @@
 | P1a：共享锚点位移 Decoder | FPS 初态锚点、现有局部特征池化、累计锚点位移、平滑插值到初态 Gaussian；首版继承其他 GS 属性 | 现有条件编码、LocalGSBlock、五帧因果协议、AR 主体、冻结的监督与更新预算 | 先检验五帧中心轨迹与连贯性；若完整目标已达成，可结束当前表达能力改造。仅有明显剩余椭球／尺度／旋转问题时推进 P1b |
 | P1a.5：Learnable Anisotropic Deformation | 初态局部特征预测受控 SPD 度量，替换固定各向同性 RBF | FPS128、累计位移、五步 AR、条件编码、属性继承及原配对协议 | 已完成；001 未获得稳定收益，保留为可选对照，不据此推进后续阶段；详见 6.1 |
 | P1b：协方差一致形变（按需） | 同一形变场更新协方差，适配 covars 渲染、正定性、拉伸及尺度约束 | P1a 共享位移、条件编码、窗口与监督口径 | 改善椭球问题，同时保持中心运动连贯及集合／渲染拟合 |
-| P2：层级 GS Encoder（按需） | 多尺度局部表示与锚点特征 | 已选定的 Decoder、条件编码、监督和 400 次预算 | 仅在 P1a／按需 P1b 仍未达到表达目标，且诊断指向现有 Encoder／局部表示瓶颈时实施 |
+| P2：Structural GS Encoder | LocalGSBlock 后做锚点池化、两层 128 维／4 头相对 XYZ self-attention，再经零初始化残差插值回 GS 特征 | 原各向同性 P1a Decoder、条件编码、初态属性继承、监督和 400 次预算 | 先完成 Oracle 诊断；五帧配对后再扩展十五帧，分别检查拟合准确性与结构连贯性；完整层级 Encoder 不在本轮范围 |
 | P3：Latent Dynamics（后续） | 持久运动状态、历史 GS、动作／触觉有效利用及跨 episode／物体泛化 | 已验收的 Encoder–Decoder | 单独制定泛化与条件利用验收；不计入当前 400-step 表达能力门槛 |
 
 ## 4. 固定窗口与 400 次验收协议
+
+本节保留原 P0/P1a 五帧验收协议；本轮 P1a/P2 的十五帧扩展、实际选模状态与证据见第 11 节。
 
 ### 4.1 精确选窗与配对对照
 
 | Scene | 精确索引 `(episode_id, start_frame)` | 六帧范围（初态＋未来五帧） | 任务 |
 | --- | --- | --- | --- |
 | 001-rope | `(1, 85)`、`(2, 73)` | 85–90、73–78 | 运动端／相对稳定端的局部柔性形变 |
-| 051-cube | `(0, 109)`、`(0, 132)` | 109–114、132–137 | 整体向上平移及相对布局保持 |
+| 051-cube | `(0, 109)`、`(0, 132)` | 109–114、132–137 | 整体平移及相对布局保持 |
 
 **代码事实：** 基准版本的 `scripts/training/train.py` 使用 `Subset(loader.dataset, range(n))`，所以 `--overfit-windows 2` 只选 Dataset 前两个窗口，不能自动选中本表窗口。
 
-**实施要求：** 后续必须按 `(episode_id, start_frame)` 精确查找，并在启动训练前核对、记录 scene、episode、起点及实际六帧 `frame_ids`。窗口缺失、重复或实际帧号不符时停止，不能悄悄回退到前两个窗口。实验结果保留这些信息供复核；本轮只记录要求，不修改选窗代码。
+**已实现：** `--protocol fixed400` 按 `(episode_id, start_frame)` 精确查找并记录实际 `frame_ids`；不是 `--overfit-windows 2`。扩展 H 必须提供冻结的 `--window-manifest`，长度为 H+1；选窗层校验窗口、完整帧号及来源元数据，恢复时核对一致性。本轮训练前的 CUDA 验收另核对 Stage 0 快照 SHA 与实际十六帧数组。旧 H=5 固定窗口保持不变。
 
 每个模型、每个 scene 进行 **400 次参数更新**，两个窗口交替，各 200 次。沿用逐 scene 独立训练、seed=42、batch=1、AdamW、lr=1e-4 及其他既有设置。400 指优化器更新次数，不是 epoch 数。每 20 次更新评估两个窗口。
 
@@ -108,7 +110,7 @@ P0 只需保证上述已审计固定窗口的监督可信。目标 GS 低 alpha 
 
 `L = 1.0 × Chamfer + RGB + 0.1 × alpha + 0.01 × 当前尺度正则`
 
-Chamfer 沿用按 scene 归一化、双向非平方距离、五帧等权；渲染沿用相同相机及可信区域。λ=1 是本轮固定配置，不代表全局最优。保留原数据有效性、补齐、时间因果掩码；不同时调整监督范围、条件编码和 Decoder。
+Chamfer 沿用按 scene 归一化、双向非平方距离、H 帧等权；渲染沿用相同相机及可信区域。λ=1 是本轮固定配置，不代表全局最优。保留原数据有效性、补齐、时间因果掩码；不同时调整监督范围、条件编码和 Decoder。
 
 **P1a 首版继承初态尺度，因此原有“相对初态累计 log-scale 变化”正则恒为零。** 这是继承属性的结果，不新增另一种形变损失来替代；对照中明确记录这个区别。P1b 再确定协方差更新后的尺度约束实现。
 
@@ -116,7 +118,7 @@ Chamfer 沿用按 scene 归一化、双向非平方距离、五帧等权；渲�
 
 首版只引入共享位移表达，优先解决中心分散：
 
-1. 从有效初态 GS 用 FPS 选择锚点；约 **128 个锚点是候选值**，数量上限、有效点不足时的处理在实现设计中明确。各样本独立选择，排除 padding，不读取未来 GT。
+1. 从有效初态 GS 用 FPS 选择最多 **128 个锚点**，局部池化 k=16；有效点不足时使用有效锚点掩码。各样本独立选择，排除 padding，不读取未来 GT。
 2. 复用现有 LocalGSBlock 的局部 GS 特征，池化为锚点特征；不同时引入完整层级 Encoder。
 3. 网络为每个 horizon 预测**相对初态的累计锚点位移** `d_a,h`。维持现有动作／触觉编码、五帧因果协议和 AR 主体，跨步梯度不截断；累计位移与 AR 内部状态的衔接方式须在编码前明确，不能重复叠加到上一帧中心。
 4. 初态锚点与插值关系五步沿用，以正带宽的平滑归一化 RBF 将位移传播至全部初态 Gaussian：
@@ -133,7 +135,7 @@ Chamfer 沿用按 scene 归一化、双向非平方距离、五帧等权；渲�
 
 P1a 编码前需冻结的最小细节：FPS 规则与数量、锚点特征池化、RBF 带宽／支持范围、累计位移与 AR 的衔接、输出模式与 checkpoint 版本、独立 centers／ellipsoids 展示及性能预算。F、协方差稳定化和 covars 接口不属于 P1a 的前置设计。
 
-### 6.1 P1a.5：Learnable Anisotropic Deformation（本轮实施与验收）
+### 6.1 P1a.5：Learnable Anisotropic Deformation（历史实施与验收）
 
 **实现事实：** 基于 `ea0e79c`，实现提交 `880972f`。新增独立配置 `--gs-decoder anchors_anisotropic`；原 `anchors` 保留。初态 GS 经现有 Encoder／LocalGSBlock 后、加入时间和动作触觉之前，池化为锚点特征，由小型 MLP 输出每锚点的 3×3 参数 R。末层零初始化，使用原 P1a 带宽 σ₀：
 
@@ -156,7 +158,7 @@ M 与权重仅从初态计算一次，五步共享、保留反向图；FPS／邻
 
 **度量诊断：** 学习并未停在各向同性；001 最低 CD 时条件数中位约 4.07–4.16，第 400 次约 3.46–3.57，051 约 2.86–3.24，均在理论界内。最宽影响方向的有效 RBF 宽度，rope 约 21.6 mm（初始 σ₀ 约 11.1 mm）；各窗口锚点该方向相对整体主方向的中位偏角约 1.2–3.9°，方向较集中。这是学到较一致方向扩展的证据，尚不能证明正确捕捉了局部材料结构，也不是独立根因证明。
 
-**决策：** 保留 P1a 为基准，P1a.5 为可选实验配置；本轮没有证明主要目标的稳定收益，不追加机制、调 loss 或延长训练，不推进 P1b/P2/P3。正式拟合容差仍未冻结，因此报告 `lowest_cd.pt` 与 `last_400.pt`，不冒充 `best_fit` 已通过；结论限于单 seed、四个训练窗口，不推断泛化。
+**决策：** 保留 P1a 为基准，P1a.5 为可选实验配置；本轮没有证明主要目标的稳定收益，该轮不追加机制、调 loss 或延长训练，也未推进 P1b/P2/P3；后续独立研究以第 11 节为准。正式拟合容差仍未冻结，因此报告 `lowest_cd.pt` 与 `last_400.pt`，不冒充 `best_fit` 已通过；结论限于单 seed、四个训练窗口，不推断泛化。
 
 证据：[完整报告](../audit/p1a5-anisotropic-v1/report.html)、[五帧渲染并排](../audit/p1a5-anisotropic-v1/render-comparison.html)、[配对指标](../audit/p1a5-anisotropic-v1/results.json)、[CUDA 验收](../audit/p1a5-anisotropic-v1/acceptance.json)、[完成核对](../audit/p1a5-anisotropic-v1/final_acceptance.json)、[度量分布](../audit/p1a5-anisotropic-v1/metric_diagnostics.json)。报告同时提供各 horizon CD／RGB／alpha、centers／ellipsoids、邻域位移与铺展、平移一致性和逐锚点矩阵；模型轨迹只沿预测初态模板计算，不建立 GT 行号对应。checkpoint 保留在服务器 `runs/{001-rope,051-cube}/p1a5-anisotropic-v1/`。
 
@@ -183,31 +185,108 @@ $$F_{i,h}=I+\nabla u_h(\mu_{i,0}),\qquad
 | Oracle 也不能拟合 | 优先检查锚点密度、插值函数、Decoder 容量和监督；不能直接归咎动作编码 |
 | Oracle 与正常模型均能拟合，且 Gaussian 运动连贯 | 本阶段获得较充分的表达能力证据，仍须单独报告稳定性 |
 
-Oracle 成功不证明 Encoder 已具备泛化能力。P2 只有在进一步诊断明确指出现有 Encoder／局部表示瓶颈时才启动；P3 的历史状态、条件有效利用及跨物体泛化均属于后续工作。
+Oracle 成功不证明 Encoder 已具备泛化能力。本轮先运行 Oracle-Latent；其未充分拟合时，再运行直接优化逐 horizon 累计锚点位移的 Oracle-Anchor。后者仍使用同一固定 RBF，用于区分 Decoder 可表达空间和网络／优化限制；其独立坐标优化器必须明确记录，不能冒充正式模型的公平性能对照。只有明确显示固定 RBF 容量不足才另做最小局部仿射容量对照，不与 P2 混合。P3 的历史状态、条件有效利用及跨物体泛化均属于后续工作。
 
 ## 9. 代码事实、实验事实与待验证判断
 
-- **代码事实：** 基准具备 7 维控制点、五步 AR、初态固定 k=16 局部 attention，以及自由位置／尺度／旋转头；颜色与不透明度继承初态。GT GS 无跨帧固定 ID。现有 `--overfit-windows` 的选窗限制见第 4 节。
+- **当前代码事实：** 保留 7 维控制点、初态固定 k=16 局部 attention，以及自由 Head、P1a、P1a.5 的独立配置。P2 在 P1a 上新增结构锚点 attention。H 默认 5，支持 10/15；第 k 个预测只读取 t 至 t+k−1 的条件。未来 GT 只进入 loss／诊断，不作为 query。GT GS 无跨帧固定 ID。
 - **实验事实：** 051 第五步平均 CD 为 λ=0：4.394 mm、λ=0.1：2.667 mm、λ=1：1.933 mm。001 的 λ=1 在第 340 次更新五步平均 CD 约 2.118 mm、渲染误差约 0.04991，第 400 次分别为约 2.418 mm、0.07030；两项一起恶化，不能据此认定监督必然冲突。
 - **用户视觉观察：** λ=1 时 051 平移拟合更好；001 轮廓更柔和、毛刺减少，但运动端仍分散铺展。视觉判断与集合指标分别记录，不互相替代。
 - **待验证假设：** 逐 Gaussian 自由预测缺少共同形变约束可能导致中心分散；共享锚点场可能改善连贯性。局部 attention 存在不等于已经保证一致形变，也不能把该假设当成唯一根因。
-- **候选设计：** FPS／RBF 共享位移、约 128 个锚点及按需协方差传输尚未实现或验收；λ=1 则是下一轮对照明确固定的起步设置。
+- **实现与候选的区分：** FPS128／固定各向同性 RBF 已是正式 P1a 基线，P1a.5 为历史消融；P2 及 H 扩展的事实见第 11 节。协方差传输、材料拓扑及新 Dynamics 未实施。λ=1 为本轮冻结配置。
 
 证据路径：[联合监督报告](../audit/gs-joint-chamfer-v1/report.html)、[完整实验记录](../audit/gs-joint-chamfer-v1/results.json)、[CUDA 验收](../audit/gs-joint-chamfer-v1/acceptance.json)。已有真实渲染反向、旧 checkpoint 兼容与恢复已通过；每个新阶段仍需针对性测试。
 
-## 10. 预计修改范围与执行边界
+## 10. 工程范围与执行边界
 
-下表是后续工程范围，不代表本轮已经修改代码；文件路径相对项目根目录。
+文件路径相对项目根目录；历史实现保留，不覆盖旧报告或 checkpoint。
 
 | 阶段 | 现有文件／计划新增与职责 |
 | --- | --- |
 | P0 | `scripts/training/train.py`、`evaluate.py`、`test_training.py`：精确选窗、日志帧号验证、400 次计数、分项指标和 best_fit／last_400；`visualize.py`：五帧及 centers／ellipsoids 独立展示。只有确需调整可信区域时才改 `losses.py`、`rendering.py` 或现有 dataloader，并先单独建立同口径基准 |
-| P1a | 计划新增 `scripts/training/gs_decoder.py`，实现初态锚点与共享位移；修改 `model.py` 的锚点特征、累计位移与 AR 接入、初态属性继承；适配 `train.py`、`evaluate.py`、`visualize.py` 和 `test_training.py` 的模式、checkpoint、指标与测试。沿用现有 scale／quaternion 渲染，不要求新增 covars 接口 |
+| P1a | 已有 `scripts/training/gs_decoder.py`，实现初态锚点与共享位移；`model.py` 接入累计位移 AR 和属性继承。保留原 scale／quaternion 渲染，不新增 covars 接口 |
 | P1b（按需） | 扩展 `gs_decoder.py` 与 `model.py` 的协方差输出，修改 `rendering.py` 适配 covars／稳定分解，适配 `losses.py` 的既有尺度约束语义，以及训练、评估、可视化、checkpoint 和测试 |
-| P2（按需） | 诊断确认后再计划新增 `scripts/training/gs_encoder.py`，适配 `model.py` 与测试；首轮不创建 |
+| Oracle／P2 | 新增 `scripts/training/oracle.py`、`oracle_fit.py`、`gs_structure.py` 及相关测试；适配 `model.py`、`train.py`、`fixed_fit.py`、`visualize.py`；不新增另一个层级 Encoder |
+| H 扩展 | 泛化现有 dataloader／collate／processor 检查、时间 embedding、rollout、loss、render、train／evaluate／visualize；新增 `scripts/training/test_horizon.py`，保留旧 H=5 与 checkpoint 语义 |
 | P3（后续） | dynamics 与必要的历史数据接口，具体文件在进入该阶段时确定；首轮不创建 |
 
-下一轮先完成 P0 的口径与 P1a 最小代码设计，明确候选参数及验收容差后再实施。后续依次进行本地审查／测试、按用户授权提交同步、真实 CUDA／gsplat 验收和固定窗口实验。创建文件前告知完整路径；模型修改、训练和提交均遵循相应授权。
+各阶段先测试再推进，代码本地提交后推送 GitHub 与服务器并由服务器 fast-forward。本轮使用独立 `codex/structural-gs-h15` 分支，未经确认不合并 main。重数据、checkpoint、审计图片及 HTML 留在忽略目录；创建前告知完整路径。十五帧明确为逐步获得未来动作／触觉的在线条件预测，不宣称初态已知未来触觉的开放环预测。
+
+## 11. Structural GS Representation + 15-Frame Prediction：实际进度
+
+### 11.1 版本、顺序与窗口冻结
+
+本轮保留 P0/P1a/P1a.5 旧实验；正式基线为各向同性 P1a，不重复训练已有五帧基线。独立分支为 `codex/structural-gs-h15`，没有合并 main。Stage 0 源码 `7bc78bb`；Oracle-Latent `39bdff0`、Oracle-Anchor `495a05c`；P2 五帧 `05f90c6`；H 扩展及十五帧实验 `cbf6802`。各阶段先测试，再按 Stage 0→1→2→3→4 执行。
+
+Stage 0 仅依据 GT 质量和运动信息冻结以下窗口，未按预测结果选择；原五帧窗口不变。
+
+| Scene | episode／起点 | 完整十六帧 | h15 复制初态 CD mm | 去除整体平移后 CD mm | 质量与运动依据 |
+| --- | --- | --- | --- | --- | --- |
+| 001-rope | ep1／85 | 85–100（连续整数） | 12.029 | 2.953 | 两端均有运动，作为连贯运动辅助窗口，不称一端固定 |
+| 001-rope | ep2／73 | 73–88（连续整数） | 14.381 | 9.697 | 主要局部弯曲窗口；两端区域移动约 49.63／2.25 mm |
+| 051-cube | ep0／109 | 109–124（连续整数） | 13.830 | 2.202 | 清晰整体平移；以真实世界 XYZ 位移为准 |
+| 051-cube | ep0／132 | 132–147（连续整数） | 17.937 | 2.507 | 清晰整体平移；不把图像方向等同世界高 Z |
+
+没有发现使这些窗口失去代表性的整段突然缺失，但不能认定 GT 完整无误：cube 的 `brics-odroid-012_cam0` 存在底边裁切，其他两相机提供互补；rope ep2 的 cam001 mask 内有效深度覆盖约 96.75%→93.34%，这不是 mask 识别准确率。保留已有遮挡与重建限制，不新增监督规则。完整帧号、动作幅度、点数、相机质量和哈希见 [冻结清单](../audit/structural-gs-h15-v1/stage0_frozen_windows.json) 与 [GT 审计](../audit/structural-gs-h15-v1/stage0_report.html)。真实 CUDA 验收又将当前 16 帧 XYZ／属性逐数组与审计快照精确核对。
+
+### 11.2 Oracle 诊断结论
+
+每个 scene 仍为两个原五帧窗口、400 次交替更新。Oracle-Latent 先由同构 Encoder／LocalGSBlock 得到锚点特征，再加入独立窗口／horizon latent 和时间编码，经同一共享锚点 Head 解码；条件分支冻结并绕过。Encoder／LocalGSBlock、时间编码、Head 与 latent 共同优化，不是只优化 latent。未充分改善后，追加直接优化累计锚点位移的 Oracle-Anchor。后者使用事先固定的坐标优化器 lr=.01、weight decay=0，其他监督相同；正式模型／Latent 沿用 AdamW lr=1e-4、weight decay=1e-4。没有按结果追加调参。
+
+| Scene | P1a 最低五步 CD mm | Oracle-Latent 最低／400 次 CD mm | Oracle-Anchor 最低／400 次 CD mm |
+| --- | --- | --- | --- |
+| 001-rope | 1.9197 | 1.9297（360 次）／2.0324 | 1.6417／1.6417 |
+| 051-cube | 1.6813 | 2.2464／2.2464 | 1.2654／1.2654 |
+
+**结论：** 同一固定 RBF 可表达更低的集合／渲染误差，没有明确证据触发局部仿射 Decoder 对照，因此未实现该额外机制。Latent 未可靠优于 P1a，不能把问题只归因于动作编码，也不能证明 Encoder 已充分表达。Anchor 虽降低误差，但 cube 平移 RMS 和部分 rope 端区误差并未同步改善；有限预算 Oracle 不是全局最优容量证明，更不是泛化证据。目标优化得到的变量从未进入正式模型。
+
+证据：[Oracle 决策](../audit/structural-gs-h15-v1/stage1_decision.json)、[逐窗口几何对照](../audit/structural-gs-h15-v1/stage1_geometry_comparison.json)。作业 30475／30476 均完成，172 项服务器测试通过。
+
+### 11.3 P2 实现及原五帧配对
+
+实现链路为 **14D GS → LocalGSBlock → 固定 FPS128 邻域池化 → 两层 128 维／4 头 Structural Anchor Attention → 零初始化残差插值回逐 GS 特征 → 原条件 cross-attention → 原 P1a 累计位移 Decoder**。结构 attention 用锚点特征及当前相对 XYZ；初态 FPS、邻域和各向同性 RBF 固定。未使用 P1a.5 可学习 RBF、材料轴、GNN、协方差传输或新 loss。尺度、旋转、颜色、不透明度继承初态；初始行为与 P1a 对齐。
+
+| Scene | P1a 最低／400 次 CD mm | P2 最低 CD mm（更新） | P2 第 400 次 CD mm | 最低点 h5：P1a→P2 mm |
+| --- | --- | --- | --- | --- |
+| 001-rope | 1.9197／1.9197 | 1.7332（340） | 1.7338 | 2.1775→1.8449 |
+| 051-cube | 1.6813／1.6813 | 1.5920（360） | 1.5920 | 1.8081→1.6954 |
+
+五帧 P2 的平均 CD、RGB、alpha 均改善，rope 局部铺展及 cube 平移一致性也改善；但 rope ep2 的 h5 运动端 X 排序区域误差 3.434→4.514 mm，不能称所有区域的真实轨迹均改善。作业 30477 完成，190 项服务器测试通过，真实 CUDA／旧 checkpoint／恢复验收通过。证据：[五帧配对](../audit/structural-gs-h15-v1/stage2_comparison.json)、[CUDA](../audit/structural-gs-h15-v1/stage2_acceptance.json)。
+
+### 11.4 H=15 实现、实验与资源
+
+H 在 Dataset、collate、processor 检查、时间 embedding、AR、loss、renderer、训练、评估和可视化中统一配置；默认 5，支持 10/15。新 checkpoint v7 显式保存 H，旧版本解释为 H=5，恢复时拒绝切换 H／结构模式，并保护既有最佳 checkpoint。旧 H5 原始／归一化样本指纹不变；已训练 P1a、P1a.5、P2 的 H5 预测与各 loss 项在真实 CUDA 上与旧源码精确一致。
+
+**因果协议：** 条件为 t…t+H−1，目标为 t+1…t+H，第 k 步仅使用截至 t+k−1 的条件。没有未来 GT query、teacher forcing 或跨步 detach。十五帧是逐步得到动作／触觉的在线条件预测，不是初态预知未来触觉的开放环预测。
+
+四组实验均沿用冻结窗口、λ=1、seed42、相同相机／掩码／400 次预算、每窗口 200 次、每 20 次评估。最低 CD checkpoint 均恰为第 400 次，仍分别保留 `lowest_cd.pt` 和 `last_400.pt`；未冻结质量阈值，因此不发布代表完整质量通过的 `best_fit.pt`。
+
+| Scene／模型 | 平均 CD mm | h5／h10／h15 CD mm | 平均 RGB／Alpha | 完整运行秒数 | 峰值 CUDA 分配 GiB |
+| --- | --- | --- | --- | --- | --- |
+| 001／P1a H15 | 2.3855 | 2.1864／2.5546／2.9540 | .055390／.043683 | 314.67 | 8.186 |
+| 001／P2 H15 | 1.9643 | 1.8884／2.0152／2.1609 | .048714／.040065 | 339.05 | 8.953 |
+| 051／P1a H15 | 1.8263 | 1.7308／1.9128／2.0188 | .015908／.009763 | 148.53 | 6.406 |
+| 051／P2 H15 | 1.8170 | 1.7143／1.9047／2.0269 | .015712／.009273 | 175.96 | 7.182 |
+
+时间包含 400 次更新、评估和最佳／末次可视化导出。Slurm 30478 单张 RTX 5090，完成时间 17分35秒；213 项服务器测试全部通过，零跳过。四窗口×两模型真实 H15 前向／RGB／alpha 反向峰值 5.35–7.97 GiB，正式完整运行最高 8.953 GiB，无 OOM、H10 降级、activation checkpointing 或梯度截断。近初始化 float32 探针的末步 CD 能连接全部 15 个 Head，但到最早 Head 的梯度极弱（约 10^-45–10^-39 的 L2 量级）；高精度探针也确认完整链。每步直接监督的 total loss 梯度有限且非零；**图连通不能证明远期误差对早期状态的学习信号足够强**。
+
+证据：[H15 CUDA](../audit/structural-gs-h15-v1/stage3_acceptance.json)、[逐 horizon 与结构指标](../audit/structural-gs-h15-v1/stage3_comparison.json)、[服务器完整日志](../audit/structural-gs-h15-v1/stage3-job-30478.log)、[最终工程核验](../audit/structural-gs-h15-v1/stage4_final_acceptance.json)。运行命令、源码版本、数据清单、优化曲线和资源记录分别保存在各 run 的 `config.json`、`metrics.json`、`runtime.json`。
+
+### 11.5 场景结论、限制与交付
+
+- **001-rope：有配对收益，但未解决全部区域轨迹。** H15 平均 CD 降低 17.65%，h15 降低约 26.85%。主牵拉窗口 ep2 的 h15 较大运动端区域误差 3.971→2.031 mm，预测位移模 47.42→48.24 mm（GT 区域约 49.62 mm），局部半径增量 p95 1.529→0.572 mm；这同时改善了目标运动拟合与铺展，不只是把运动压小。但较少运动端 h15 误差 4.659→4.898 mm，ep1 对应端误差 4.246→5.447 mm；仍有漂移和局部取舍。
+- **051-cube：总体平移能力保留，布局更一致，拟合收益很小。** 平均 CD 仅降低约 0.51%，h15 反而增加约 0.40%。两窗口平均平移 RMS .643→.473、.724→.617 mm，但 h15 整体位移质心误差 2.062→2.350、2.350→2.455 mm。不能以更一致的布局掩盖后期幅度／方向偏差，也不能用单 seed 的微小均值差声称显著收益。
+- 两模型 H15 均大幅优于复制初态（rope／cube 复制初态平均 CD 7.283／10.313 mm），继承属性、协方差及非有限值检查正常。未证明已学习材料拓扑、正确利用条件或具备跨 episode 泛化；本轮没有追加架构、loss、训练预算或新超参数搜索。
+
+端区域采用初态预测模板的 X 分位区域，与每帧独立 X 分位 GT 集合比较；GT 不沿行号追踪，区域也不是严格同一材料段。所谓较少运动端并非固定端，ep1 两端均有运动。邻域差含真实弯曲／旋转，半径增长可含真实伸展，平移 RMS=0 的复制初态也可能完全未跟随目标；这些量必须与逐帧多视角几何和渲染共同判断。
+
+**交付入口：** [完整十五帧离线报告](../audit/structural-gs-h15-v1/report.html)。包含全部 16 个实际时刻、GT／P1a／P2／复制初态、centers／ellipsoids／预测模板轨迹、三相机 RGB／alpha、h5/10/15 标记、训练曲线和最佳／400 次切换。全部必要数据和图片位于 `audit/structural-gs-h15-v1/`，不依赖 CDN。几何指标使用全部有效点；交互椭球／轨迹展示使用明确标注的确定性子集，GT 不绘制虚构的逐粒子运动轨迹。
+
+**交付核验通过：** [真实资源与交互 QA](../audit/structural-gs-h15-v1/stage4_qa.json) 检查 8 个窗口／checkpoint 数据包、3072 张原生 1280×720 RGB／alpha 图，以及 1536 个帧号／几何模式／视图组合；覆盖播放、逐帧与异步切窗。16 组模型／窗口／checkpoint 均包含 15 个独立 XYZ 预测，h10/h15 不是 h5 重复。检查使用真实报告 JavaScript 的 DOM 模拟及导出图像人工复核，未宣称完成真实浏览器布局截图验收。工程恢复与核验范围见 [执行记录](../audit/structural-gs-h15-v1/stage4_execution_notes.json)。
+
+服务器 checkpoint 位于 `/data1/userdata/tcweng/projects/touch4d/runs/{001-rope,051-cube}/structural-gs-h15-v1-{oracle-latent,oracle-anchor,p2-h5,p1a-h15,p2-h15}/`，本地仅保留报告和导出数据。原 P1a/P0/P1a.5 及 P2 H5 共 14 个已冻结 checkpoint 哈希通过保留检查。工程闭环与 H15 可视化交付分别核验，质量阈值仍未自行确定。
+
+**下一步最值得研究的瓶颈：** 当前表示已能更连贯地表达 rope 的大幅局部牵拉，但运动较少区域的漂移与长时程末端误差仍存在；需要围绕准确的局部运动分配与优化检查，不能只追求更平滑。现有 Oracle 证据未证明固定 RBF 是明确容量上限；也不能仅凭近初始化弱跨步梯度单独认定根因。本轮到此停止，不自动进入 P1b/P3 或新的研究方向。
 
 ## 附录：用户补充提示词原文（历史）
 
