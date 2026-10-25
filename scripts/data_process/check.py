@@ -13,7 +13,7 @@ import json
 import torch
 
 from ..dataloader.check import check_batch
-from ..dataloader.collate import collate_fn
+from ..dataloader.collate import batch_horizon, collate_fn
 from ..dataloader.dataset import DEFAULT_ROOT
 from ..dataloader.loader import make_dataloader
 from .processor import DataProcessor, SUPPORTED_SCENES
@@ -49,13 +49,14 @@ def check_processed_batch(raw, processed, processor):
     check_batch(raw)
     check_batch(processed)
     x, y = raw["inputs"], processed["inputs"]
+    horizon = batch_horizon(raw)
     constants = processor.state_dict()
     scale, tactile_scale = constants["scale"], constants["tactile_scale"]
     changed_paths = {"inputs.gs_xyz", "inputs.gs_attr", "inputs.action_state",
                      "inputs.controller_points", "inputs.tactile_xyz", "inputs.tactile"}
-    changed_paths.update(f"targets.target_xyz[{k}]" for k in range(5))
+    changed_paths.update(f"targets.target_xyz[{k}]" for k in range(horizon))
     if "target_attr" in raw["targets"]:
-        changed_paths.update(f"targets.target_attr[{k}]" for k in range(5))
+        changed_paths.update(f"targets.target_attr[{k}]" for k in range(horizon))
     raw_leaves, out_leaves = dict(_leaves(raw)), dict(_leaves(processed))
     if raw_leaves.keys() != out_leaves.keys():
         raise ValueError("Normalized batch structure changed")
@@ -80,7 +81,7 @@ def check_processed_batch(raw, processed, processor):
     for field, mask in (("gs_xyz", "gs_mask"), ("controller_points", "controller_mask"),
                         ("tactile_xyz", "tactile_spatial_mask")):
         close(y[field], expected_xyz(x[field], x[mask]))
-    for k in range(5):
+    for k in range(horizon):
         close(processed["targets"]["target_xyz"][k],
               expected_xyz(raw["targets"]["target_xyz"][k], raw["targets"]["target_mask"][k]))
     attr = x["gs_attr"].double().clone()
@@ -134,6 +135,7 @@ def main(argv=None):
     parser.add_argument("--depth-root", help="Root containing depth extensions")
     parser.add_argument("--depth-cameras", nargs="+", help="Camera IDs to load in the given order")
     parser.add_argument("--batch-size", type=int, default=2)
+    parser.add_argument("--horizon", type=int, default=5)
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--max-batches", type=int, default=3, help="0 checks all selected windows")
@@ -143,7 +145,7 @@ def main(argv=None):
     loader = make_dataloader(args.scene, args.split, root=args.root, stage=args.stage,
                              batch_size=args.batch_size, num_workers=args.workers, seed=args.seed,
                              with_depth=args.with_depth, depth_root=args.depth_root,
-                             depth_cameras=args.depth_cameras)
+                             depth_cameras=args.depth_cameras, horizon=args.horizon)
     processor = DataProcessor(args.scene)
     results, checked_samples, errors = [], 0, {}
 
@@ -165,7 +167,7 @@ def main(argv=None):
     first, last = loader.dataset[0], loader.dataset[-1]
     verify(collate_fn([first, last]))
     print(json.dumps({"status": "passed", "scene": args.scene, "split": args.split, "stage": args.stage,
-                      "with_depth": args.with_depth,
+                      "with_depth": args.with_depth, "horizon": args.horizon,
                       "depth_cameras": first["meta"].get("depth_camera_ids"),
                       "parameters": processor.state_dict(), "episodes": loader.dataset.episode_ids,
                       "total_windows": len(loader.dataset), "normal_batches": normal_batches,

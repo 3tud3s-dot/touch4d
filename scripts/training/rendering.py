@@ -4,6 +4,27 @@ import math
 import torch
 
 
+def _target_layout(batch):
+    """Cross-check target sequence length against calibrated image tensors."""
+    y = batch["targets"]
+    depth = y["target_depth"]
+    if depth.ndim != 5:
+        raise ValueError("Target depth must have shape [B,H,V,height,width]")
+    b, times, views, height, width = depth.shape
+    if times < 1 or views < 1 or height < 1 or width < 1:
+        raise ValueError("Positive target horizon, camera count and image dimensions are required")
+    if len(y.get("target_xyz", [])) != times or len(y.get("target_mask", [])) != times:
+        raise ValueError("Target GS/mask lists and image horizon must agree")
+    for xyz, keep in zip(y["target_xyz"], y["target_mask"]):
+        if (xyz.ndim != 3 or xyz.shape[0] != b or xyz.shape[-1] != 3
+                or keep.shape != xyz.shape[:2] or keep.dtype != torch.bool):
+            raise ValueError("Invalid independently padded target GS/mask shape")
+    if (y["camera_intrinsics"].shape != (b, views, 3, 3)
+            or y["camera_to_world"].shape != (b, views, 4, 4)):
+        raise ValueError("Camera calibration must match the target batch and views")
+    return b, times, views, height, width
+
+
 def _gaussians(xyz, attrs, processor, keep):
     """Convert normalized selected GS to gsplat's world-metre representation."""
     if not keep.any():
@@ -55,6 +76,9 @@ class DepthRenderer:
 
     def __call__(self, prediction, batch, processor):
         positions = prediction["xyz"] if isinstance(prediction, dict) else prediction
+        b, times, views, height, width = _target_layout(batch)
+        if positions.shape != (b, times, batch["inputs"]["gs_xyz"].shape[1], 3):
+            raise ValueError("Prediction shape must match target H and initial Gaussian count")
         if self.rasterizer is None:
             if not positions.is_cuda:
                 raise RuntimeError("Real depth rendering requires a CUDA device")
@@ -64,13 +88,10 @@ class DepthRenderer:
                 raise RuntimeError("Install the audited gsplat renderer in the server environment first") from exc
             self.rasterizer = rasterization
         y = batch["targets"]
-        b, times, views, height, width = y["target_depth"].shape
-        if times != 5 or positions.shape[:2] != (b, 5):
-            raise ValueError("Five prediction and target times are required")
         output = []
         for i in range(b):
             frames = []
-            for k in range(5):
+            for k in range(times):
                 gs = assemble_gaussians(prediction, batch, processor, i, k)
                 images = []
                 for v in range(views):
@@ -108,15 +129,13 @@ class GaussianRenderer:
 
     def _render(self, batch, assemble):
         y = batch["targets"]
-        b, times, views, height, width = y["target_depth"].shape
-        if times != 5 or views < 1:
-            raise ValueError("Five target times and at least one camera are required")
+        b, times, views, height, width = _target_layout(batch)
         if self.image_size is not None and (height, width) != tuple(self.image_size):
             raise ValueError("Target depth resolution disagrees with checkpoint render settings")
         rgb_batch, alpha_batch, depth_batch = [], [], []
         for i in range(b):
             rgb_frames, alpha_frames, depth_frames = [], [], []
-            for k in range(5):
+            for k in range(times):
                 gs = assemble(i, k)
                 rgb_views, alpha_views, depth_views = [], [], []
                 for v in range(views):
@@ -141,16 +160,20 @@ class GaussianRenderer:
 
     def __call__(self, prediction, batch, processor):
         positions = prediction["xyz"] if isinstance(prediction, dict) else prediction
+        b, times, _, _, _ = _target_layout(batch)
+        if positions.shape != (b, times, batch["inputs"]["gs_xyz"].shape[1], 3):
+            raise ValueError("Prediction shape must match target H and initial Gaussian count")
         self._ensure_rasterizer(positions)
-        if positions.shape[:2] != (batch["targets"]["target_depth"].shape[0], 5):
-            raise ValueError("Five prediction and target times are required")
         return self._render(batch, lambda i, k: assemble_gaussians(prediction, batch, processor, i, k))
 
     @torch.no_grad()
     def render_targets(self, batch, processor):
         y = batch["targets"]
-        if "target_attr" not in y or len(y["target_attr"]) != 5:
-            raise ValueError("Full target_attr for all five target GS frames is required")
+        _, times, _, _, _ = _target_layout(batch)
+        if "target_attr" not in y or len(y["target_attr"]) != times:
+            raise ValueError("Full target_attr for all H target GS frames is required")
+        if any(attr.shape != (*xyz.shape[:2], 11) for xyz, attr in zip(y["target_xyz"], y["target_attr"])):
+            raise ValueError("Target attributes must match each target Gaussian set")
         self._ensure_rasterizer(y["target_xyz"][0])
         return self._render(batch, lambda i, k: _gaussians(
             y["target_xyz"][k][i], y["target_attr"][k][i], processor, y["target_mask"][k][i]))

@@ -22,7 +22,7 @@ except ImportError:  # Existing point-only tests remain usable without the optio
 
 from . import dataset as dataset_module
 from .check import check_batch, main as check_main
-from .collate import collate_fn, validate_depth_batch
+from .collate import FIXED_FIELDS, batch_horizon, collate_fn, fixed_fields, validate_depth_batch
 from .dataset import DataFormatError, Touch4DDataset
 from .geometry import (HAND_ORDER, STREAM_ORDER, action_conditions, hand_slots,
                        pose_validity, tactile_world_coordinates)
@@ -159,7 +159,7 @@ class MemoryBackedDataset(Touch4DDataset):
     """Spawn-safe test fixture: each worker mounts its own in-memory NPZ source."""
 
     def __init__(self, scene, split, root, **kwargs):
-        self.memory_source = MemoryReconstruction(scene)
+        self.memory_source = MemoryReconstruction(scene, frames=max(12, kwargs.get("horizon", 5)+7))
         with self.memory_source.mounted():
             super().__init__(scene, split, root, **kwargs)
 
@@ -317,6 +317,18 @@ class SplitTests(unittest.TestCase):
         self.assertEqual(list(window_starts(10, "test")), [0])
         self.assertEqual(list(window_starts(11, "test")), [0, 5])
 
+    def test_configurable_horizon_keeps_split_strides_and_rejects_invalid_lengths(self):
+        for horizon in (1, 5, 10, 15):
+            self.assertEqual(list(window_starts(horizon, "train", horizon)), [])
+            self.assertEqual(list(window_starts(horizon+1, "train", horizon)), [0])
+            self.assertEqual(list(window_starts(horizon+7, "train", horizon)), list(range(7)))
+            self.assertEqual(list(window_starts(horizon+7, "val", horizon)), [0, 5])
+            self.assertEqual(list(window_starts(horizon+7, "test", horizon)), [0, 5])
+        self.assertEqual(fixed_fields(5), FIXED_FIELDS)
+        for bad in (0, -1, 1.5, True, "15", None):
+            with self.subTest(horizon=bad), self.assertRaises(ValueError):
+                window_starts(20, "train", bad)
+
 
 class GeometryTests(unittest.TestCase):
     def test_metadata_binding_not_slot_number(self):
@@ -372,6 +384,50 @@ class GeometryTests(unittest.TestCase):
 class DatasetTests(unittest.TestCase):
     def setUp(self):
         self.data = MemoryReconstruction()
+
+    def test_long_windows_read_distinct_future_frames_and_only_past_conditions(self):
+        for horizon in (10, 15):
+            for scene in SPLITS:
+                source = MemoryReconstruction(scene, frames=horizon+7)
+                with self.subTest(horizon=horizon, scene=scene), source.mounted():
+                    ds = Touch4DDataset(scene, "train", source.root, horizon=horizon)
+                    sample = ds[ds.windows.index((5, 2))]
+                    self.assertEqual(ds.horizon, horizon)
+                    self.assertEqual(len(ds), 42)
+                    self.assertEqual(sample["meta"]["frame_ids"].tolist(), list(range(2, horizon+3)))
+                    self.assertEqual(sample["inputs"]["action_state"][:, 0, 0].tolist(), list(range(102, horizon+102)))
+                    self.assertEqual(sample["inputs"]["action_state"][:, 1, 0].tolist(), list(range(2, horizon+2)))
+                    self.assertEqual([int(t[0, 1]) for t in sample["targets"]["target_xyz"]], list(range(3, horizon+3)))
+                    self.assertEqual(set(sample["meta"]), {"scene", "episode_id", "frame_ids", "observation_timestamp_us"})
+                    # Mutating t+H conditions and future GS cannot change the initial/condition inputs.
+                    initial = copy.deepcopy(sample["inputs"])
+                    source.get(5, "tactile.npz")["tactile"][horizon+2, :, :, :31] = 123
+                    source.get(5, f"gs/frame_{horizon+2:06d}.npz")["xyz"] += .5
+                    fresh = Touch4DDataset(scene, "train", source.root, horizon=horizon)
+                    result = fresh[fresh.windows.index((5, 2))]
+                    for key in initial:
+                        self.assertTrue(torch.equal(initial[key], result["inputs"][key]), key)
+                    self.assertFalse(torch.equal(sample["targets"]["target_xyz"][-1], result["targets"]["target_xyz"][-1]))
+                    check_batch(collate_fn([sample, ds[-1]]))
+
+    def test_h5_explicit_and_default_samples_are_identical(self):
+        with self.data.mounted():
+            default = Touch4DDataset(self.data.scene, "train", self.data.root)
+            explicit = Touch4DDataset(self.data.scene, "train", self.data.root, horizon=5)
+            self.assertEqual(default.windows, explicit.windows)
+            for index in (0, -1):
+                a, b = default[index], explicit[index]
+                for group in ("inputs", "targets", "meta"):
+                    self.assertEqual(a[group].keys(), b[group].keys())
+                    for key, value in a[group].items():
+                        other = b[group][key]
+                        if isinstance(value, torch.Tensor):
+                            self.assertTrue(torch.equal(value, other))
+                        elif isinstance(value, list):
+                            self.assertEqual(len(value), len(other))
+                            self.assertTrue(all(torch.equal(x, y) for x, y in zip(value, other)))
+                        else:
+                            self.assertEqual(value, other)
 
     def test_sample_timing_attributes_and_controller_order(self):
         with self.data.mounted():
@@ -531,6 +587,30 @@ class DatasetTests(unittest.TestCase):
 
 
 class CollateAndLoaderTests(unittest.TestCase):
+    def test_h15_dynamic_padding_mixed_lengths_rejected_and_loader_passes_horizon(self):
+        source = MemoryReconstruction(frames=22)
+        with source.mounted():
+            ds = Touch4DDataset(source.scene, "test", source.root, horizon=15)
+            samples = [ds[0], ds[1]]
+            batch = collate_fn(samples)
+            self.assertEqual(batch_horizon(batch), 15)
+            self.assertEqual(batch["meta"]["frame_ids"].shape, (2, 16))
+            for h in range(15):
+                lengths = [len(s["targets"]["target_xyz"][h]) for s in samples]
+                self.assertEqual(batch["targets"]["target_xyz"][h].shape[1], max(lengths))
+                self.assertEqual(batch["targets"]["target_lengths"][:, h].tolist(), lengths)
+                self.assertTrue(torch.all(batch["targets"]["target_attr"][h][~batch["targets"]["target_mask"][h]] == 0))
+            shorter = Touch4DDataset(source.scene, "test", source.root, horizon=5)[0]
+            with self.assertRaises(ValueError):
+                collate_fn([samples[0], shorter])
+            broken = copy.deepcopy(samples[0])
+            broken["inputs"]["tactile"] = broken["inputs"]["tactile"][:5]
+            with self.assertRaises(ValueError):
+                collate_fn([broken])
+            loader = make_dataloader(source.scene, "test", root=source.root, horizon=15, batch_size=2)
+            self.assertEqual(loader.dataset.windows, ds.windows)
+            check_batch(next(iter(loader)))
+
     def test_variable_point_padding_is_by_lengths_not_coordinates(self):
         data = MemoryReconstruction()
         with data.mounted():
@@ -634,9 +714,43 @@ class CollateAndLoaderTests(unittest.TestCase):
         self.assertTrue(result["all_windows_checked"])
         self.assertEqual(result["status"], "passed")
 
+    def test_h15_read_only_check_cli_preserves_val_stride(self):
+        data = MemoryReconstruction(frames=22)
+        with data.mounted(), patch("sys.stdout", new_callable=StringIO) as output:
+            check_main(["--scene", data.scene, "--root", str(data.root), "--split", "val",
+                        "--max-batches", "0", "--batch-size", "3", "--horizon", "15"])
+            result = json.loads(output.getvalue())
+        self.assertEqual(result["horizon"], 15)
+        self.assertEqual(result["checked_samples"], 4)
+        self.assertEqual(result["first_batch_shapes"]["action_state"], [3, 15, 2, 13])
+        self.assertEqual(len(result["first_batch_shapes"]["target_xyz"]), 15)
+        self.assertTrue(result["all_windows_checked"])
+
 
 @unittest.skipIf(h5py is None, "Optional depth tests require h5py")
 class DepthDatasetTests(unittest.TestCase):
+    def test_h10_h15_depth_covers_each_future_frame_with_matching_calibration(self):
+        for horizon in (10, 15):
+            for scene in SPLITS:
+                with self.subTest(scene=scene, horizon=horizon):
+                    data = MemoryDepthReconstruction(scene, frames=horizon+7)
+                    chosen = [data.cameras[2], data.cameras[0]]
+                    with data.mounted():
+                        ds = Touch4DDataset(scene, "train", data.root, with_depth=True,
+                                            depth_cameras=chosen, horizon=horizon)
+                        sample = ds[ds.windows.index((5, 2))]
+                        target = sample["targets"]
+                        frames = torch.arange(3, horizon+3, dtype=torch.float32)
+                        self.assertEqual(target["target_depth"].shape, (horizon, 2, 3, 4))
+                        torch.testing.assert_close(target["target_depth"][:, 0, 1, 1], (1200+20*frames)/1000)
+                        torch.testing.assert_close(target["target_depth"][:, 1, 1, 1], (1000+20*frames)/1000)
+                        self.assertFalse(torch.equal(target["target_depth"][4], target["target_depth"][-1]))
+                        self.assertEqual(sample["meta"]["frame_ids"].tolist(), list(range(2, horizon+3)))
+                        self.assertEqual(sample["meta"]["depth_camera_ids"], chosen)
+                        torch.testing.assert_close(target["camera_intrinsics"][:, 0, 0], torch.tensor([702., 700.]))
+                        self.assertFalse(target["target_depth_valid"][:, :, 0, 0].any())
+                        check_batch(collate_fn([sample, ds[-1]]))
+
     def test_old_mode_does_not_open_or_require_depth(self):
         data = MemoryReconstruction()
         with data.mounted(), patch.object(h5py, "File", side_effect=AssertionError("Unexpected H5 read")):

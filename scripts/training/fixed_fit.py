@@ -37,7 +37,7 @@ from .train import (PROJECT, MODEL_KEYS, GS_CAMERAS, GS_CONVENTION, atomic_json,
                     atomic_checkpoint, build_loader, choose_cameras, checkpoint_state,
                     copy_initial, gs_render_settings, make_renderer, read_checkpoint,
                     restore_training, to_device, DECODER_DEFAULTS, resolve_decoder,
-                    resolve_structure, validate_structure_config)
+                    resolve_structure, validate_structure_config, resolve_horizon)
 
 WINDOWS = {"001-rope": ((1, 85), (2, 73)), "051-cube": ((0, 109), (0, 132))}
 UPDATES, EVAL_EVERY = 400, 20
@@ -100,7 +100,7 @@ def digest(value):
 
 
 def select_windows(dataset, scene, windows=None):
-    requested = WINDOWS[scene] if windows is None else tuple(windows)
+    requested = WINDOWS[scene] if windows is None else tuple(tuple(w) for w in windows)
     if len(set(requested)) != len(requested):
         raise ValueError("Duplicate requested windows")
     selected = []
@@ -110,7 +110,7 @@ def select_windows(dataset, scene, windows=None):
             raise ValueError(f"{scene} ({episode},{start}): expected one window, found {len(matches)}")
         raw = collate_fn([dataset[matches[0]]])
         meta = raw["meta"]
-        expected = list(range(start, start+6))
+        expected = list(range(start, start+getattr(dataset, "horizon", 5)+1))
         if (meta["scene"] != [scene] or meta["episode_id"].tolist() != [episode]
                 or meta["frame_ids"].tolist() != [expected]):
             raise ValueError(f"{scene} ({episode},{start}): actual scene/episode/frame_ids mismatch")
@@ -121,7 +121,41 @@ def select_windows(dataset, scene, windows=None):
 def fixed_batches(config):
     # Bypass legacy 'first N' sampling, and retain the existing split/stride rules.
     loader = build_loader(dict(config, overfit_windows=0, batch_size=1), "train", stage="all")
-    return select_windows(loader.dataset, config["scene"])
+    return select_windows(loader.dataset, config["scene"], config.get("fixed_windows"))
+
+
+def frozen_windows(path, scene, horizon, state=None):
+    """Freeze GT-audited frame IDs before training, without prediction-based selection."""
+    saved = state["config"].get("window_evidence") if state else None
+    if path:
+        content = Path(path).read_bytes()
+        evidence = dict(manifest=json.loads(content), sha256=hashlib.sha256(content).hexdigest())
+        if saved is not None and evidence != saved:
+            raise ValueError("Cannot resume with changed frozen window manifest")
+    else:
+        evidence = saved
+    if evidence is None:
+        if horizon != 5:
+            raise ValueError("Extended fixed400 horizon requires --window-manifest frozen from GT audit")
+        return None, None
+    document = evidence["manifest"]
+    if (document.get("version") != "structural-h15-windows-v1" or document.get("horizon") != horizon
+            or not document.get("basis") or not document.get("evidence_sha256")):
+        raise ValueError("Frozen manifest needs matching horizon and GT audit provenance")
+    rows = document.get("windows", {}).get(scene, [])
+    if len(rows) != 2:
+        raise ValueError("Frozen manifest must select exactly two windows per scene")
+    selected = []
+    for row in rows:
+        episode, start = row.get("episode_id"), row.get("start_frame")
+        if (type(episode) is not int or type(start) is not int or min(episode, start) < 0
+                or row.get("frame_ids") != list(range(start, start+horizon+1))
+                or not row.get("geometry_sha256")):
+            raise ValueError("Frozen manifest contains invalid full frame IDs or missing geometry provenance")
+        selected.append([episode, start])
+    if len({tuple(w) for w in selected}) != 2:
+        raise ValueError("Frozen windows must be distinct")
+    return selected, evidence
 
 
 def manifest(raws, config):
@@ -130,6 +164,8 @@ def manifest(raws, config):
         meta, valid = raw["meta"], raw["targets"]["target_depth_valid"]
         if meta["depth_camera_ids"] != [config["depth_cameras"]]:
             raise ValueError("Fixed-window camera order differs from the frozen configuration")
+        if meta["frame_ids"].shape[1] != config.get("horizon", 5)+1:
+            raise ValueError("Fixed-window frame count disagrees with horizon")
         counts = valid.sum((-1, -2))[0]
         if not (counts > 0).all():
             raise ValueError("Every fixed-window horizon/camera needs trusted Positive pixels")
@@ -192,7 +228,7 @@ def geometry_diagnostics(prediction, batch, scale, neighbors=None):
     if not torch.isfinite(eigen).all() or not torch.isfinite(condition).all():
         raise FloatingPointError("Nonfinite covariance spectrum")
     rows = []
-    for h in range(5):
+    for h in range(prediction["xyz"].shape[1]):
         def extent(values):
             flat = values.flatten()
             return [float(flat.min()), float(flat.max())]
@@ -212,7 +248,7 @@ def prediction_metrics(prediction, batch, processor, renderer, chunk, neighbors=
     structure = geometry_diagnostics(prediction, batch, scale, neighbors)
     keep = batch["inputs"]["gs_mask"][0]
     cd = []
-    for h in range(5):
+    for h in range(prediction["xyz"].shape[1]):
         p = prediction["xyz"][0, h, keep]
         t = batch["targets"]["target_xyz"][h][0, batch["targets"]["target_mask"][h][0]]
         cd.append(float((nearest_distances(p, t, chunk).mean()+nearest_distances(t, p, chunk).mean())*.5)*scale*1000)
@@ -225,12 +261,12 @@ def prediction_metrics(prediction, batch, processor, renderer, chunk, neighbors=
             raise ValueError("Missing trusted render supervision in a fixed-window horizon")
         values[name] = times[0].tolist()
     return dict(cd_mm=cd, rgb=values["rgb"], alpha=values["alpha"], diagnostics=structure,
-                mean_cd_mm=sum(cd)/5, mean_rgb=sum(values["rgb"])/5, mean_alpha=sum(values["alpha"])/5)
+                mean_cd_mm=sum(cd)/len(cd), mean_rgb=sum(values["rgb"])/len(cd), mean_alpha=sum(values["alpha"])/len(cd))
 
 
 @torch.no_grad()
 def evaluate_fixed(models, batches, processor, renderer, config, neighbors=None):
-    """Equal two-window / five-horizon means, not episode-balanced validation."""
+    """Equal two-window / horizon means, not episode-balanced validation."""
     modes = {name: model.training for name, model in models.items()}
     try:
         for model in models.values():
@@ -246,8 +282,8 @@ def evaluate_fixed(models, batches, processor, renderer, config, neighbors=None)
                     config["chamfer_chunk"], None if neighbors is None else neighbors[i])
             result = dict(windows=rows)
             for metric in ("cd_mm", "rgb", "alpha"):
-                result[metric] = [sum(r[metric][h] for r in rows.values())/len(rows) for h in range(5)]
-                result["mean_"+metric] = sum(result[metric])/5
+                result[metric] = [sum(r[metric][h] for r in rows.values())/len(rows) for h in range(config.get("horizon", 5))]
+                result["mean_"+metric] = sum(result[metric])/len(result[metric])
             results[name] = result
         return results
     finally:
@@ -371,7 +407,7 @@ def update_loop(model, optimizer, batches, processor, renderer, config, on_evalu
             on_evaluation(completed+1, metrics, float(loss.detach()), float(norm))
 
 
-def report_html(history, best, completed, decoder="free", structure="none"):
+def report_html(history, best, completed, decoder="free", structure="none", horizon=5):
     stage = {"free": "P0 free GS Head", "anchors": "P1a shared anchor displacement",
              "anchors_anisotropic": "P1a.5 learnable anisotropic RBF"}[decoder]
     if structure == "anchor_attention":
@@ -414,7 +450,7 @@ def report_html(history, best, completed, decoder="free", structure="none"):
             detail += '</table>'
     return (f'<!doctype html><meta charset="utf-8"><title>{stage} fixed400</title>'
             '<style>body{font:15px system-ui;margin:30px}td,th{padding:8px;border-bottom:1px solid #ddd}</style>'
-            f'<h1>{stage} · {completed}/400 optimizer updates</h1><p>{best_name} update: '
+            f'<h1>{stage} · H={horizon} · {completed}/400 optimizer updates</h1><p>Online conditions t..t+H-1; targets t+1..t+H.</p><p>{best_name} update: '
             f'{None if best is None else best["update"]} · manual structural review pending.</p>'
             '<p>Fixed training windows, not held-out validation. No GT particle IDs. '
             'Positive = audited target_depth_valid; Negative = none; other pixels = Ignore.</p>'
@@ -423,7 +459,7 @@ def report_html(history, best, completed, decoder="free", structure="none"):
             'Final checkpoint comparison: <a href="fit_summary.json">fit_summary.json</a>.</p>'
             f'<svg viewBox="0 0 800 220" width="800"><polyline fill="none" stroke="#246cc7" '
             f'stroke-width="2" points="{" ".join(points)}"/></svg><table><tr><th>update</th>'
-            '<th>CD mean mm</th><th>CD h5 mm</th><th>RGB</th><th>Alpha</th><th>CD h1–h5 mm</th><th>eligible</th>'
+            f'<th>CD mean mm</th><th>CD h{horizon} mm</th><th>RGB</th><th>Alpha</th><th>CD h1–h{horizon} mm</th><th>eligible</th>'
             '<th>automatic checks</th></tr>'+''.join(rows)+'</table>'+detail)
 
 
@@ -448,6 +484,8 @@ def run(args):
     state = read_checkpoint(args.resume) if args.resume else None
     if state is not None and (Path(args.resume).name != "last.pt" or state["config"].get("protocol") != "fixed400"):
         raise ValueError("fixed400 resumes only its own last.pt; legacy best/last semantics are unchanged")
+    horizon = resolve_horizon(getattr(args, "horizon", None), state)
+    selected_windows, window_evidence = frozen_windows(getattr(args, "window_manifest", None), args.scene, horizon, state)
     decoder = resolve_decoder(args.gs_decoder, args.anchor_count, args.anchor_pool_k,
                               args.anchor_bandwidth, state)
     if any(decoder[key] != value for key, value in DECODER_DEFAULTS.items() if key != "gs_decoder"):
@@ -459,6 +497,8 @@ def run(args):
         raise ValueError("Diagnostic mode must not use acceptance thresholds")
     if contract is None and not diagnostic:
         raise ValueError("A reviewed --fit-contract is required; see fixed_fit module docstring for schema")
+    if contract is not None and horizon != 5:
+        raise ValueError("Legacy fit tolerances apply only to H=5; extended horizons require diagnostic mode")
     if contract is not None:
         validate_contract(contract, args.scene)
     device = torch.device(args.device)
@@ -471,10 +511,12 @@ def run(args):
     if cameras != GS_CAMERAS[args.scene]:
         raise ValueError("P0 freezes the audited three-camera order")
     config = dict(expected, **{k: v for k, v in optional.items() if k not in expected}, **decoder,
-        gs_structure=resolve_structure(args.gs_structure, state),
+        gs_structure=resolve_structure(args.gs_structure, state), horizon=horizon,
         scene=args.scene, root=str(root), depth_root=str(depth_root), depth_cameras=cameras,
         workers=args.workers, chamfer_chunk=args.chamfer_chunk, overfit_windows=0, protocol="fixed400",
         fit_contract=contract, fit_diagnostic=diagnostic, gs_convention=GS_CONVENTION, render_settings=gs_render_settings())
+    if selected_windows is not None:
+        config.update(fixed_windows=selected_windows, window_evidence=window_evidence)
     validate_structure_config(config)
     raws = fixed_batches(config)
     evidence = manifest(raws, config)
@@ -539,7 +581,7 @@ def run(args):
         checkpoint["fit"] = dict(completed_updates=update, best_candidate=best, manifest=evidence)
         publish_fit(run_dir, checkpoint, improved)
         atomic_json(run_dir/"metrics.json", history)
-        (run_dir/"report.html").write_text(report_html(history, best, update, config["gs_decoder"], config["gs_structure"]), encoding="utf-8")
+        (run_dir/"report.html").write_text(report_html(history, best, update, config["gs_decoder"], config["gs_structure"], horizon), encoding="utf-8")
         print(json.dumps(dict(update=update, candidate=row), allow_nan=False), flush=True)
     update_loop(model, optimizer, batches, processor, renderer, config, save, start, evaluate)
     # Also repairs a crash after last.pt(400) but before last_400.pt/export publication.
@@ -548,7 +590,8 @@ def run(args):
         raise ValueError("Missing completed 400-update state")
     atomic_checkpoint(run_dir/"last_400.pt", last)
     from .visualize import export_gaussians
-    summary = dict(scene=args.scene, completed_updates=UPDATES, windows=evidence,
+    summary = dict(scene=args.scene, horizon=horizon, prediction_protocol="online conditions t..t+H-1; targets t+1..t+H",
+                   completed_updates=UPDATES, windows=evidence,
                    gs_decoder=config["gs_decoder"],
                    gs_structure=config["gs_structure"],
                    inherited_shape=config["gs_decoder"] != "free",
@@ -566,7 +609,7 @@ def run(args):
         selected = candidate(metrics, contract, saved["fit"]["completed_updates"])
         summary["checkpoints"][name] = dict(candidate=selected, metrics=metrics, visualizations=[])
         with torch.no_grad():
-            for (episode, frame), raw, batch in zip(WINDOWS[args.scene], raws, batches):
+            for (episode, frame), raw, batch in zip(config.get("fixed_windows", WINDOWS[args.scene]), raws, batches):
                 directory = run_dir/"visualizations"/name/f"episode-{episode}-start-{frame}"
                 # A failed/partial export must not be mistaken for a complete artifact.
                 if directory.exists():
@@ -588,7 +631,7 @@ def run(args):
         interpretation="Automatic checks are evidence only. If an earlier checkpoint also passes manual "
                        "structure review and last_400 fails, report: 表达能力验收通过，训练稳定性尚未通过。")
     atomic_json(run_dir/"fit_summary.json", summary)
-    page = report_html(history, best, UPDATES, config["gs_decoder"], config["gs_structure"])
+    page = report_html(history, best, UPDATES, config["gs_decoder"], config["gs_structure"], horizon)
     for name, result in summary["checkpoints"].items():
         for path in result.get("visualizations", []):
             relative = Path(path).relative_to(run_dir).as_posix()

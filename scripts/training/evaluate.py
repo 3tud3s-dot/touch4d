@@ -55,8 +55,10 @@ def main(argv=None):
             reference, reference_processor, reference_config = load_model(args.reference_checkpoint, device)
             if (reference_processor.state_dict() != processor.state_dict()
                     or any(reference_config[k] != config[k] for k in
-                           ("scene", "output_mode", "depth_cameras", "gs_convention", "render_settings"))):
+                           ("scene", "output_mode", "depth_cameras", "gs_convention", "render_settings", "horizon"))):
                 raise ValueError("Reference must share scene, normalization, GS convention and rendering")
+            if reference_config.get("fixed_windows") != config.get("fixed_windows"):
+                raise ValueError("Reference must share frozen windows")
             models["reference"] = reference
             # Re-evaluation does not certify that historical training had paired settings.
             fit_info["reference_comparison"] = dict(checkpoint=str(Path(args.reference_checkpoint).resolve()),
@@ -69,7 +71,8 @@ def main(argv=None):
     else:
         loader = build_loader(config, args.split)
         metrics = evaluate_loader(model, loader, processor, make_renderer(config), config, device, args.max_batches)
-    result = dict(scene=config["scene"], split=args.split, checkpoint=str(Path(args.checkpoint).resolve()),
+    result = dict(scene=config["scene"], horizon=config["horizon"],
+                  prediction_protocol="online arriving action/tactile conditions", split=args.split, checkpoint=str(Path(args.checkpoint).resolve()),
                   partial=bool(args.max_batches), depth_cameras=config["depth_cameras"], metrics=metrics, **fit_info)
     if output:
         print(f"Creating {output} (and parent directories if needed; atomic .tmp staging)", flush=True)

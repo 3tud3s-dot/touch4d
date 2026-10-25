@@ -2,7 +2,7 @@
 
 import torch
 
-from .splits import HORIZON
+from .splits import HORIZON, validate_horizon
 
 FIXED_FIELDS = {
     "action_state": ((5, 2, 13), torch.float32),
@@ -18,14 +18,30 @@ FIXED_FIELDS = {
 DEPTH_FIELDS = ("target_depth", "target_depth_valid", "camera_intrinsics", "camera_to_world")
 
 
+def fixed_fields(horizon=HORIZON):
+    """H-dependent shapes, retaining the public H=5 FIXED_FIELDS constant."""
+    validate_horizon(horizon)
+    return {key: ((horizon, *shape[1:]), dtype) for key, (shape, dtype) in FIXED_FIELDS.items()}
+
+
+def batch_horizon(batch):
+    """Infer H from existing metadata; no new sample/checkpoint fields required."""
+    frames = batch["meta"]["frame_ids"]
+    if (not isinstance(frames, torch.Tensor) or frames.ndim != 2
+            or frames.dtype != torch.int64 or frames.shape[0] < 1):
+        raise ValueError("frame_ids must be int64 [B,H+1]")
+    return validate_horizon(frames.shape[1]-1)
+
+
 def validate_target_attr_batch(batch):
     """Optional geometry targets share XYZ padding; legacy point-only batches work."""
     targets = batch["targets"]
     if "target_attr" not in targets:
         return
+    horizon = batch_horizon(batch)
     attrs = targets["target_attr"]
-    if not isinstance(attrs, list) or len(attrs) != HORIZON:
-        raise ValueError("target_attr must be a list of five tensors")
+    if not isinstance(attrs, list) or len(attrs) != horizon:
+        raise ValueError(f"target_attr must be a list of {horizon} tensors")
     for step, attr in enumerate(attrs):
         xyz, mask = targets["target_xyz"][step], targets["target_mask"][step]
         if (not isinstance(attr, torch.Tensor) or attr.shape != (*xyz.shape[:-1], 11)
@@ -61,10 +77,11 @@ def validate_depth_batch(batch):
     targets, meta = batch["targets"], batch["meta"]
     if not _has_depth(targets, meta):
         return
+    horizon = batch_horizon(batch)
     depth = targets["target_depth"]
     if (not isinstance(depth, torch.Tensor) or depth.ndim != 5 or depth.dtype != torch.float32
-            or depth.shape[0] < 1 or depth.shape[1] != HORIZON or min(depth.shape[2:]) < 1):
-        raise ValueError("target_depth must be nonempty float32 [B,5,V,H,W]")
+            or depth.shape[0] < 1 or depth.shape[1] != horizon or min(depth.shape[2:]) < 1):
+        raise ValueError("target_depth must be nonempty float32 [B,H,V,height,width]")
     b, _, views, _, _ = depth.shape
     xyz = batch["inputs"]["gs_xyz"]
     if depth.device != xyz.device or len(meta["scene"]) != b or xyz.shape[0] != b:
@@ -133,6 +150,10 @@ def collate_fn(samples: list[dict]) -> dict:
     """True means real/valid. Model-specific causal masks are not built here."""
     if not samples:
         raise ValueError("Cannot collate an empty batch")
+    frames = samples[0]["meta"]["frame_ids"]
+    if not isinstance(frames, torch.Tensor) or frames.ndim != 1:
+        raise ValueError("Each frame_ids must be int64 [H+1]")
+    horizon = validate_horizon(len(frames)-1)
     scenes = [sample["meta"]["scene"] for sample in samples]
     if any(not isinstance(scene, str) for scene in scenes) or len(set(scenes)) != 1:
         raise ValueError("V0 batches must belong to one scene")
@@ -146,20 +167,21 @@ def collate_fn(samples: list[dict]) -> dict:
         attr = _tensor(inputs["gs_attr"], (len(xyz), 11), torch.float32, "gs_attr")
         initial_xyz.append(xyz)
         initial_attr.append(attr)
-        if len(sample["targets"]["target_xyz"]) != HORIZON:
-            raise ValueError("target_xyz must contain exactly five future frames")
+        if (not isinstance(sample["targets"]["target_xyz"], list)
+                or len(sample["targets"]["target_xyz"]) != horizon):
+            raise ValueError(f"target_xyz must contain exactly {horizon} future frames; cannot mix horizons")
         if all(attr_presence) and (not isinstance(sample["targets"]["target_attr"], list)
-                                   or len(sample["targets"]["target_attr"]) != HORIZON):
-            raise ValueError("target_attr must contain exactly five future frames")
+                                   or len(sample["targets"]["target_attr"]) != horizon):
+            raise ValueError(f"target_attr must contain exactly {horizon} future frames")
         if type(sample["meta"]["episode_id"]) is not int:
             raise ValueError("episode_id must be an integer")
     xyz, mask, lengths = _pad_points(initial_xyz)
     attr, _, _ = _pad_points(initial_attr)
     inputs = {"gs_xyz": xyz, "gs_attr": attr, "gs_mask": mask, "gs_lengths": lengths}
-    for key, (shape, dtype) in FIXED_FIELDS.items():
+    for key, (shape, dtype) in fixed_fields(horizon).items():
         inputs[key] = torch.stack([_tensor(s["inputs"][key], shape, dtype, key) for s in samples])
     target_xyz, target_mask, target_lengths, target_attr = [], [], [], []
-    for step in range(HORIZON):
+    for step in range(horizon):
         points = [_points(s["targets"]["target_xyz"][step], 3, f"target_xyz[{step}]") for s in samples]
         xyz, mask, lengths = _pad_points(points)
         target_xyz.append(xyz)
@@ -172,7 +194,7 @@ def collate_fn(samples: list[dict]) -> dict:
     meta = {"scene": scenes, "episode_id": torch.tensor(
         [s["meta"]["episode_id"] for s in samples], dtype=torch.int64)}
     for key in ("frame_ids", "observation_timestamp_us"):
-        meta[key] = torch.stack([_tensor(s["meta"][key], (6,), torch.int64, key) for s in samples])
+        meta[key] = torch.stack([_tensor(s["meta"][key], (horizon+1,), torch.int64, key) for s in samples])
     targets = {"target_xyz": target_xyz, "target_mask": target_mask,
                "target_lengths": torch.stack(target_lengths, dim=1)}
     if all(attr_presence):
@@ -183,8 +205,8 @@ def collate_fn(samples: list[dict]) -> dict:
             raise ValueError("Cannot mix samples with and without depth in one batch")
         first = samples[0]["targets"]["target_depth"]
         if (not isinstance(first, torch.Tensor) or first.ndim != 4
-                or first.shape[0] != HORIZON or min(first.shape[1:]) < 1):
-            raise ValueError("Each target_depth must have nonempty shape [5,V,H,W]")
+                or first.shape[0] != horizon or min(first.shape[1:]) < 1):
+            raise ValueError("Each target_depth must have nonempty shape [H,V,height,width]")
         views = first.shape[1]
         specs = {"target_depth": (first.shape, torch.float32),
                  "target_depth_valid": (first.shape, torch.bool),

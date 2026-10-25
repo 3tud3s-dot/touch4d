@@ -4,8 +4,8 @@
     normalized = processor(batch)  # same structure; independent tensor storage
     restored = processor.denormalize_batch(normalized)
 
-Save processor.state_dict() alongside a checkpoint. For prediction [B,5,N,3],
-pass gs_mask[:, None, :].expand(B,5,N) to denormalize_xyz/displacement.
+Save processor.state_dict() alongside a checkpoint. For prediction [B,H,N,3],
+pass gs_mask[:, None, :].expand(B,H,N) to denormalize_xyz/displacement.
 """
 
 from dataclasses import dataclass
@@ -14,8 +14,8 @@ from types import MappingProxyType
 
 import torch
 
-from ..dataloader.collate import FIXED_FIELDS, validate_depth_batch, validate_target_attr_batch
-from ..dataloader.splits import HORIZON
+from ..dataloader.collate import (batch_horizon, fixed_fields, validate_depth_batch,
+                                  validate_target_attr_batch)
 
 
 @dataclass(frozen=True)
@@ -112,6 +112,7 @@ class DataProcessor:
             if not isinstance(scenes, list) or not scenes or any(s != self.scene for s in scenes):
                 raise ValueError(f"batch must contain only {self.scene}")
             b = len(scenes)
+            horizon = batch_horizon(batch)
             xyz = inputs["gs_xyz"]
             if not isinstance(xyz, torch.Tensor) or xyz.ndim != 3 or xyz.shape[1] < 1:
                 raise ValueError("gs_xyz must be a nonempty [B,N,3] tensor")
@@ -120,13 +121,13 @@ class DataProcessor:
             _require_tensor(inputs["gs_attr"], (b, n, 11), torch.float32, "gs_attr", device)
             _require_tensor(inputs["gs_mask"], (b, n), torch.bool, "gs_mask", device)
             _require_tensor(inputs["gs_lengths"], (b,), torch.int64, "gs_lengths")
-            for key, (shape, dtype) in FIXED_FIELDS.items():
+            for key, (shape, dtype) in fixed_fields(horizon).items():
                 _require_tensor(inputs[key], (b, *shape), dtype, key,
                                 None if key == "tactile_age_us" else device)
-            _require_tensor(targets["target_lengths"], (b, HORIZON), torch.int64, "target_lengths")
+            _require_tensor(targets["target_lengths"], (b, horizon), torch.int64, "target_lengths")
             for key in ("target_xyz", "target_mask"):
-                if not isinstance(targets[key], list) or len(targets[key]) != HORIZON:
-                    raise ValueError(f"{key} must be a list of five tensors")
+                if not isinstance(targets[key], list) or len(targets[key]) != horizon:
+                    raise ValueError(f"{key} must be a list of {horizon} tensors")
             for k, points in enumerate(targets["target_xyz"]):
                 if not isinstance(points, torch.Tensor) or points.ndim != 3 or points.shape[1] < 1:
                     raise ValueError(f"target_xyz[{k}] must be nonempty [B,M,3]")
@@ -136,7 +137,7 @@ class DataProcessor:
             validate_target_attr_batch(batch)
             _require_tensor(meta["episode_id"], (b,), torch.int64, "episode_id")
             for key in ("frame_ids", "observation_timestamp_us"):
-                _require_tensor(meta[key], (b, HORIZON+1), torch.int64, key)
+                _require_tensor(meta[key], (b, horizon+1), torch.int64, key)
             validate_depth_batch(batch)
         except (KeyError, TypeError) as exc:
             raise ValueError(f"Malformed DataLoader batch: {exc}") from exc
