@@ -189,6 +189,27 @@ class OracleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "mask mismatch"):
             restored.load_diagnostic_checkpoint(wrong)
 
+    def test_legacy_oracle_defaults_normalize_without_enabling_structure(self):
+        self.base.config.update(gs_structure="none", horizon=5)
+        model = OracleLatent(self.base, self.masks)
+        state = copy.deepcopy(model.diagnostic_checkpoint())
+        state["config"].pop("gs_structure")
+        state["config"].pop("horizon")
+        original_config = copy.deepcopy(state["config"])
+        model.load_diagnostic_checkpoint(state, restore_rng=False)
+        self.assertEqual(state["config"], original_config)
+        forged = copy.deepcopy(state)
+        forged["config"]["gs_structure"] = "anchor_attention"
+        with self.assertRaises(ValueError):
+            model.load_diagnostic_checkpoint(forged, restore_rng=False)
+        forged = copy.deepcopy(state)
+        forged["config"]["horizon"] = 15
+        with self.assertRaises(ValueError):
+            model.load_diagnostic_checkpoint(forged, restore_rng=False)
+        self.base.config["gs_structure"] = "anchor_attention"
+        with self.assertRaises(ValueError):
+            OracleLatent(self.base, self.masks)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -65,6 +65,8 @@ def gs_viewer_html(data, title):
     properties = {'anchors': 'P1a 共享锚点位移；尺度、旋转、颜色及不透明度继承初态。',
                   'anchors_anisotropic': 'P1a.5 初态可学习各向异性 RBF；尺度、旋转、颜色及不透明度继承初态。',
                   'free': '自由 GS Head；位置、尺度、旋转随预测更新，颜色及不透明度继承初态。'}[data.get('gs_decoder', 'free')]
+    if data.get('gs_structure', 'none') == 'anchor_attention':
+        properties = 'P2 结构锚点 attention + P1a 位移 Decoder；尺度、旋转、颜色及不透明度继承初态。'
     return '''<!doctype html><html lang="zh"><meta charset="utf-8"><title>GS 渲染对比</title>
 <style>body{font:14px system-ui;background:#f5f7fa;color:#172437;margin:20px}.row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.panel{background:white;padding:10px;border-radius:8px}img{width:100%}select,input,button{margin:8px}</style><h1>''' + html.escape(title) + '''</h1>
 <p><a href="geometry.html">独立检查 Gaussian centers、ellipsoids 和五步轨迹</a></p>
@@ -188,7 +190,8 @@ def export_gaussians(args, config, raw, batch, prediction, processor):
                 (directory/'figures'/f'frame_{k+1}_view_{v}_{name}.png').write_bytes(png_bytes(image))
     data = dict(cameras=raw['meta']['depth_camera_ids'][0], frame_ids=arrays['frame_ids'].tolist(),
                 initial_count=int(keep.sum()), target_counts=raw['targets']['target_lengths'][0].tolist(),
-                depth_range=[float(lo), float(hi)], gs_decoder=config.get('gs_decoder', 'free'))
+                depth_range=[float(lo), float(hi)], gs_decoder=config.get('gs_decoder', 'free'),
+                gs_structure=config.get('gs_structure', 'none'))
     title = f'{config["scene"]} · episode {args.episode} · start {args.start}'
     (directory/'geometry.html').write_text(geometry_html(geometry, title), encoding='utf-8')
     (directory/'index.html').write_text(gs_viewer_html(data, title), encoding='utf-8')

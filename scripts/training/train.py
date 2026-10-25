@@ -29,7 +29,8 @@ from .losses import objective
 from .model import PositionPredictor
 from .rendering import DepthRenderer, GaussianRenderer
 
-VERSION = "touch4d-gs-v5"
+VERSION = "touch4d-gs-v6"
+GS_ANISOTROPIC_VERSION = "touch4d-gs-v5"
 GS_ANCHOR_VERSION = "touch4d-gs-v4"
 GS_JOINT_VERSION = "touch4d-gs-v3"
 GS_LOCAL_VERSION = "touch4d-gs-v2"
@@ -39,7 +40,7 @@ LEGACY_VERSION = "touch4d-displacement-v1"
 INDEPENDENT_VERSION = "touch4d-displacement-v2"
 MODEL_KEYS = ("width", "heads", "layers", "controller_features", "prediction_mode", "output_mode",
               "gs_local_attention", "gs_local_k", "gs_decoder", "anchor_count", "anchor_pool_k",
-              "anchor_bandwidth")
+              "anchor_bandwidth", "gs_structure")
 DECODER_DEFAULTS = dict(gs_decoder="free", anchor_count=128, anchor_pool_k=16, anchor_bandwidth=1.)
 PROJECT = Path(__file__).resolve().parents[2]
 GS_CAMERAS = {
@@ -288,8 +289,9 @@ def checkpoint_config(value):
     """Interpret legacy metadata without changing the checkpoint on disk."""
     version = value.get("version")
     if version not in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
-                       GS_LEGACY_VERSION, GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
-        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1/v2/v3/v4/v5 weights; "
+                       GS_LEGACY_VERSION, GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION,
+                       GS_ANISOTROPIC_VERSION, VERSION):
+        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1/v2/v3/v4/v5/v6 weights; "
                          "absolute-position V0 checkpoints require the original V0 code")
     config = dict(value["config"])
     if version in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION):
@@ -306,7 +308,7 @@ def checkpoint_config(value):
     if config.get("render_settings") != settings:
         raise ValueError("Checkpoint has missing or unsupported render settings")
     config["render_settings"] = settings
-    if version not in (GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
+    if version not in (GS_JOINT_VERSION, GS_ANCHOR_VERSION, GS_ANISOTROPIC_VERSION, VERSION):
         if config.get("chamfer_weight", 0.) != 0:
             raise ValueError("Legacy checkpoint must use zero GS chamfer_weight")
         config["chamfer_weight"] = 0.
@@ -337,7 +339,7 @@ def checkpoint_config(value):
     weight = value["model"].get("controller_encoder.0.weight")
     if not isinstance(weight, torch.Tensor) or tuple(weight.shape) != (config["width"], features):
         raise ValueError("Checkpoint controller weights disagree with feature configuration")
-    if version not in (GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
+    if version not in (GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION, GS_ANISOTROPIC_VERSION, VERSION):
         if config.get("gs_local_attention", "none") != "none" or config.get("gs_local_k", 16) != 16:
             raise ValueError("Legacy checkpoint must use disabled local GS attention")
         config.update(gs_local_attention="none", gs_local_k=16)
@@ -348,7 +350,7 @@ def checkpoint_config(value):
     local_weights = any(key.startswith("gs_local.") for key in value["model"])
     if local_weights != (config["gs_local_attention"] == "knn"):
         raise ValueError("Checkpoint local GS attention weights disagree with configuration")
-    if version not in (GS_ANCHOR_VERSION, VERSION):
+    if version not in (GS_ANCHOR_VERSION, GS_ANISOTROPIC_VERSION, VERSION):
         for key, default in DECODER_DEFAULTS.items():
             if config.get(key, default) != default:
                 raise ValueError("Legacy checkpoint must use the free GS decoder and default anchor metadata")
@@ -356,11 +358,19 @@ def checkpoint_config(value):
     elif any(key not in config for key in DECODER_DEFAULTS):
         raise ValueError("Checkpoint requires explicit GS decoder and anchor settings")
     validate_decoder_config(config)
-    if version != VERSION and config["gs_decoder"] == "anchors_anisotropic":
+    if version not in (GS_ANISOTROPIC_VERSION, VERSION) and config["gs_decoder"] == "anchors_anisotropic":
         raise ValueError("Anisotropic decoder requires v5 checkpoint semantics")
     metric_weights = any(key.startswith("metric_head.") for key in value["model"])
     if metric_weights != (config["gs_decoder"] == "anchors_anisotropic"):
         raise ValueError("Checkpoint metric head disagrees with decoder configuration")
+    if version != VERSION:
+        if config.get("gs_structure", "none") != "none":
+            raise ValueError("Legacy checkpoint must disable GS structure")
+        config["gs_structure"] = "none"
+    validate_structure_config(config)
+    structural_weights = any(key.startswith("gs_structure.") for key in value["model"])
+    if structural_weights != (config["gs_structure"] == "anchor_attention"):
+        raise ValueError("Checkpoint GS structure weights disagree with configuration")
     if config["output_mode"] == "gs_geometry":
         free_heads = [any(key.startswith(prefix) for key in value["model"])
                       for prefix in ("scale_head.", "rotation_head.")]
@@ -381,6 +391,22 @@ def validate_decoder_config(config):
     if config["gs_decoder"] != "free" and (config.get("output_mode") != "gs_geometry"
             or config.get("prediction_mode") != "autoregressive" or config.get("gs_local_attention") != "knn"):
         raise ValueError("Anchor decoder requires autoregressive GS geometry and local kNN features")
+
+
+def validate_structure_config(config):
+    if config.get("gs_structure") not in ("none", "anchor_attention"):
+        raise ValueError("Checkpoint requires explicit gs_structure: none or anchor_attention")
+    if config["gs_structure"] == "anchor_attention" and config.get("gs_decoder") != "anchors":
+        raise ValueError("GS structure requires the isotropic anchors decoder")
+
+
+def resolve_structure(requested, state=None):
+    saved = checkpoint_config(state)["gs_structure"] if state is not None else "none"
+    if requested is not None and requested not in ("none", "anchor_attention"):
+        raise ValueError("gs_structure must be none or anchor_attention")
+    if state is not None and requested is not None and requested != saved:
+        raise ValueError("Cannot resume with different gs_structure; start a new run")
+    return saved if requested is None else requested
 
 
 def resolve_chamfer_weight(requested, output_mode, state=None):
@@ -485,7 +511,7 @@ def recover_best_score(last_state, run):
     # Canonical legacy defaults allow old best and newly saved last to coexist.
     comparable = lambda c: {k: v for k, v in {"controller_features": 3,
                             "prediction_mode": "independent", "output_mode": "position",
-                            "gs_local_attention": "none", "gs_local_k": 16,
+                            "gs_local_attention": "none", "gs_local_k": 16, "gs_structure": "none",
                             "gs_convention": None, "render_settings": None, **LOSS_DEFAULTS,
                             **DECODER_DEFAULTS, **c}.items()
                             if k != "epochs"}
@@ -561,6 +587,8 @@ def parser():
                    help="Initial GS neighbors including self; fresh default 16; supports e.g. 32")
     p.add_argument("--gs-decoder", choices=("free", "anchors", "anchors_anisotropic"), default=None,
                    help="free; P1a anchors; P1a.5 anchors_anisotropic with an initial-only learnable metric")
+    p.add_argument("--gs-structure", choices=("none", "anchor_attention"), default=None,
+                   help="P2 two-layer structural anchor attention; default none; resume inherits")
     p.add_argument("--anchor-count", type=int, default=None,
                    help="P1a initial FPS anchor cap; fresh default 128; resume inherits")
     p.add_argument("--anchor-pool-k", type=int, default=None,
@@ -622,6 +650,8 @@ def main(argv=None):
                                      args.anchor_bandwidth, state).items():
         setattr(args, key, value)
     validate_decoder_config(vars(args))
+    args.gs_structure = resolve_structure(args.gs_structure, state)
+    validate_structure_config(vars(args))
     if args.output_mode == "gs_geometry" and (args.prediction_mode != "autoregressive"
             or args.depth_weight != 0 or args.rgb_weight <= 0):
         p.error("GS geometry requires autoregressive, positive RGB weight and --depth-weight 0")
@@ -643,6 +673,7 @@ def main(argv=None):
                               controller_features=args.controller_features,
                               prediction_mode=args.prediction_mode, output_mode=args.output_mode,
                               gs_local_attention=args.gs_local_attention, gs_local_k=args.gs_local_k,
+                              gs_structure=args.gs_structure,
                               **{key: getattr(args, key) for key in DECODER_DEFAULTS}).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     renderer = make_renderer(config)

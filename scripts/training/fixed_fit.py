@@ -36,7 +36,8 @@ from .model import PositionPredictor, initial_knn
 from .train import (PROJECT, MODEL_KEYS, GS_CAMERAS, GS_CONVENTION, atomic_json,
                     atomic_checkpoint, build_loader, choose_cameras, checkpoint_state,
                     copy_initial, gs_render_settings, make_renderer, read_checkpoint,
-                    restore_training, to_device, DECODER_DEFAULTS, resolve_decoder)
+                    restore_training, to_device, DECODER_DEFAULTS, resolve_decoder,
+                    resolve_structure, validate_structure_config)
 
 WINDOWS = {"001-rope": ((1, 85), (2, 73)), "051-cube": ((0, 109), (0, 132))}
 UPDATES, EVAL_EVERY = 400, 20
@@ -370,9 +371,11 @@ def update_loop(model, optimizer, batches, processor, renderer, config, on_evalu
             on_evaluation(completed+1, metrics, float(loss.detach()), float(norm))
 
 
-def report_html(history, best, completed, decoder="free"):
+def report_html(history, best, completed, decoder="free", structure="none"):
     stage = {"free": "P0 free GS Head", "anchors": "P1a shared anchor displacement",
              "anchors_anisotropic": "P1a.5 learnable anisotropic RBF"}[decoder]
+    if structure == "anchor_attention":
+        stage = "P2 structural anchor attention + P1a decoder"
     best_name = "lowest_cd (diagnostic only)" if best and best.get("diagnostic_only") else "best_fit"
     rows = []
     for row in history:
@@ -468,9 +471,11 @@ def run(args):
     if cameras != GS_CAMERAS[args.scene]:
         raise ValueError("P0 freezes the audited three-camera order")
     config = dict(expected, **{k: v for k, v in optional.items() if k not in expected}, **decoder,
+        gs_structure=resolve_structure(args.gs_structure, state),
         scene=args.scene, root=str(root), depth_root=str(depth_root), depth_cameras=cameras,
         workers=args.workers, chamfer_chunk=args.chamfer_chunk, overfit_windows=0, protocol="fixed400",
         fit_contract=contract, fit_diagnostic=diagnostic, gs_convention=GS_CONVENTION, render_settings=gs_render_settings())
+    validate_structure_config(config)
     raws = fixed_batches(config)
     evidence = manifest(raws, config)
     print(json.dumps(dict(exact_windows=evidence, updates=UPDATES, evaluation_every=EVAL_EVERY), indent=2), flush=True)
@@ -534,7 +539,7 @@ def run(args):
         checkpoint["fit"] = dict(completed_updates=update, best_candidate=best, manifest=evidence)
         publish_fit(run_dir, checkpoint, improved)
         atomic_json(run_dir/"metrics.json", history)
-        (run_dir/"report.html").write_text(report_html(history, best, update, config["gs_decoder"]), encoding="utf-8")
+        (run_dir/"report.html").write_text(report_html(history, best, update, config["gs_decoder"], config["gs_structure"]), encoding="utf-8")
         print(json.dumps(dict(update=update, candidate=row), allow_nan=False), flush=True)
     update_loop(model, optimizer, batches, processor, renderer, config, save, start, evaluate)
     # Also repairs a crash after last.pt(400) but before last_400.pt/export publication.
@@ -545,6 +550,7 @@ def run(args):
     from .visualize import export_gaussians
     summary = dict(scene=args.scene, completed_updates=UPDATES, windows=evidence,
                    gs_decoder=config["gs_decoder"],
+                   gs_structure=config["gs_structure"],
                    inherited_shape=config["gs_decoder"] != "free",
                    acceptance="not assessed: tolerances not frozen" if diagnostic else "manual structural review pending",
                    checkpoints={})
@@ -582,7 +588,7 @@ def run(args):
         interpretation="Automatic checks are evidence only. If an earlier checkpoint also passes manual "
                        "structure review and last_400 fails, report: 表达能力验收通过，训练稳定性尚未通过。")
     atomic_json(run_dir/"fit_summary.json", summary)
-    page = report_html(history, best, UPDATES, config["gs_decoder"])
+    page = report_html(history, best, UPDATES, config["gs_decoder"], config["gs_structure"])
     for name, result in summary["checkpoints"].items():
         for path in result.get("visualizations", []):
             relative = Path(path).relative_to(run_dir).as_posix()

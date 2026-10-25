@@ -26,7 +26,8 @@ class _Oracle(nn.Module):
         if (config.get("gs_decoder") != "anchors"
                 or config.get("prediction_mode") != "autoregressive"
                 or config.get("output_mode") != "gs_geometry"
-                or config.get("gs_local_attention") != "knn"):
+                or config.get("gs_local_attention") != "knn"
+                or config.get("gs_structure", "none") != "none"):
             raise ValueError("Oracle requires the isotropic P1a AR GS model")
         self.horizon = config.get("horizon", 5)
         if (type(self.horizon) is not int or self.horizon < 1
@@ -108,8 +109,14 @@ class _Oracle(nn.Module):
                     python_rng=random.getstate())
 
     def load_diagnostic_checkpoint(self, state, optimizer=None, restore_rng=True):
+        saved_config = dict(state.get("config", {}))
+        # These disabled/default semantics predate the fields. Normalization is
+        # read-only and must never turn a five-frame P1a Oracle into P2/H=15.
+        for key, default in (("gs_structure", "none"), ("horizon", 5)):
+            if key in self.config:
+                saved_config.setdefault(key, default)
         if (state.get("version") != ORACLE_VERSION or state.get("diagnostic_only") is not True
-                or state.get("oracle_mode") != self.mode or state.get("config") != self.config):
+                or state.get("oracle_mode") != self.mode or saved_config != self.config):
             raise ValueError("Oracle checkpoint mode/configuration mismatch")
         if optimizer is not None and state.get("optimizer") is None:
             raise ValueError("Oracle checkpoint has no optimizer state")

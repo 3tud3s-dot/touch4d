@@ -7,6 +7,7 @@ from torch import nn
 
 from .gs_decoder import (build_initial_anchor_field, pool_anchor_features,
                          interpolate_anchor_displacements, anisotropic_anchor_field)
+from .gs_structure import StructuralGSBlock
 
 
 def masked(value, mask):
@@ -136,7 +137,8 @@ class PositionPredictor(nn.Module):
     def __init__(self, width=128, heads=4, layers=2, controller_features=7,
                  prediction_mode="autoregressive", output_mode="position",
                  gs_local_attention="none", gs_local_k=16, gs_decoder="free",
-                 anchor_count=128, anchor_pool_k=16, anchor_bandwidth=1.0):
+                 anchor_count=128, anchor_pool_k=16, anchor_bandwidth=1.0,
+                 gs_structure="none"):
         super().__init__()
         if min(width, heads, layers) < 1 or width % heads:
             raise ValueError("Positive dimensions required; width must be divisible by heads")
@@ -154,6 +156,10 @@ class PositionPredictor(nn.Module):
             raise ValueError("gs_local_k must be a positive integer")
         if gs_decoder not in ("free", "anchors", "anchors_anisotropic"):
             raise ValueError("gs_decoder must be free, anchors or anchors_anisotropic")
+        if gs_structure not in ("none", "anchor_attention"):
+            raise ValueError("gs_structure must be none or anchor_attention")
+        if gs_structure == "anchor_attention" and gs_decoder != "anchors":
+            raise ValueError("Structural anchor attention requires the isotropic anchors decoder")
         if (gs_decoder != "free" and
                 (prediction_mode != "autoregressive" or output_mode != "gs_geometry"
                  or gs_local_attention != "knn")):
@@ -170,7 +176,7 @@ class PositionPredictor(nn.Module):
                            output_mode=output_mode, gs_local_attention=gs_local_attention,
                            gs_local_k=gs_local_k, gs_decoder=gs_decoder,
                            anchor_count=anchor_count, anchor_pool_k=anchor_pool_k,
-                           anchor_bandwidth=anchor_bandwidth)
+                           anchor_bandwidth=anchor_bandwidth, gs_structure=gs_structure)
         def mlp(n):
             return nn.Sequential(nn.Linear(n, width), nn.GELU(), nn.Linear(width, width))
         self.gs_encoder = mlp(14)
@@ -206,6 +212,10 @@ class PositionPredictor(nn.Module):
                                              nn.GELU(), nn.Linear(max(1, width//2), 9))
             nn.init.zeros_(self.metric_head[-1].weight)
             nn.init.zeros_(self.metric_head[-1].bias)
+        # Append after all existing modules so P1a shared weights keep the exact
+        # seed/RNG initialization. The disabled path owns no parameters or RNG.
+        self.gs_structure = (StructuralGSBlock(width, heads)
+                             if gs_structure == "anchor_attention" else None)
 
     def controller_inputs(self, x):
         """Same-frame XYZ, optional displacement from t0 and endpoint validity.
@@ -273,6 +283,8 @@ class PositionPredictor(nn.Module):
                 features = self.gs_encoder(masked(torch.cat((current, attrs), -1), keep))
                 if self.gs_local is not None:
                     features = self.gs_local(features, current, keep, neighbors)
+                if self.gs_structure is not None:
+                    features = self.gs_structure(features, current, keep, anchor_field)
                 if anisotropic and k == 0:
                     # Initial local GS features ONLY, before time/condition fusion.
                     # This graph is shared across all five horizons, never detached.
