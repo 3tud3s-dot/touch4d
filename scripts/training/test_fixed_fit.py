@@ -2,7 +2,7 @@
 
 import copy
 from io import StringIO
-from contextlib import redirect_stdout
+from contextlib import ExitStack, redirect_stdout
 import json
 from pathlib import Path
 import re
@@ -341,25 +341,27 @@ class FixedFitTests(unittest.TestCase):
         if diagnostic:
             arguments.fit_contract=None
             arguments.fit_diagnostic=True
-        with patch.object(fit,"fixed_batches",return_value=raws), \
-             patch.object(fit,"choose_cameras",return_value=fit.GS_CAMERAS["001-rope"]), \
-             patch.object(fit,"PositionPredictor",return_value=model), \
-             patch.object(model,"to",return_value=model), \
-             patch.object(fit,"to_device",side_effect=lambda raw,device:raw), \
-             patch.object(fit.torch.cuda,"is_available",return_value=True), \
-             patch.object(fit.torch.cuda,"get_rng_state_all",return_value=[]), \
-             patch.object(fit.torch.cuda,"manual_seed_all"), \
-             patch.dict("sys.modules",gsplat=SimpleNamespace(__version__="unit-test")), \
-             patch.object(fit,"update_loop",side_effect=simulate_updates), \
-             patch.object(fit,"evaluate_fixed",return_value=metrics) as evaluate, \
-             patch.object(fit,"atomic_checkpoint",side_effect=save_checkpoint), \
-             patch.object(fit,"atomic_json",side_effect=save_json), \
-             patch.object(fit,"read_checkpoint",side_effect=lambda p:copy.deepcopy(checkpoints[Path(p).name])), \
-             patch("scripts.training.visualize.export_gaussians") as export, \
-             patch("pathlib.Path.read_text",return_value=json.dumps(contract())), \
-             patch("pathlib.Path.is_file",side_effect=lambda p:p.name in checkpoints,autospec=True), \
-             patch("pathlib.Path.exists",return_value=False),patch("pathlib.Path.mkdir"), \
-             patch("pathlib.Path.write_text"),redirect_stdout(StringIO()):
+        with ExitStack() as stack:
+            contexts = [patch.object(fit,"fixed_batches",return_value=raws),
+                patch.object(fit,"choose_cameras",return_value=fit.GS_CAMERAS["001-rope"]),
+                patch.object(fit,"PositionPredictor",return_value=model),patch.object(model,"to",return_value=model),
+                patch.object(fit,"to_device",side_effect=lambda raw,device:raw),
+                patch.object(fit.torch.cuda,"is_available",return_value=True),
+                patch.object(fit.torch.cuda,"get_rng_state_all",return_value=[]),
+                patch.object(fit.torch.cuda,"manual_seed_all"),
+                patch.dict("sys.modules",gsplat=SimpleNamespace(__version__="unit-test")),
+                patch.object(fit,"update_loop",side_effect=simulate_updates),
+                patch.object(fit,"atomic_checkpoint",side_effect=save_checkpoint),
+                patch.object(fit,"atomic_json",side_effect=save_json),
+                patch.object(fit,"read_checkpoint",side_effect=lambda p:copy.deepcopy(checkpoints[Path(p).name])),
+                patch("pathlib.Path.read_text",return_value=json.dumps(contract())),
+                patch("pathlib.Path.is_file",side_effect=lambda p:p.name in checkpoints,autospec=True),
+                patch("pathlib.Path.exists",return_value=False),patch("pathlib.Path.mkdir"),
+                patch("pathlib.Path.write_text"),redirect_stdout(StringIO())]
+            for context in contexts:
+                stack.enter_context(context)
+            evaluate=stack.enter_context(patch.object(fit,"evaluate_fixed",return_value=metrics))
+            export=stack.enter_context(patch("scripts.training.visualize.export_gaussians"))
             self.assertEqual(fit.run(arguments),0)
         name="lowest_cd.pt" if diagnostic else "best_fit.pt"
         expected={name,"last.pt","last_400.pt"}
