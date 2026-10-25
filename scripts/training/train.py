@@ -472,6 +472,11 @@ def restore_training(state, model, optimizer):
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--protocol", choices=("epochs", "fixed400"), default="epochs",
+                   help="fixed400: Roadmap P0 exact windows, alternating updates and fit selection")
+    p.add_argument("--fit-contract", help="Reviewed P0 JSON tolerances; required for a new fixed400 run")
+    p.add_argument("--fit-diagnostic", action="store_true",
+                   help="fixed400 baseline without acceptance thresholds; retain all evaluation checkpoints")
     p.add_argument("--scene", required=True, choices=SUPPORTED_SCENES)
     p.add_argument("--root", default=str(DEFAULT_ROOT))
     p.add_argument("--depth-root")
@@ -517,6 +522,11 @@ def parser():
 def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
+    if args.protocol == "fixed400":
+        from .fixed_fit import run
+        return run(args)
+    if args.fit_contract or args.fit_diagnostic:
+        p.error("Fit options require --protocol fixed400")
     if (min(args.epochs, args.batch_size, args.chamfer_chunk) < 1 or args.single_epochs < 0
             or args.single_epochs > args.epochs or min(args.workers, args.seed, args.max_train_batches,
                 args.max_val_batches, args.overfit_windows) < 0):
@@ -538,6 +548,8 @@ def main(argv=None):
         if Path(args.resume).name != "last.pt":
             p.error("Resume from last.pt to preserve the completed-epoch history; best.pt is for evaluation")
         state = read_checkpoint(args.resume)
+        if state["config"].get("protocol") == "fixed400":
+            p.error("A fixed400 checkpoint must resume with --protocol fixed400")
     args.controller_features = resolve_controller_features(args.controller_features, state)
     args.prediction_mode = resolve_prediction_mode(args.prediction_mode, state)
     args.output_mode = resolve_output_mode(args.output_mode, state)
@@ -550,7 +562,7 @@ def main(argv=None):
     root = Path(args.root).resolve()
     depth_root = Path(args.depth_root).resolve() if args.depth_root else root.parent / "touch4d-depth-v1"
     config = vars(args).copy()
-    for key in ("run_id", "resume", "device"):
+    for key in ("run_id", "resume", "device", "protocol", "fit_contract", "fit_diagnostic"):
         config.pop(key)
     requested_cameras = args.depth_cameras
     if requested_cameras is None:
