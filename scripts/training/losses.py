@@ -43,7 +43,7 @@ def chamfer_samples(prediction, batch, chunk=512):
         frames = []
         for k in range(5):
             p = prediction[b, k, x["gs_mask"][b]]
-            t = y["target_xyz"][k][b, y["target_mask"][k][b]]
+            t = y["target_xyz"][k][b, y["target_mask"][k][b]].detach()
             frames.append((nearest_distances(p, t, chunk).mean() + nearest_distances(t, p, chunk).mean()) * .5)
         losses.append(torch.stack(frames).mean())
     return torch.stack(losses)
@@ -99,17 +99,17 @@ def render_samples(prediction, target, valid):
 
 
 def gs_objective(prediction, batch, processor, renderer, depth_weight=0., chunk=512,
-                 rgb_weight=1., alpha_weight=.1, scale_weight=.01):
-    """Render supervision for full GS geometry; Chamfer/depth are diagnostics.
+                 rgb_weight=1., alpha_weight=.1, scale_weight=.01, chamfer_weight=0.):
+    """RGB/alpha supervision with optional normalized, unsquared Chamfer.
 
     All-empty samples are excluded from every training component, including the
-    scale regularizer. The training loop must skip an entirely empty batch, so
+    scale regularizer and Chamfer. The training loop must skip an entirely empty batch, so
     AdamW decay/moments cannot move parameters without an observed objective.
     """
     if depth_weight != 0:
         raise ValueError("gs_geometry keeps depth diagnostic only; depth_weight must be zero")
     for name, weight in (("rgb_weight", rgb_weight), ("alpha_weight", alpha_weight),
-                         ("scale_weight", scale_weight)):
+                         ("scale_weight", scale_weight), ("chamfer_weight", chamfer_weight)):
         if not math.isfinite(weight) or weight < 0:
             raise ValueError(f"{name} must be finite and nonnegative")
     x, y = batch["inputs"], batch["targets"]
@@ -140,7 +140,12 @@ def gs_objective(prediction, batch, processor, renderer, depth_weight=0., chunk=
                              prediction["log_scales"] - x["gs_attr"][:, None, :, :3],
                              torch.zeros_like(prediction["log_scales"]))
     scale_regularization = difference.square().sum((1, 2, 3)) / (real.sum((1, 2)) * 3).clamp_min(1)
+    with torch.set_grad_enabled(torch.is_grad_enabled() and chamfer_weight > 0):
+        geometry = chamfer_samples(prediction["xyz"], batch, chunk)
     data_score = rgb_weight * rgb + alpha_weight * alpha
+    # Preserve the original zero-weight objective and its gradient graph exactly.
+    if chamfer_weight > 0:
+        data_score = data_score + chamfer_weight * geometry
     sample_loss = data_score + scale_weight * scale_regularization
     if available.any():
         loss = sample_loss[available].mean()
@@ -149,10 +154,9 @@ def gs_objective(prediction, batch, processor, renderer, depth_weight=0., chunk=
     if not torch.isfinite(loss):
         raise FloatingPointError("Nonfinite Gaussian rendering objective")
     with torch.no_grad():
-        geometry = chamfer_samples(prediction["xyz"], batch, chunk)
         depth, depth_available = depth_samples(rendered["depth"].detach(),
                                                y["target_depth"], valid)
-    return loss, {"geometry": geometry, "depth_m": depth, "depth_available": depth_available,
+    return loss, {"geometry": geometry.detach(), "depth_m": depth, "depth_available": depth_available,
                   "rgb": rgb, "alpha": alpha, "render_available": available,
                   "scale_regularization": scale_regularization, "data_score": data_score,
                   "rgb_by_horizon": rgb_time, "alpha_by_horizon": alpha_time,
@@ -160,10 +164,12 @@ def gs_objective(prediction, batch, processor, renderer, depth_weight=0., chunk=
 
 
 def objective(prediction, batch, processor, renderer, depth_weight=0., chunk=512,
-              rgb_weight=1., alpha_weight=.1, scale_weight=.01):
+              rgb_weight=1., alpha_weight=.1, scale_weight=.01, chamfer_weight=0.):
     if isinstance(prediction, dict):
         return gs_objective(prediction, batch, processor, renderer, depth_weight, chunk,
-                            rgb_weight, alpha_weight, scale_weight)
+                            rgb_weight, alpha_weight, scale_weight, chamfer_weight)
+    if chamfer_weight != 0:
+        raise ValueError("chamfer_weight is GS-only; position mode retains unit-weight Chamfer")
     if not math.isfinite(depth_weight) or depth_weight < 0:
         raise ValueError("depth_weight must be finite and nonnegative")
     real = batch["inputs"]["gs_mask"][:, None].expand(-1, 5, -1)

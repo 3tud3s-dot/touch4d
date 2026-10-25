@@ -27,9 +27,9 @@ from .evaluate import load_model
 from .rendering import DepthRenderer, GaussianRenderer, assemble_gaussians
 from .train import (EpisodeMetrics, GaussianMetrics, checkpoint_state, evaluate_loader, restore_training,
                     train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser,
-                    VERSION, GS_LEGACY_VERSION, LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
+                    VERSION, GS_LOCAL_VERSION, GS_LEGACY_VERSION, LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
                     resolve_controller_features, resolve_prediction_mode, resolve_output_mode,
-                    resolve_local_attention)
+                    resolve_local_attention, resolve_chamfer_weight, loss_options)
 from .visualize import png_bytes, viewer_html, main as visualize_main
 
 
@@ -808,6 +808,174 @@ class TrainingTests(unittest.TestCase):
             self.assertTrue(torch.isfinite(grad).all())
             self.assertGreater(grad.abs().sum().item(),0.)
 
+    def test_joint_chamfer_gradient_matches_geometry_and_ignores_padding_targets(self):
+        model, batch = self.geometry_fixture(gs_local_attention='knn')
+        self.activate_geometry_heads(model)
+        prediction = {key: value.detach().requires_grad_()
+                      for key, value in model(batch['inputs']).items()}
+        for xyz, valid in zip(batch['targets']['target_xyz'], batch['targets']['target_mask']):
+            xyz[~valid] = float('nan')
+            xyz.requires_grad_()
+        real = batch['inputs']['gs_mask'][:, None].expand(-1, 5, -1)
+        with torch.no_grad():
+            prediction['xyz'][~real] = float('nan')
+        renderer = GaussianRenderer(fake_gaussian_rasterizer)
+        base, _ = objective(prediction, batch, self.processor, renderer, chunk=2)
+        explicit_zero, _ = objective(prediction, batch, self.processor, renderer,
+                                     chunk=2, chamfer_weight=0.)
+        torch.testing.assert_close(base, explicit_zero, atol=0, rtol=0)
+        joint, parts = objective(prediction, batch, self.processor, renderer,
+                                 chunk=2, chamfer_weight=.1)
+        geometry = chamfer_samples(prediction['xyz'], batch, 2).mean()
+        torch.testing.assert_close(joint, base + .1 * geometry)
+        tensors = list(prediction.values())
+        base_grad = torch.autograd.grad(base, tensors, retain_graph=True, allow_unused=True)
+        zero_grad = torch.autograd.grad(explicit_zero, tensors, retain_graph=True, allow_unused=True)
+        for a, b in zip(base_grad, zero_grad):
+            if a is None: self.assertIsNone(b)
+            else: torch.testing.assert_close(a, b, atol=0, rtol=0)
+        joint_grad = torch.autograd.grad(joint, tensors, retain_graph=True, allow_unused=True)
+        cd_grad, = torch.autograd.grad(geometry, prediction['xyz'], retain_graph=True)
+        torch.testing.assert_close(joint_grad[0], base_grad[0] + .1 * cd_grad)
+        self.assertGreater(cd_grad.abs().sum().item(), 0.)
+        self.assertEqual(cd_grad[~real].abs().sum().item(), 0.)
+        for a, b in zip(base_grad[1:], joint_grad[1:]):
+            if a is None: self.assertIsNone(b)
+            else: torch.testing.assert_close(a, b, atol=0, rtol=0)
+        joint.backward()
+        self.assertFalse(parts['geometry'].requires_grad)
+        for xyz in batch['targets']['target_xyz']:
+            self.assertIsNone(xyz.grad)
+
+    def test_joint_chamfer_fifth_step_reaches_all_rollout_updates(self):
+        model, batch = self.geometry_fixture(gs_local_attention='knn')
+        self.activate_geometry_heads(model)
+        increments = []
+        hook = model.position_head.register_forward_hook(lambda _, args, out: increments.append(out))
+        try:
+            prediction = model(batch['inputs'])
+        finally:
+            hook.remove()
+        # Isolate the fifth Chamfer by repeating its live output and its target.
+        last_batch = dict(batch, targets=dict(batch['targets'],
+            target_xyz=[batch['targets']['target_xyz'][-1]] * 5,
+            target_mask=[batch['targets']['target_mask'][-1]] * 5))
+        fifth = prediction['xyz'][:, -1:].expand_as(prediction['xyz'])
+        geometry = chamfer_samples(fifth, last_batch, 2).mean()
+        gradients = torch.autograd.grad(geometry, increments)
+        self.assertEqual(len(gradients), 5)
+        for gradient in gradients:
+            self.assertTrue(torch.isfinite(gradient).all())
+            self.assertGreater(gradient.abs().sum().item(), 0.)
+
+    def test_joint_chamfer_empty_samples_and_weight_validation(self):
+        model, batch = self.geometry_fixture()
+        self.activate_geometry_heads(model)
+        batch['targets']['target_depth_valid'][1] = False
+        prediction = {key: value.detach().requires_grad_()
+                      for key, value in model(batch['inputs']).items()}
+        renderer = GaussianRenderer(fake_gaussian_rasterizer)
+        joint, parts = objective(prediction, batch, self.processor, renderer, chunk=2, chamfer_weight=.1)
+        self.assertEqual(parts['render_available'].tolist(), [True, False])
+        expected = (parts['rgb'] + .1*parts['alpha'] + .01*parts['scale_regularization']
+                    + .1*parts['geometry'])[0]
+        torch.testing.assert_close(joint, expected)
+        joint.backward()
+        self.assertEqual(prediction['xyz'].grad[1].abs().sum().item(), 0.)
+        self.assertGreater(prediction['xyz'].grad[0].abs().sum().item(), 0.)
+        batch['targets']['target_depth_valid'].zero_()
+        model.zero_grad(set_to_none=True)
+        empty, _ = objective(model(batch['inputs']), batch, self.processor, renderer, chunk=2, chamfer_weight=1.)
+        self.assertEqual(empty.item(), 0.)
+        empty.backward()
+        for parameter in model.parameters():
+            if parameter.grad is not None:
+                self.assertTrue(torch.isfinite(parameter.grad).all())
+                self.assertEqual(parameter.grad.abs().sum().item(), 0.)
+        for weight in (-1., float('nan'), float('inf')):
+            with self.assertRaisesRegex(ValueError, 'chamfer_weight'):
+                objective(prediction, batch, self.processor, renderer, chamfer_weight=weight)
+        with self.assertRaisesRegex(ValueError, 'GS-only'):
+            objective(prediction['xyz'], batch, self.processor, renderer, chamfer_weight=.1)
+
+    def test_joint_chamfer_cli_legacy_checkpoint_resume_and_best(self):
+        args = parser().parse_args(['--scene', '001-rope'])
+        self.assertEqual(resolve_chamfer_weight(args.chamfer_weight, 'gs_geometry'), .1)
+        self.assertEqual(resolve_chamfer_weight(args.chamfer_weight, 'position'), 0.)
+        for weight in (0., .1, 1.):
+            args = parser().parse_args(['--scene', '001-rope', '--chamfer-weight', str(weight)])
+            self.assertEqual(resolve_chamfer_weight(args.chamfer_weight, 'gs_geometry'), weight)
+        for weight in (-1., float('nan'), float('inf')):
+            with self.assertRaises(ValueError): resolve_chamfer_weight(weight, 'gs_geometry')
+        with self.assertRaises(ValueError): resolve_chamfer_weight(.1, 'position')
+        for version, local in ((GS_LEGACY_VERSION, 'none'), (GS_LOCAL_VERSION, 'knn')):
+            model, batch = self.geometry_fixture(gs_local_attention=local)
+            self.activate_geometry_heads(model)
+            optimizer = torch.optim.AdamW(model.parameters())
+            cfg = dict(config(), **model.config)
+            old = copy.deepcopy(checkpoint_state(model, optimizer, self.processor, cfg, 1, .2, []))
+            old['version'] = version
+            del old['config']['chamfer_weight']
+            if version == GS_LEGACY_VERSION:
+                del old['config']['gs_local_attention']; del old['config']['gs_local_k']
+            with patch('scripts.training.train.torch.load', return_value=old):
+                loaded, _, restored = load_model('memory/old.pt', 'cpu')
+            self.assertEqual(restored['chamfer_weight'], 0.)
+            self.assertEqual(restored['gs_local_attention'], local)
+            self.assertEqual(resolve_chamfer_weight(None, 'gs_geometry', old), 0.)
+            with self.assertRaisesRegex(ValueError, 'different chamfer_weight'):
+                resolve_chamfer_weight(.1, 'gs_geometry', old)
+            renderer = GaussianRenderer(fake_gaussian_rasterizer)
+            before, before_parts = objective(model(batch['inputs']), batch, self.processor, renderer, chunk=2)
+            after, after_parts = objective(loaded(batch['inputs']), batch, self.processor, renderer,
+                                           chunk=2, **loss_options(restored))
+            torch.testing.assert_close(before, after, atol=0, rtol=0)
+            for key in before_parts:
+                torch.testing.assert_close(before_parts[key], after_parts[key], atol=0, rtol=0)
+            opt = torch.optim.AdamW(loaded.parameters())
+            restore_training(old, loaded, opt)
+            new = checkpoint_state(loaded, opt, self.processor, restored, 2, .3, [])
+            with patch('pathlib.Path.is_file', return_value=True), \
+                 patch('scripts.training.train.torch.load', return_value=old):
+                self.assertEqual(recover_best_score(new, 'memory'), .2)
+                different = copy.deepcopy(new)
+                different['config']['chamfer_weight'] = .1
+                with self.assertRaisesRegex(ValueError, 'configurations differ'):
+                    recover_best_score(different, 'memory')
+            with patch('scripts.training.train.atomic_checkpoint') as save:
+                publish_checkpoints('memory', dict(new, best=.2), .25 < .2)
+                self.assertEqual(save.call_count, 1)
+                self.assertEqual(save.call_args.args[0].name, 'last.pt')
+            # A new joint checkpoint requires its explicit loss semantics.
+            joint = checkpoint_state(model, optimizer, self.processor,
+                                     dict(cfg, chamfer_weight=.1), 1, .2, [])
+            self.assertEqual(resolve_chamfer_weight(None, 'gs_geometry', joint), .1)
+            with self.assertRaisesRegex(ValueError, 'different chamfer_weight'):
+                resolve_chamfer_weight(1., 'gs_geometry', joint)
+            for bad in (None, -1., float('nan'), float('inf')):
+                broken = copy.deepcopy(joint)
+                if bad is None: del broken['config']['chamfer_weight']
+                else: broken['config']['chamfer_weight'] = bad
+                with patch('scripts.training.train.torch.load', return_value=broken):
+                    with self.assertRaises(ValueError): read_checkpoint('memory/broken.pt')
+
+    def test_joint_best_score_uses_matching_samples_and_equal_episode_weights(self):
+        cfg = dict(rgb_weight=1., alpha_weight=.1, scale_weight=.01, chamfer_weight=.1)
+        tracker = GaussianMetrics(.1, cfg)
+        values = dict(geometry=torch.tensor([2., 4., 1000., 10.]), depth_m=torch.zeros(4),
+            depth_available=torch.ones(4, dtype=torch.bool),
+            render_available=torch.tensor([True, True, False, True]),
+            rgb=torch.tensor([1., 3., 0., 6.]), alpha=torch.tensor([.1, .3, 0., .6]),
+            scale_regularization=torch.tensor([20., 40., 0., 50.]),
+            rgb_by_horizon=torch.zeros(4, 5), alpha_by_horizon=torch.zeros(4, 5),
+            render_time_available=torch.tensor([[True]*5, [True]*5, [False]*5, [True]*5]))
+        tracker.add(torch.tensor([1, 1, 1, 5]), values)
+        result = tracker.summary()
+        self.assertAlmostEqual(result['supervised_geometry'], 6.5)
+        self.assertGreater(result['geometry'], 100.)  # All-sample diagnostic only.
+        self.assertAlmostEqual(result['val_score'], 4. + .1*.4 + .1*6.5)
+        self.assertAlmostEqual(result['training_objective'], result['val_score'] + .01*40.)
+
     def test_geometry_render_mask_equal_averaging_and_empty_samples(self):
         model,batch=self.geometry_fixture()
         pred=model(batch['inputs'])
@@ -853,7 +1021,7 @@ class TrainingTests(unittest.TestCase):
         raw=copy.deepcopy(self.raw)
         raw['targets']['target_depth'].zero_()
         raw['targets']['target_depth_valid'].zero_()
-        cfg=dict(config(),**model.config,rgb_weight=1.,alpha_weight=.1,scale_weight=.01)
+        cfg=dict(config(),**model.config,rgb_weight=1.,alpha_weight=.1,scale_weight=.01,chamfer_weight=.1)
         optimizer=torch.optim.AdamW(model.parameters(),lr=1e-3,weight_decay=.1)
         before={key:value.clone() for key,value in model.state_dict().items()}
         # A training epoch with no observations must not silently be considered
@@ -927,10 +1095,11 @@ class TrainingTests(unittest.TestCase):
         optimizer=torch.optim.AdamW(model.parameters(),lr=1e-3)
         def step(network,opt):
             opt.zero_grad(set_to_none=True)
-            loss,_=objective(network(batch['inputs']),batch,self.processor,GaussianRenderer(fake_gaussian_rasterizer),chunk=2)
+            loss,_=objective(network(batch['inputs']),batch,self.processor,
+                             GaussianRenderer(fake_gaussian_rasterizer),chunk=2,chamfer_weight=.1)
             loss.backward();opt.step()
         step(model,optimizer)
-        cfg=dict(config(),**model.config,rgb_weight=1.,alpha_weight=.1,scale_weight=.01)
+        cfg=dict(config(),**model.config,rgb_weight=1.,alpha_weight=.1,scale_weight=.01,chamfer_weight=.1)
         state=copy.deepcopy(checkpoint_state(model,optimizer,self.processor,cfg,3,.2,[]))
         self.assertEqual(state['version'],VERSION)
         self.assertEqual(state['config']['render_settings']['width'],1280)

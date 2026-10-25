@@ -29,7 +29,8 @@ from .losses import objective
 from .model import PositionPredictor
 from .rendering import DepthRenderer, GaussianRenderer
 
-VERSION = "touch4d-gs-v2"
+VERSION = "touch4d-gs-v3"
+GS_LOCAL_VERSION = "touch4d-gs-v2"
 GS_LEGACY_VERSION = "touch4d-gs-v1"
 DISPLACEMENT_VERSION = "touch4d-displacement-v3"
 LEGACY_VERSION = "touch4d-displacement-v1"
@@ -41,7 +42,9 @@ GS_CAMERAS = {
     "001-rope": ["brics-odroid-001_cam0", "brics-odroid-011_cam0", "brics-odroid-021_cam0"],
     "051-cube": ["brics-odroid-001_cam0", "brics-odroid-012_cam0", "brics-odroid-021_cam1"],
 }
-LOSS_DEFAULTS = dict(rgb_weight=1., alpha_weight=.1, scale_weight=.01)
+# Canonical defaults for existing callers/checkpoints. Fresh CLI GS runs resolve
+# chamfer_weight separately to .1; missing legacy metadata must remain zero.
+LOSS_DEFAULTS = dict(rgb_weight=1., alpha_weight=.1, scale_weight=.01, chamfer_weight=0.)
 GS_CONVENTION = "world-left-wxyz-sh0-black-depth-valid-v1"
 
 
@@ -157,7 +160,7 @@ class EpisodeMetrics:
 
 
 class GaussianMetrics(EpisodeMetrics):
-    """Keep diagnostics separate from the observation-only best score."""
+    """Joint best score on render-available samples; all-sample CD stays diagnostic."""
     def __init__(self, scale, config):
         super().__init__(scale, 0.)
         self.weights = loss_options(config)
@@ -167,11 +170,12 @@ class GaussianMetrics(EpisodeMetrics):
         super().add(ids, metrics)
         for i, episode in enumerate(ids.tolist()):
             row = self.render.setdefault(str(episode), dict(samples=0, rgb=0., alpha=0.,
-                scale_regularization=0., time_counts=[0]*5, rgb_by_horizon=[0.]*5,
+                scale_regularization=0., supervised_geometry=0., time_counts=[0]*5, rgb_by_horizon=[0.]*5,
                 alpha_by_horizon=[0.]*5))
             if not bool(metrics["render_available"][i]):
                 continue
             row["samples"] += 1
+            row["supervised_geometry"] += float(metrics["geometry"][i].detach())
             for key in ("rgb", "alpha", "scale_regularization"):
                 row[key] += float(metrics[key][i].detach())
             for k in range(5):
@@ -187,10 +191,10 @@ class GaussianMetrics(EpisodeMetrics):
             raise ValueError(f"No render supervision for entire episodes: {missing}")
         for ep, row in self.render.items():
             result["episodes"][ep].update(render_samples=row["samples"],
-                **{key: row[key]/row["samples"] for key in ("rgb", "alpha", "scale_regularization")})
+                **{key: row[key]/row["samples"] for key in ("rgb", "alpha", "scale_regularization", "supervised_geometry")})
             for key in ("rgb_by_horizon", "alpha_by_horizon"):
                 result["episodes"][ep][key] = [v/n if n else None for v, n in zip(row[key], row["time_counts"])]
-        for key in ("rgb", "alpha", "scale_regularization"):
+        for key in ("rgb", "alpha", "scale_regularization", "supervised_geometry"):
             result[key] = sum(ep[key] for ep in result["episodes"].values())/len(self.render)
         for key in ("rgb_by_horizon", "alpha_by_horizon"):
             result[key] = []
@@ -198,6 +202,8 @@ class GaussianMetrics(EpisodeMetrics):
                 values = [ep[key][k] for ep in result["episodes"].values() if ep[key][k] is not None]
                 result[key].append(sum(values)/len(values) if values else None)
         score = self.weights["rgb_weight"]*result["rgb"] + self.weights["alpha_weight"]*result["alpha"]
+        if self.weights["chamfer_weight"] > 0:
+            score += self.weights["chamfer_weight"]*result["supervised_geometry"]
         result.update(objective=score, val_score=score,
             training_objective=score+self.weights["scale_weight"]*result["scale_regularization"])
         return result
@@ -277,8 +283,9 @@ def checkpoint_state(model, optimizer, processor, config, epoch, best, history):
 def checkpoint_config(value):
     """Interpret legacy metadata without changing the checkpoint on disk."""
     version = value.get("version")
-    if version not in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION, GS_LEGACY_VERSION, VERSION):
-        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1/v2 weights; "
+    if version not in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
+                       GS_LEGACY_VERSION, GS_LOCAL_VERSION, VERSION):
+        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1/v2/v3 weights; "
                          "absolute-position V0 checkpoints require the original V0 code")
     config = dict(value["config"])
     if version in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION):
@@ -295,12 +302,18 @@ def checkpoint_config(value):
     if config.get("render_settings") != settings:
         raise ValueError("Checkpoint has missing or unsupported render settings")
     config["render_settings"] = settings
+    if version != VERSION:
+        if config.get("chamfer_weight", 0.) != 0:
+            raise ValueError("Legacy checkpoint must use zero GS chamfer_weight")
+        config["chamfer_weight"] = 0.
     for key, default in LOSS_DEFAULTS.items():
         if config["output_mode"] == "gs_geometry" and key not in config:
             raise ValueError(f"GS checkpoint requires {key}")
         config.setdefault(key, default)
         if not math.isfinite(config[key]) or config[key] < 0:
             raise ValueError(f"Invalid checkpoint loss weight {key}")
+    if config["output_mode"] == "position" and config["chamfer_weight"] != 0:
+        raise ValueError("Position checkpoint must use zero GS chamfer_weight")
     if version == LEGACY_VERSION:
         if config.get("controller_features", 3) != 3:
             raise ValueError("Legacy checkpoint must use 3 controller features")
@@ -320,7 +333,7 @@ def checkpoint_config(value):
     weight = value["model"].get("controller_encoder.0.weight")
     if not isinstance(weight, torch.Tensor) or tuple(weight.shape) != (config["width"], features):
         raise ValueError("Checkpoint controller weights disagree with feature configuration")
-    if version != VERSION:
+    if version not in (GS_LOCAL_VERSION, VERSION):
         if config.get("gs_local_attention", "none") != "none" or config.get("gs_local_k", 16) != 16:
             raise ValueError("Legacy checkpoint must use disabled local GS attention")
         config.update(gs_local_attention="none", gs_local_k=16)
@@ -332,6 +345,21 @@ def checkpoint_config(value):
     if local_weights != (config["gs_local_attention"] == "knn"):
         raise ValueError("Checkpoint local GS attention weights disagree with configuration")
     return config
+
+
+def resolve_chamfer_weight(requested, output_mode, state=None):
+    """Fresh GS runs use .1; resume inherits its objective without changing best."""
+    if requested is not None and (not math.isfinite(requested) or requested < 0):
+        raise ValueError("chamfer_weight must be finite and nonnegative")
+    if state is not None:
+        saved = checkpoint_config(state)["chamfer_weight"]
+        if requested is not None and requested != saved:
+            raise ValueError("Cannot resume with different chamfer_weight; start a new run")
+        return saved
+    weight = (.1 if output_mode == "gs_geometry" else 0.) if requested is None else requested
+    if output_mode != "gs_geometry" and weight != 0:
+        raise ValueError("chamfer_weight is GS-only; position mode retains unit-weight Chamfer")
+    return weight
 
 
 def resolve_controller_features(requested, state=None):
@@ -473,7 +501,11 @@ def parser():
     p.add_argument("--gs-local-k", type=int, default=None,
                    help="Initial GS neighbors including self; fresh default 16; supports e.g. 32")
     for name, default in LOSS_DEFAULTS.items():
-        p.add_argument("--"+name.replace("_", "-"), type=float, default=default)
+        if name == "chamfer_weight":
+            p.add_argument("--chamfer-weight", type=float, default=None,
+                           help="GS only: fresh default .1; resume inherits checkpoint (legacy: 0)")
+        else:
+            p.add_argument("--"+name.replace("_", "-"), type=float, default=default)
     p.add_argument("--chamfer-chunk", type=int, default=512)
     p.add_argument("--max-train-batches", type=int, default=0, help="0 means full epoch")
     p.add_argument("--max-val-batches", type=int, default=0, help="0 means full validation")
@@ -509,6 +541,7 @@ def main(argv=None):
     args.controller_features = resolve_controller_features(args.controller_features, state)
     args.prediction_mode = resolve_prediction_mode(args.prediction_mode, state)
     args.output_mode = resolve_output_mode(args.output_mode, state)
+    args.chamfer_weight = resolve_chamfer_weight(args.chamfer_weight, args.output_mode, state)
     args.gs_local_attention, args.gs_local_k = resolve_local_attention(
         args.gs_local_attention, args.gs_local_k, state)
     if args.output_mode == "gs_geometry" and (args.prediction_mode != "autoregressive"
