@@ -384,6 +384,9 @@ class FixedFitTests(unittest.TestCase):
     def test_anchor_run_reuses_fixed400_schedule_diagnostics_and_exports(self):
         self.test_run_orchestration_publishes_final_evaluates_and_exports_both_checkpoints(True,"anchors")
 
+    def test_anisotropic_run_reuses_fixed400_schedule_and_exports(self):
+        self.test_run_orchestration_publishes_final_evaluates_and_exports_both_checkpoints(True,"anchors_anisotropic")
+
     def test_fit_evaluation_cli_reuses_exact_windows_and_rejects_changed_manifest(self):
         from . import evaluate as evaluation
         cfg=dict(self.config,depth_cameras=["cam_a","cam_b"])

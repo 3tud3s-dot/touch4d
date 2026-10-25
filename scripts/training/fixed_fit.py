@@ -371,7 +371,8 @@ def update_loop(model, optimizer, batches, processor, renderer, config, on_evalu
 
 
 def report_html(history, best, completed, decoder="free"):
-    stage = "P1a shared anchor displacement" if decoder == "anchors" else "P0 free GS Head"
+    stage = {"free": "P0 free GS Head", "anchors": "P1a shared anchor displacement",
+             "anchors_anisotropic": "P1a.5 learnable anisotropic RBF"}[decoder]
     best_name = "lowest_cd (diagnostic only)" if best and best.get("diagnostic_only") else "best_fit"
     rows = []
     for row in history:
@@ -544,7 +545,7 @@ def run(args):
     from .visualize import export_gaussians
     summary = dict(scene=args.scene, completed_updates=UPDATES, windows=evidence,
                    gs_decoder=config["gs_decoder"],
-                   inherited_shape=config["gs_decoder"] == "anchors",
+                   inherited_shape=config["gs_decoder"] != "free",
                    acceptance="not assessed: tolerances not frozen" if diagnostic else "manual structural review pending",
                    checkpoints={})
     selected_name = "lowest_cd" if diagnostic else "best_fit"

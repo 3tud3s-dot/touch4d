@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from .gs_decoder import (build_initial_anchor_field, pool_anchor_features,
-                         interpolate_anchor_displacements)
+                         interpolate_anchor_displacements, anisotropic_anchor_field)
 
 
 def masked(value, mask):
@@ -152,9 +152,9 @@ class PositionPredictor(nn.Module):
             raise ValueError("gs_local_attention must be none or knn")
         if type(gs_local_k) is not int or gs_local_k < 1:
             raise ValueError("gs_local_k must be a positive integer")
-        if gs_decoder not in ("free", "anchors"):
-            raise ValueError("gs_decoder must be free or anchors")
-        if (gs_decoder == "anchors" and
+        if gs_decoder not in ("free", "anchors", "anchors_anisotropic"):
+            raise ValueError("gs_decoder must be free, anchors or anchors_anisotropic")
+        if (gs_decoder != "free" and
                 (prediction_mode != "autoregressive" or output_mode != "gs_geometry"
                  or gs_local_attention != "knn")):
             raise ValueError("anchors requires autoregressive gs_geometry and knn local attention")
@@ -195,11 +195,17 @@ class PositionPredictor(nn.Module):
                 nn.init.zeros_(head[-1].bias)
         # Disabled legacy path creates no parameters and consumes no extra RNG.
         self.gs_local = LocalGSBlock(width, heads) if gs_local_attention == "knn" else None
-        if gs_decoder == "anchors":
+        if gs_decoder != "free":
             # Construct the free geometry heads before LocalGS, then remove them.
             # This preserves the P0 RNG stream and identical initial shared weights
             # for paired experiments without retaining unused trainable heads.
             del self.scale_head, self.rotation_head
+        if gs_decoder == "anchors_anisotropic":
+            # Added after all shared modules, preserving paired initialization.
+            self.metric_head = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, max(1, width//2)),
+                                             nn.GELU(), nn.Linear(max(1, width//2), 9))
+            nn.init.zeros_(self.metric_head[-1].weight)
+            nn.init.zeros_(self.metric_head[-1].bias)
 
     def controller_inputs(self, x):
         """Same-frame XYZ, optional displacement from t0 and endpoint validity.
@@ -242,7 +248,8 @@ class PositionPredictor(nn.Module):
         initial = masked(torch.cat((x["gs_xyz"], x["gs_attr"]), -1), keep)
         autoregressive = self.config["prediction_mode"] == "autoregressive"
         geometry = self.config["output_mode"] == "gs_geometry"
-        anchors = self.config["gs_decoder"] == "anchors"
+        anchors = self.config["gs_decoder"] != "free"
+        anisotropic = self.config["gs_decoder"] == "anchors_anisotropic"
         current = initial[..., :3]
         current_scales, current_quats = initial[..., 3:6], initial[..., 6:10]
         features = None if autoregressive else self.gs_encoder(initial)
@@ -266,6 +273,12 @@ class PositionPredictor(nn.Module):
                 features = self.gs_encoder(masked(torch.cat((current, attrs), -1), keep))
                 if self.gs_local is not None:
                     features = self.gs_local(features, current, keep, neighbors)
+                if anisotropic and k == 0:
+                    # Initial local GS features ONLY, before time/condition fusion.
+                    # This graph is shared across all five horizons, never detached.
+                    raw_metric = self.metric_head(pool_anchor_features(features, anchor_field))
+                    raw_metric = raw_metric.reshape(*anchor_field.anchor_mask.shape, 3, 3)
+                    anchor_field = anisotropic_anchor_field(initial[..., :3], keep, anchor_field, raw_metric)
             # No condition encoder combines times before this causal slicing.
             memory = tokens[:, :k+1].flatten(1, 2)
             valid = token_valid[:, :k+1].flatten(1, 2)

@@ -62,9 +62,9 @@ slider.oninput=update;camera.onchange=update;window.onresize=update;document.get
 
 def gs_viewer_html(data, title):
     encoded = json.dumps(data, separators=(',', ':'), allow_nan=False).replace('<', '\\u003c')
-    properties = ('P1a 共享锚点位移；尺度、旋转、颜色及不透明度继承初态。'
-                  if data.get('gs_decoder', 'free') == 'anchors' else
-                  '自由 GS Head；位置、尺度、旋转随预测更新，颜色及不透明度继承初态。')
+    properties = {'anchors': 'P1a 共享锚点位移；尺度、旋转、颜色及不透明度继承初态。',
+                  'anchors_anisotropic': 'P1a.5 初态可学习各向异性 RBF；尺度、旋转、颜色及不透明度继承初态。',
+                  'free': '自由 GS Head；位置、尺度、旋转随预测更新，颜色及不透明度继承初态。'}[data.get('gs_decoder', 'free')]
     return '''<!doctype html><html lang="zh"><meta charset="utf-8"><title>GS 渲染对比</title>
 <style>body{font:14px system-ui;background:#f5f7fa;color:#172437;margin:20px}.row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.panel{background:white;padding:10px;border-radius:8px}img{width:100%}select,input,button{margin:8px}</style><h1>''' + html.escape(title) + '''</h1>
 <p><a href="geometry.html">独立检查 Gaussian centers、ellipsoids 和五步轨迹</a></p>

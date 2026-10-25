@@ -29,7 +29,8 @@ from .losses import objective
 from .model import PositionPredictor
 from .rendering import DepthRenderer, GaussianRenderer
 
-VERSION = "touch4d-gs-v4"
+VERSION = "touch4d-gs-v5"
+GS_ANCHOR_VERSION = "touch4d-gs-v4"
 GS_JOINT_VERSION = "touch4d-gs-v3"
 GS_LOCAL_VERSION = "touch4d-gs-v2"
 GS_LEGACY_VERSION = "touch4d-gs-v1"
@@ -287,8 +288,8 @@ def checkpoint_config(value):
     """Interpret legacy metadata without changing the checkpoint on disk."""
     version = value.get("version")
     if version not in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
-                       GS_LEGACY_VERSION, GS_LOCAL_VERSION, GS_JOINT_VERSION, VERSION):
-        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1/v2/v3/v4 weights; "
+                       GS_LEGACY_VERSION, GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
+        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1/v2/v3/v4/v5 weights; "
                          "absolute-position V0 checkpoints require the original V0 code")
     config = dict(value["config"])
     if version in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION):
@@ -305,7 +306,7 @@ def checkpoint_config(value):
     if config.get("render_settings") != settings:
         raise ValueError("Checkpoint has missing or unsupported render settings")
     config["render_settings"] = settings
-    if version not in (GS_JOINT_VERSION, VERSION):
+    if version not in (GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
         if config.get("chamfer_weight", 0.) != 0:
             raise ValueError("Legacy checkpoint must use zero GS chamfer_weight")
         config["chamfer_weight"] = 0.
@@ -336,7 +337,7 @@ def checkpoint_config(value):
     weight = value["model"].get("controller_encoder.0.weight")
     if not isinstance(weight, torch.Tensor) or tuple(weight.shape) != (config["width"], features):
         raise ValueError("Checkpoint controller weights disagree with feature configuration")
-    if version not in (GS_LOCAL_VERSION, GS_JOINT_VERSION, VERSION):
+    if version not in (GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
         if config.get("gs_local_attention", "none") != "none" or config.get("gs_local_k", 16) != 16:
             raise ValueError("Legacy checkpoint must use disabled local GS attention")
         config.update(gs_local_attention="none", gs_local_k=16)
@@ -347,7 +348,7 @@ def checkpoint_config(value):
     local_weights = any(key.startswith("gs_local.") for key in value["model"])
     if local_weights != (config["gs_local_attention"] == "knn"):
         raise ValueError("Checkpoint local GS attention weights disagree with configuration")
-    if version != VERSION:
+    if version not in (GS_ANCHOR_VERSION, VERSION):
         for key, default in DECODER_DEFAULTS.items():
             if config.get(key, default) != default:
                 raise ValueError("Legacy checkpoint must use the free GS decoder and default anchor metadata")
@@ -355,6 +356,11 @@ def checkpoint_config(value):
     elif any(key not in config for key in DECODER_DEFAULTS):
         raise ValueError("Checkpoint requires explicit GS decoder and anchor settings")
     validate_decoder_config(config)
+    if version != VERSION and config["gs_decoder"] == "anchors_anisotropic":
+        raise ValueError("Anisotropic decoder requires v5 checkpoint semantics")
+    metric_weights = any(key.startswith("metric_head.") for key in value["model"])
+    if metric_weights != (config["gs_decoder"] == "anchors_anisotropic"):
+        raise ValueError("Checkpoint metric head disagrees with decoder configuration")
     if config["output_mode"] == "gs_geometry":
         free_heads = [any(key.startswith(prefix) for key in value["model"])
                       for prefix in ("scale_head.", "rotation_head.")]
@@ -364,15 +370,15 @@ def checkpoint_config(value):
 
 
 def validate_decoder_config(config):
-    if config.get("gs_decoder") not in ("free", "anchors"):
-        raise ValueError("gs_decoder must be free or anchors")
+    if config.get("gs_decoder") not in ("free", "anchors", "anchors_anisotropic"):
+        raise ValueError("gs_decoder must be free, anchors or anchors_anisotropic")
     for key in ("anchor_count", "anchor_pool_k"):
         if type(config.get(key)) is not int or config[key] < 1:
             raise ValueError(f"{key} must be a positive integer")
     bandwidth = config.get("anchor_bandwidth")
     if type(bandwidth) not in (int, float) or not math.isfinite(bandwidth) or bandwidth <= 0:
         raise ValueError("anchor_bandwidth must be finite and positive")
-    if config["gs_decoder"] == "anchors" and (config.get("output_mode") != "gs_geometry"
+    if config["gs_decoder"] != "free" and (config.get("output_mode") != "gs_geometry"
             or config.get("prediction_mode") != "autoregressive" or config.get("gs_local_attention") != "knn"):
         raise ValueError("Anchor decoder requires autoregressive GS geometry and local kNN features")
 
@@ -553,8 +559,8 @@ def parser():
                    help="Fresh runs default to knn; resume inherits checkpoint (legacy: none)")
     p.add_argument("--gs-local-k", type=int, default=None,
                    help="Initial GS neighbors including self; fresh default 16; supports e.g. 32")
-    p.add_argument("--gs-decoder", choices=("free", "anchors"), default=None,
-                   help="Fresh default free; anchors uses P1a shared displacement and inherited GS shape")
+    p.add_argument("--gs-decoder", choices=("free", "anchors", "anchors_anisotropic"), default=None,
+                   help="free; P1a anchors; P1a.5 anchors_anisotropic with an initial-only learnable metric")
     p.add_argument("--anchor-count", type=int, default=None,
                    help="P1a initial FPS anchor cap; fresh default 128; resume inherits")
     p.add_argument("--anchor-pool-k", type=int, default=None,

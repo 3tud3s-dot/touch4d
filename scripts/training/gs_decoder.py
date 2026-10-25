@@ -5,7 +5,7 @@ initial template once per rollout; it never reads target frames or transfers
 covariance. The helpers have no trainable parameters.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 
 import torch
@@ -19,6 +19,7 @@ class InitialAnchorField:
     pool_mask: torch.Tensor
     weights: torch.Tensor
     bandwidth: torch.Tensor
+    metric: torch.Tensor = None
 
 
 @torch.no_grad()
@@ -112,6 +113,48 @@ def pool_anchor_features(features, field):
     gathered = torch.where(field.pool_mask[..., None], gathered, torch.zeros_like(gathered))
     counts = field.pool_mask.sum(-1, keepdim=True).clamp_min(1)
     return gathered.sum(-2) / counts.to(features.dtype)
+
+
+def bounded_metric(raw, bandwidth, anchor_mask):
+    """M = sigma^-2 (I+A)^T(I+A), A=.5 R/max(1,||R||_F).
+
+    The dimensionless eigenvalues lie in [.25, 2.25], so cond(M)<=9.
+    Rescale before taking the norm to avoid overflow for large finite R.
+    This is algebraically the requested parameterization, with a live gradient.
+    """
+    if raw.shape != (*anchor_mask.shape, 3, 3) or bandwidth.shape != raw.shape[:1]:
+        raise ValueError("Expected raw [B,K,3,3], bandwidth [B] and anchor mask [B,K]")
+    if anchor_mask.dtype != torch.bool:
+        raise ValueError("Anchor mask must be Boolean")
+    raw = torch.where(anchor_mask[..., None, None], raw, torch.zeros_like(raw))
+    if not torch.isfinite(raw).all() or not torch.isfinite(bandwidth).all() or not (bandwidth > 0).all():
+        raise ValueError("Nonfinite metric parameters or invalid bandwidth")
+    # Compute metric geometry at least in float32, even under mixed precision.
+    raw = raw.to(torch.float64 if raw.dtype == torch.float64 else torch.float32)
+    scale = raw.abs().amax((-1, -2), keepdim=True).clamp_min(1.)
+    unit = raw / scale
+    denominator = torch.maximum(scale.reciprocal(), torch.linalg.vector_norm(unit, dim=(-1,-2), keepdim=True))
+    a = .5 * unit / denominator
+    transform = torch.eye(3, device=raw.device, dtype=raw.dtype) + a
+    with torch.autocast(device_type=raw.device.type, enabled=False):
+        metric = transform.transpose(-1,-2) @ transform
+    return metric / bandwidth.to(raw.dtype)[:, None, None, None].square()
+
+
+def anisotropic_anchor_field(xyz, keep, field, raw):
+    """Initial-only learnable RBF; FPS/pools stay fixed, M and weights stay live."""
+    metric = bounded_metric(raw, field.bandwidth, field.anchor_mask)
+    xyz = torch.where(keep[..., None], xyz, torch.zeros_like(xyz)).to(metric.dtype)
+    batches = torch.arange(len(xyz), device=xyz.device)[:, None]
+    centers = xyz[batches, field.anchor_indices]
+    offsets = xyz[:, :, None] - centers[:, None]
+    with torch.autocast(device_type=xyz.device.type, enabled=False):
+        distance = torch.einsum('bnki,bkij,bnkj->bnk', offsets, metric, offsets)
+    logits = (-.5 * distance).masked_fill(~field.anchor_mask[:, None], float('-inf'))
+    logits = torch.where(field.anchor_mask.any(-1)[:, None, None], logits, 0.)
+    weights = logits.softmax(-1).masked_fill(~field.anchor_mask[:, None], 0.)
+    weights = torch.where(keep[..., None], weights, torch.zeros_like(weights))
+    return replace(field, weights=weights, metric=metric)
 
 
 def interpolate_anchor_displacements(displacements, field, keep):
