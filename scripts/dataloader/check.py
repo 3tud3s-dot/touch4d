@@ -11,7 +11,7 @@ import json
 
 import torch
 
-from .collate import DEPTH_FIELDS, validate_depth_batch, validate_target_attr_batch
+from .collate import DEPTH_FIELDS, batch_horizon, fixed_fields, validate_depth_batch, validate_target_attr_batch
 from .dataset import DEFAULT_ROOT
 from .geometry import STREAM_HANDS
 from .loader import make_dataloader
@@ -26,6 +26,15 @@ def check_batch(batch):
         if not bool(condition):
             raise ValueError(message)
 
+    horizon = batch_horizon(batch)
+    b = len(meta["scene"])
+    for key, (shape, dtype) in fixed_fields(horizon).items():
+        value = inputs[key]
+        require(value.shape == (b, *shape) and value.dtype == dtype, f"Invalid shape/dtype for {key}")
+    for key in ("target_xyz", "target_mask"):
+        require(isinstance(targets[key], list) and len(targets[key]) == horizon, f"{key} length disagrees with H")
+    require(targets["target_lengths"].shape == (b, horizon), "target_lengths must be [B,H]")
+    require(meta["observation_timestamp_us"].shape == (b, horizon+1), "timestamps must cover H+1 frames")
     point_groups = [(inputs["gs_xyz"], inputs["gs_mask"], inputs["gs_lengths"])]
     point_groups += list(zip(targets["target_xyz"], targets["target_mask"],
                             targets["target_lengths"].unbind(dim=1)))
@@ -59,6 +68,7 @@ def main(argv=None):
     parser.add_argument("--depth-root", help="Depth extension root; defaults to root's sibling touch4d-depth-v1")
     parser.add_argument("--depth-cameras", nargs="+", help="Ordered camera IDs; default is first two shared cameras")
     parser.add_argument("--batch-size", type=int, default=2)
+    parser.add_argument("--horizon", type=int, default=5)
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--max-batches", type=int, default=1, help="0 checks every selected window")
@@ -70,7 +80,7 @@ def main(argv=None):
     loader = make_dataloader(args.scene, args.split, root=args.root, stage=args.stage,
                              batch_size=args.batch_size, num_workers=args.workers, seed=args.seed,
                              with_depth=args.with_depth, depth_root=args.depth_root,
-                             depth_cameras=args.depth_cameras)
+                             depth_cameras=args.depth_cameras, horizon=args.horizon)
     batches = loader if args.max_batches == 0 else islice(loader, args.max_batches)
     checked_samples = checked_batches = 0
     first_shapes = None
@@ -86,7 +96,7 @@ def main(argv=None):
             if args.with_depth:
                 first_shapes.update({key: list(batch["targets"][key].shape) for key in DEPTH_FIELDS})
     print(json.dumps({"scene": args.scene, "split": args.split, "stage": args.stage,
-                      "episodes": loader.dataset.episode_ids, "total_windows": len(loader.dataset),
+                      "horizon": args.horizon, "episodes": loader.dataset.episode_ids, "total_windows": len(loader.dataset),
                       "checked_samples": checked_samples, "checked_batches": checked_batches,
                       "all_windows_checked": checked_samples == len(loader.dataset),
                       "with_depth": args.with_depth, "depth_cameras": loader.dataset.depth_cameras,

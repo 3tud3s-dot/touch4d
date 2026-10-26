@@ -1,4 +1,4 @@
-"""Disk-free P1a tests: python -B -m unittest scripts.training.test_gs_decoder -v."""
+"""Disk-free P1a tests: python -B -m unittest scripts.tests.training.test_gs_decoder -v."""
 
 import copy
 from pathlib import Path
@@ -7,16 +7,16 @@ from unittest.mock import patch
 
 import torch
 
-from ..data_process import DataProcessor
-from ..data_process.test_data_process import make_batch, add_depth_targets
-from .gs_decoder import (build_initial_anchor_field, pool_anchor_features,
+from scripts.data_process import DataProcessor
+from scripts.tests.data_process.test_data_process import make_batch, add_depth_targets
+from scripts.training.gs_decoder import (build_initial_anchor_field, pool_anchor_features,
                          interpolate_anchor_displacements)
-from .model import PositionPredictor
-from .losses import objective, nearest_distances
-from .rendering import GaussianRenderer
-from .test_training import fake_gaussian_rasterizer
-from .evaluate import load_model
-from .train import (VERSION, GS_JOINT_VERSION, DECODER_DEFAULTS, checkpoint_state,
+from scripts.training.model import PositionPredictor
+from scripts.training.losses import objective, nearest_distances
+from scripts.training.rendering import GaussianRenderer
+from scripts.tests.training.test_training import fake_gaussian_rasterizer
+from scripts.training.evaluate import load_model
+from scripts.training.train import (VERSION, GS_JOINT_VERSION, DECODER_DEFAULTS, checkpoint_state,
                     checkpoint_config, restore_training, resolve_decoder,
                     recover_best_score, publish_checkpoints, loss_options)
 

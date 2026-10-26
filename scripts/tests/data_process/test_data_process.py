@@ -1,4 +1,4 @@
-"""Disk-free tests: python -B -m unittest scripts.data_process.test_data_process -v"""
+"""Disk-free tests: python -B -m unittest scripts.tests.data_process.test_data_process -v"""
 
 import copy
 from io import StringIO
@@ -8,18 +8,18 @@ from unittest.mock import patch
 
 import torch
 
-from ..dataloader.check import check_batch
-from ..dataloader.collate import collate_fn
-from ..dataloader.dataset import Touch4DDataset
-from ..dataloader.test_dataloader import MemoryReconstruction
-from .check import check_processed_batch, main as check_main, require_unchanged
-from .processor import DataProcessor, SUPPORTED_SCENES
+from scripts.dataloader.check import check_batch
+from scripts.dataloader.collate import collate_fn
+from scripts.dataloader.dataset import Touch4DDataset
+from scripts.tests.dataloader.test_dataloader import MemoryReconstruction
+from scripts.data_process.check import check_processed_batch, main as check_main, require_unchanged
+from scripts.data_process.processor import DataProcessor, SUPPORTED_SCENES
 
 
-def make_batch(scene="001-rope", split="train"):
-    source = MemoryReconstruction(scene)
+def make_batch(scene="001-rope", split="train", horizon=5):
+    source = MemoryReconstruction(scene, frames=max(12, horizon+7))
     with source.mounted():
-        dataset = Touch4DDataset(scene, split, source.root)
+        dataset = Touch4DDataset(scene, split, source.root, horizon=horizon)
         batch = collate_fn([dataset[0], dataset[-1]])
     # Physically sized coordinates, including a valid world-origin point.
     x = batch["inputs"]
@@ -42,8 +42,9 @@ def make_batch(scene="001-rope", split="train"):
 def add_depth_targets(batch):
     """Tiny metric images and static cameras; no files or renderer required."""
     b = len(batch["meta"]["scene"])
-    depth = torch.full((b, 5, 2, 3, 4), .5, dtype=torch.float32)
-    depth += torch.arange(5, dtype=torch.float32)[None, :, None, None, None] * .01
+    horizon = batch["meta"]["frame_ids"].shape[1]-1
+    depth = torch.full((b, horizon, 2, 3, 4), .5, dtype=torch.float32)
+    depth += torch.arange(horizon, dtype=torch.float32)[None, :, None, None, None] * .01
     depth[..., -1, -1] = 0
     k = torch.tensor([[100., 0., 1.5], [0., 110., 1.], [0., 0., 1.]])
     c2w = torch.eye(4).repeat(b, 2, 1, 1)
@@ -55,6 +56,44 @@ def add_depth_targets(batch):
 
 
 class ProcessorTests(unittest.TestCase):
+    def test_horizon_10_15_roundtrip_preserves_metadata_cameras_and_all_targets(self):
+        for scene in SUPPORTED_SCENES:
+            processor = DataProcessor(scene)
+            constants = processor.state_dict()
+            for horizon in (5, 10, 15):
+                with self.subTest(scene=scene, horizon=horizon):
+                    batch = add_depth_targets(make_batch(scene, horizon=horizon))
+                    saved = copy.deepcopy(batch)
+                    out = processor(batch)
+                    report = check_processed_batch(batch, out, processor)
+                    require_unchanged(saved, batch)
+                    self.assertEqual(processor.state_dict(), constants)
+                    self.assertEqual(len(out["targets"]["target_xyz"]), horizon)
+                    self.assertEqual(out["targets"]["target_depth"].shape[1], horizon)
+                    self.assertIn(f"targets.target_xyz[{horizon-1}]", report["roundtrip_max_abs_errors"])
+                    self.assertNotIn("horizon", out["meta"])
+                    if horizon > 5:
+                        self.assertFalse(torch.equal(out["targets"]["target_xyz"][4],
+                                                     out["targets"]["target_xyz"][-1]))
+
+    def test_long_horizon_inconsistent_conditions_targets_and_metadata_fail(self):
+        mutations = [
+            lambda b: b["inputs"].update(action_state=b["inputs"]["action_state"][:, :5]),
+            lambda b: b["inputs"].update(valid_mask=b["inputs"]["valid_mask"][:, :5]),
+            lambda b: b["targets"]["target_xyz"].pop(),
+            lambda b: b["targets"]["target_mask"].pop(),
+            lambda b: b["targets"].update(target_lengths=b["targets"]["target_lengths"][:, :5]),
+            lambda b: b["targets"].update(target_depth=b["targets"]["target_depth"][:, :5]),
+            lambda b: b["meta"].update(observation_timestamp_us=b["meta"]["observation_timestamp_us"][:, :6]),
+            lambda b: b["meta"].update(frame_ids=b["meta"]["frame_ids"][:, :6]),
+        ]
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                batch = add_depth_targets(make_batch(horizon=15))
+                mutate(batch)
+                with self.assertRaises(ValueError):
+                    DataProcessor("001-rope")(batch)
+
     def test_target_attributes_normalize_scales_preserve_rows_and_roundtrip(self):
         for scene in SUPPORTED_SCENES:
             batch = make_batch(scene)
@@ -362,6 +401,18 @@ class ProcessorTests(unittest.TestCase):
             self.assertEqual(report["checked_batches"], 3)
             self.assertEqual(report["boundary_batches"], 1)
             self.assertTrue(report["all_windows_checked"])
+
+    def test_h15_acceptance_cli_checks_last_target_and_window_boundaries(self):
+        source = MemoryReconstruction(frames=22)
+        with source.mounted(), patch("sys.stdout", new_callable=StringIO) as output:
+            check_main(["--scene", source.scene, "--root", str(source.root), "--split", "val",
+                        "--max-batches", "0", "--batch-size", "3", "--horizon", "15"])
+            report = json.loads(output.getvalue())
+        self.assertEqual(report["horizon"], 15)
+        self.assertEqual(report["normal_samples"], 4)
+        self.assertEqual(report["boundary_frame_ids"], [list(range(16)), list(range(5, 21))])
+        self.assertIn("targets.target_xyz[14]", report["roundtrip_max_abs_errors"])
+        self.assertIn("targets.target_attr[14]", report["roundtrip_max_abs_errors"])
 
 
 if __name__ == "__main__":

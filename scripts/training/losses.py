@@ -8,7 +8,7 @@ def nearest_distances(query, reference, chunk=512):
     """Exact nearest neighbours in bounded blocks; gradients through matched XYZ.
 
     Neighbour search itself is discrete. Keeping its distance matrices out of the
-    graph avoids retaining quadratic memory for every frame of a five-frame loss.
+    graph avoids retaining quadratic memory for every frame of an H-frame loss.
     """
     if not len(query) or not len(reference) or chunk < 1:
         raise ValueError("Nonempty point sets and a positive chunk size are required")
@@ -32,16 +32,38 @@ def nearest_distances(query, reference, chunk=512):
     return torch.linalg.vector_norm(query - nearest, dim=-1)
 
 
-def chamfer_samples(prediction, batch, chunk=512):
-    """[B] equal averages across five times and the two unsquared L2 directions."""
+def prediction_horizon(prediction, batch):
+    """Validate H predictions against independently padded target point sets."""
     x, y = batch["inputs"], batch["targets"]
-    expected = (x["gs_xyz"].shape[0], 5, x["gs_xyz"].shape[1], 3)
+    if not isinstance(prediction, torch.Tensor) or prediction.ndim != 4 or prediction.shape[1] < 1:
+        raise ValueError("Expected prediction [B,H,N,3] with positive H")
+    horizon = prediction.shape[1]
+    expected = (x["gs_xyz"].shape[0], horizon, x["gs_xyz"].shape[1], 3)
     if tuple(prediction.shape) != expected:
         raise ValueError(f"Expected prediction shape {expected}")
+    if (x["gs_mask"].shape != x["gs_xyz"].shape[:2] or x["gs_mask"].dtype != torch.bool
+            or len(y.get("target_xyz", [])) != horizon or len(y.get("target_mask", [])) != horizon):
+        raise ValueError("Prediction H, target XYZ/mask lists and initial mask must agree")
+    if "target_attr" in y and len(y["target_attr"]) != horizon:
+        raise ValueError("Target attributes must contain exactly H frames")
+    for h, (xyz, mask) in enumerate(zip(y["target_xyz"], y["target_mask"])):
+        if (xyz.ndim != 3 or xyz.shape[0] != expected[0] or xyz.shape[-1] != 3
+                or mask.shape != xyz.shape[:2] or mask.dtype != torch.bool):
+            raise ValueError(f"Target XYZ/mask shape mismatch at horizon {h+1}")
+    for name in ("target_depth", "target_depth_valid"):
+        if name in y and (y[name].ndim != 5 or y[name].shape[:2] != expected[:2]):
+            raise ValueError(f"{name} must have the same [B,H] as prediction")
+    return horizon
+
+
+def chamfer_samples(prediction, batch, chunk=512):
+    """[B] equal averages across H times and the two unsquared L2 directions."""
+    x, y = batch["inputs"], batch["targets"]
+    horizon = prediction_horizon(prediction, batch)
     losses = []
     for b in range(len(prediction)):
         frames = []
-        for k in range(5):
+        for k in range(horizon):
             p = prediction[b, k, x["gs_mask"][b]]
             t = y["target_xyz"][k][b, y["target_mask"][k][b]].detach()
             frames.append((nearest_distances(p, t, chunk).mean() + nearest_distances(t, p, chunk).mean()) * .5)
@@ -57,8 +79,8 @@ def depth_samples(prediction_m, target_m, valid):
     contribute a zero score; an all-empty sample is marked unavailable.
     """
     if (prediction_m.shape != target_m.shape or valid.shape != target_m.shape
-            or target_m.ndim != 5 or target_m.shape[1] != 5 or valid.dtype != torch.bool):
-        raise ValueError("Expected matching [B,5,V,H,W] depth and boolean target mask")
+            or target_m.ndim != 5 or target_m.shape[1] < 1 or valid.dtype != torch.bool):
+        raise ValueError("Expected matching [B,H,V,height,width] depth and boolean target mask")
     if not torch.isfinite(prediction_m).all():
         raise FloatingPointError("Nonfinite rendered depth")
     delta = torch.where(valid, prediction_m - target_m, torch.zeros_like(prediction_m)).abs()
@@ -77,12 +99,12 @@ def render_samples(prediction, target, valid):
     Return sample loss, sample availability, per-time loss and time availability.
     The target mask alone chooses observations, including absent predictions.
     """
-    if valid.dtype != torch.bool or valid.ndim != 5 or valid.shape[1] != 5:
-        raise ValueError("Expected boolean [B,5,V,H,W] target render mask")
+    if valid.dtype != torch.bool or valid.ndim != 5 or valid.shape[1] < 1:
+        raise ValueError("Expected boolean [B,H,V,height,width] target render mask")
     if prediction.shape != target.shape or prediction.shape[:5] != valid.shape:
         raise ValueError("Rendered predictions, targets and target mask must match")
     if prediction.ndim not in (5, 6) or (prediction.ndim == 6 and prediction.shape[-1] != 3):
-        raise ValueError("Rendered values must be alpha [B,5,V,H,W] or RGB with three channels")
+        raise ValueError("Rendered values must be alpha [B,H,V,height,width] or RGB with three channels")
     if not torch.isfinite(prediction).all() or not torch.isfinite(target).all():
         raise FloatingPointError("Nonfinite rendered prediction or target")
     delta = (prediction - target).abs()
@@ -113,7 +135,13 @@ def gs_objective(prediction, batch, processor, renderer, depth_weight=0., chunk=
         if not math.isfinite(weight) or weight < 0:
             raise ValueError(f"{name} must be finite and nonnegative")
     x, y = batch["inputs"], batch["targets"]
-    real = x["gs_mask"][:, None].expand(-1, 5, -1)
+    if "xyz" not in prediction:
+        raise ValueError("GS prediction requires XYZ")
+    horizon = prediction_horizon(prediction["xyz"], batch)
+    if "target_attr" in y and any(attr.shape != (*xyz.shape[:2], 11)
+                                   for xyz, attr in zip(y["target_xyz"], y["target_attr"])):
+        raise ValueError("Target attributes must match each rendered Gaussian set")
+    real = x["gs_mask"][:, None].expand(-1, horizon, -1)
     dimensions = {"xyz": 3, "log_scales": 3, "quaternions": 4, "opacity_logits": 1, "sh_dc": 3}
     for key, size in dimensions.items():
         if key not in prediction or tuple(prediction[key].shape) != (*real.shape, size):
@@ -122,8 +150,8 @@ def gs_objective(prediction, batch, processor, renderer, depth_weight=0., chunk=
             raise FloatingPointError(f"Nonfinite predicted {key}; refusing to call the rasterizer")
     valid = y["target_depth_valid"]
     if (valid.dtype != torch.bool or valid.shape != y["target_depth"].shape
-            or valid.ndim != 5 or valid.shape[1] != 5):
-        raise ValueError("Expected matching depth and boolean [B,5,V,H,W] target mask")
+            or valid.ndim != 5 or valid.shape[1] != horizon):
+        raise ValueError("Expected matching depth and boolean [B,H,V,height,width] target mask")
     if not torch.isfinite(y["target_depth"]).all():
         raise FloatingPointError("Nonfinite target depth")
     # Never backpropagate through target GS or observations, even when supplied
@@ -172,7 +200,8 @@ def objective(prediction, batch, processor, renderer, depth_weight=0., chunk=512
         raise ValueError("chamfer_weight is GS-only; position mode retains unit-weight Chamfer")
     if not math.isfinite(depth_weight) or depth_weight < 0:
         raise ValueError("depth_weight must be finite and nonnegative")
-    real = batch["inputs"]["gs_mask"][:, None].expand(-1, 5, -1)
+    horizon = prediction_horizon(prediction, batch)
+    real = batch["inputs"]["gs_mask"][:, None].expand(-1, horizon, -1)
     if not torch.isfinite(prediction[real]).all():
         raise FloatingPointError("Nonfinite predicted position; refusing to call the rasterizer")
     geometry = chamfer_samples(prediction, batch, chunk)

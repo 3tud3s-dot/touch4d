@@ -1,4 +1,4 @@
-"""Causal five-step position or full Gaussian-geometry prediction."""
+"""Causal H-step position or full Gaussian-geometry prediction (default H=5)."""
 
 import math
 
@@ -7,6 +7,7 @@ from torch import nn
 
 from .gs_decoder import (build_initial_anchor_field, pool_anchor_features,
                          interpolate_anchor_displacements, anisotropic_anchor_field)
+from .gs_structure import StructuralGSBlock
 
 
 def masked(value, mask):
@@ -136,8 +137,11 @@ class PositionPredictor(nn.Module):
     def __init__(self, width=128, heads=4, layers=2, controller_features=7,
                  prediction_mode="autoregressive", output_mode="position",
                  gs_local_attention="none", gs_local_k=16, gs_decoder="free",
-                 anchor_count=128, anchor_pool_k=16, anchor_bandwidth=1.0):
+                 anchor_count=128, anchor_pool_k=16, anchor_bandwidth=1.0,
+                 gs_structure="none", horizon=5):
         super().__init__()
+        if type(horizon) is not int or horizon < 1:
+            raise ValueError("horizon must be a positive integer")
         if min(width, heads, layers) < 1 or width % heads:
             raise ValueError("Positive dimensions required; width must be divisible by heads")
         if type(controller_features) is not int or controller_features not in (3, 7):
@@ -154,6 +158,10 @@ class PositionPredictor(nn.Module):
             raise ValueError("gs_local_k must be a positive integer")
         if gs_decoder not in ("free", "anchors", "anchors_anisotropic"):
             raise ValueError("gs_decoder must be free, anchors or anchors_anisotropic")
+        if gs_structure not in ("none", "anchor_attention"):
+            raise ValueError("gs_structure must be none or anchor_attention")
+        if gs_structure == "anchor_attention" and gs_decoder != "anchors":
+            raise ValueError("Structural anchor attention requires the isotropic anchors decoder")
         if (gs_decoder != "free" and
                 (prediction_mode != "autoregressive" or output_mode != "gs_geometry"
                  or gs_local_attention != "knn")):
@@ -170,7 +178,8 @@ class PositionPredictor(nn.Module):
                            output_mode=output_mode, gs_local_attention=gs_local_attention,
                            gs_local_k=gs_local_k, gs_decoder=gs_decoder,
                            anchor_count=anchor_count, anchor_pool_k=anchor_pool_k,
-                           anchor_bandwidth=anchor_bandwidth)
+                           anchor_bandwidth=anchor_bandwidth, gs_structure=gs_structure,
+                           horizon=horizon)
         def mlp(n):
             return nn.Sequential(nn.Linear(n, width), nn.GELU(), nn.Linear(width, width))
         self.gs_encoder = mlp(14)
@@ -179,12 +188,12 @@ class PositionPredictor(nn.Module):
         self.tactile_encoder = mlp(384 * 3 + 1)
         # Each controller ID encodes hand, finger and within-finger point index.
         self.token_identity = nn.Embedding(66, width)
-        self.condition_time = nn.Embedding(5, width)
-        self.prediction_time = nn.Embedding(5, width)
+        self.condition_time = nn.Embedding(horizon, width)
+        self.prediction_time = nn.Embedding(horizon, width)
         self.null_token = nn.Parameter(torch.zeros(1, 1, width))
         self.blocks = nn.ModuleList(CrossBlock(width, heads) for _ in range(layers))
         self.position_head = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, 3))
-        # A zero displacement head copies the initial GS across all five steps.
+        # A zero displacement head copies the initial GS across all H steps.
         nn.init.zeros_(self.position_head[-1].weight)
         nn.init.zeros_(self.position_head[-1].bias)
         if output_mode == "gs_geometry":
@@ -206,6 +215,10 @@ class PositionPredictor(nn.Module):
                                              nn.GELU(), nn.Linear(max(1, width//2), 9))
             nn.init.zeros_(self.metric_head[-1].weight)
             nn.init.zeros_(self.metric_head[-1].bias)
+        # Append after all existing modules so P1a shared weights keep the exact
+        # seed/RNG initialization. The disabled path owns no parameters or RNG.
+        self.gs_structure = (StructuralGSBlock(width, heads)
+                             if gs_structure == "anchor_attention" else None)
 
     def controller_inputs(self, x):
         """Same-frame XYZ, optional displacement from t0 and endpoint validity.
@@ -225,9 +238,14 @@ class PositionPredictor(nn.Module):
 
     def encode_conditions(self, x):
         b = x["gs_xyz"].shape[0]
+        horizon = self.config["horizon"]
+        for name in ("action_state", "action_valid", "controller_points", "controller_mask",
+                     "tactile", "valid_mask", "tactile_spatial_mask", "tactile_age_us"):
+            if name not in x or x[name].shape[:2] != (b, horizon):
+                raise ValueError(f"Expected {name} with [B,H]=[{b},{horizon}] condition times")
         state = self.state_encoder(masked(x["action_state"], x["action_valid"]))
         controllers = self.controller_encoder(self.controller_inputs(x))
-        controllers = controllers.reshape(b, 5, 60, -1)
+        controllers = controllers.reshape(b, horizon, 60, -1)
         valid = x["valid_mask"]
         fingers_valid = valid.flatten(-2).any(-1)
         tactile = torch.where(valid, x["tactile"], torch.zeros_like(x["tactile"]))
@@ -237,13 +255,14 @@ class PositionPredictor(nn.Module):
                               age.unsqueeze(-1)), dim=-1)
         fingers = self.tactile_encoder(features)
         tokens = torch.cat((state, controllers, fingers), dim=2)
-        keep = torch.cat((x["action_valid"], x["controller_mask"].reshape(b, 5, 60),
+        keep = torch.cat((x["action_valid"], x["controller_mask"].reshape(b, horizon, 60),
                           fingers_valid), dim=2)
         tokens = tokens + self.token_identity.weight[None, None] + self.condition_time.weight[None, :, None]
         return masked(tokens, keep), keep
 
     def forward(self, inputs):
         x = inputs
+        horizon = self.config["horizon"]
         keep = x["gs_mask"]
         initial = masked(torch.cat((x["gs_xyz"], x["gs_attr"]), -1), keep)
         autoregressive = self.config["prediction_mode"] == "autoregressive"
@@ -264,7 +283,7 @@ class PositionPredictor(nn.Module):
         b = initial.shape[0]
         outputs = []
         scale_outputs, quaternion_outputs = [], []
-        for k in range(5):
+        for k in range(horizon):
             if autoregressive:
                 # GS mode feeds back updated geometry, with initial appearance.
                 # Both modes keep the full graph through every preceding step.
@@ -273,9 +292,11 @@ class PositionPredictor(nn.Module):
                 features = self.gs_encoder(masked(torch.cat((current, attrs), -1), keep))
                 if self.gs_local is not None:
                     features = self.gs_local(features, current, keep, neighbors)
+                if self.gs_structure is not None:
+                    features = self.gs_structure(features, current, keep, anchor_field)
                 if anisotropic and k == 0:
                     # Initial local GS features ONLY, before time/condition fusion.
-                    # This graph is shared across all five horizons, never detached.
+                    # This graph is shared across all horizons, never detached.
                     raw_metric = self.metric_head(pool_anchor_features(features, anchor_field))
                     raw_metric = raw_metric.reshape(*anchor_field.anchor_mask.shape, 3, 3)
                     anchor_field = anisotropic_anchor_field(initial[..., :3], keep, anchor_field, raw_metric)
@@ -313,5 +334,5 @@ class PositionPredictor(nn.Module):
             return xyz
         return {"xyz": xyz, "log_scales": torch.stack(scale_outputs, dim=1),
                 "quaternions": torch.stack(quaternion_outputs, dim=1),
-                "opacity_logits": initial[..., 10:11][:, None].expand(-1, 5, -1, -1),
-                "sh_dc": initial[..., 11:14][:, None].expand(-1, 5, -1, -1)}
+                "opacity_logits": initial[..., 10:11][:, None].expand(-1, horizon, -1, -1),
+                "sh_dc": initial[..., 11:14][:, None].expand(-1, horizon, -1, -1)}

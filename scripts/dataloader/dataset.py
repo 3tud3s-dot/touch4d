@@ -1,4 +1,4 @@
-"""Lazy GS loading and episode-local six-frame samples from touch4d-v1.
+"""Lazy GS loading and episode-local H+1-frame samples from touch4d-v1.
 
 The root is datasets/touch4d-v1, not the raw Deform360 directory. Fixed-size
 episode arrays are cached per Dataset/worker; GS frames are read on demand.
@@ -19,7 +19,7 @@ from torch.utils.data import Dataset
 
 from .geometry import (OPENING_RANGE, RIGID_ATOL, action_conditions, hand_slots,
                        tactile_world_coordinates)
-from .splits import HORIZON, episode_ids, window_starts
+from .splits import HORIZON, episode_ids, validate_horizon, window_starts
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[2] / "datasets" / "touch4d-v1"
 GS_WIDTHS = {"xyz": 3, "log_scales": 3, "quaternions": 4,
@@ -104,8 +104,9 @@ def _depth_info(directory: Path, core: EpisodeInfo, scene: str) -> DepthInfo:
     return DepthInfo(directory, frames, cameras, meta["height"], meta["width"], intrinsics, camera_to_world)
 
 
-def read_depth(info: DepthInfo, start: int, cameras: tuple) -> dict:
-    """Read only the five future frames; all HDF5 handles close before return."""
+def read_depth(info: DepthInfo, start: int, cameras: tuple, horizon: int = HORIZON) -> dict:
+    """Read only t+1..t+H; all HDF5 handles close before return."""
+    validate_horizon(horizon)
     try:
         import h5py
     except ImportError as exc:
@@ -126,11 +127,11 @@ def read_depth(info: DepthInfo, start: int, cameras: tuple) -> dict:
                     raise DataFormatError(f"{path}: data must be uint16 [F,H,W] matching depth metadata")
                 if data.is_virtual or data.external:
                     raise DataFormatError(f"{path}: external/virtual H5 storage is not supported")
-                future = data[start + 1:start + HORIZON + 1]
+                future = data[start + 1:start + horizon + 1]
         except (OSError, ValueError, KeyError) as exc:
             raise DataFormatError(f"{path}: cannot read required depth frames: {exc}") from exc
-        if future.shape != (HORIZON, info.height, info.width):
-            raise DataFormatError(f"{path}: incomplete five-frame depth target")
+        if future.shape != (horizon, info.height, info.width):
+            raise DataFormatError(f"{path}: incomplete {horizon}-frame depth target")
         values.append(future)
     # H5 preserves millimetres; only the selected sample is converted to metres.
     depth_mm = np.stack(values, axis=1)
@@ -261,14 +262,16 @@ class Touch4DDataset(Dataset):
     stage='single' or 'all' controls training curriculum. Recreate the loader to
     change stages; validation/test always use 'all'. cache_episodes limits the
     number of fixed-array episodes in each worker (GS frames are not cached).
-    with_depth reads only t+1..t+5 from a separate, verified depth extension.
+    Conditions cover t..t+H-1; targets cover t+1..t+H. Only initial GS enters inputs.
+    with_depth reads only t+1..t+H from a separate, verified depth extension.
     depth_cameras preserves explicit order; otherwise the first two sorted
     cameras common to all selected episodes are used (or one if only one exists).
     Depth stays in metres and calibration stays in native world coordinates.
     """
 
     def __init__(self, scene: str, split: str, root=DEFAULT_ROOT, *, stage="all", cache_episodes=2,
-                 with_depth=False, depth_root=None, depth_cameras=None):
+                 with_depth=False, depth_root=None, depth_cameras=None, horizon=HORIZON):
+        self.horizon = validate_horizon(horizon)
         selected = episode_ids(scene, split, stage)
         if type(cache_episodes) is not int or cache_episodes < 1:
             raise ValueError("cache_episodes must be a positive integer")
@@ -298,7 +301,7 @@ class Touch4DDataset(Dataset):
             if stage == "single" and sum(s is not None for s in info.slots) != 1:
                 raise DataFormatError(f"{info.path}: reviewed single-hand curriculum conflicts with metadata")
             self.episodes[episode] = info
-            self.windows.extend((episode, start) for start in window_starts(info.frames, split))
+            self.windows.extend((episode, start) for start in window_starts(info.frames, split, self.horizon))
             if with_depth:
                 self.depth_episodes[episode] = _depth_info(
                     self.depth_root / scene / f"episode_{episode}", info, scene)
@@ -330,7 +333,7 @@ class Touch4DDataset(Dataset):
                 self._cache.popitem(last=False)
         self._cache.move_to_end(episode)
         conditions = self._cache[episode]
-        take = slice(start, start + HORIZON)
+        take = slice(start, start + self.horizon)
         inputs = {key: torch.from_numpy(conditions[key][take].copy()) for key in (
             "action_state", "action_valid", "controller_points", "controller_mask", "tactile", "valid_mask")}
         xyz, spatial = tactile_world_coordinates(
@@ -344,7 +347,7 @@ class Touch4DDataset(Dataset):
         inputs["gs_attr"] = torch.from_numpy(np.concatenate(
             [initial[key] for key in GS_ATTR_FIELDS], axis=-1))
         targets = {"target_xyz": [], "target_attr": []}
-        for frame in range(start + 1, start + HORIZON + 1):
+        for frame in range(start + 1, start + self.horizon + 1):
             # Read once so positions and attributes share exactly the same frame
             # and point ordering. There is no cross-frame Gaussian ID assumption.
             future = read_gs(info, frame)
@@ -353,10 +356,10 @@ class Touch4DDataset(Dataset):
                 [future[key] for key in GS_ATTR_FIELDS], axis=-1)))
         meta = {
             "scene": self.scene, "episode_id": episode,
-            "frame_ids": torch.arange(start, start + HORIZON + 1, dtype=torch.int64),
-            "observation_timestamp_us": torch.from_numpy(info.timestamps[start:start + HORIZON + 1].copy()),
+            "frame_ids": torch.arange(start, start + self.horizon + 1, dtype=torch.int64),
+            "observation_timestamp_us": torch.from_numpy(info.timestamps[start:start + self.horizon + 1].copy()),
         }
         if self.with_depth:
-            targets.update(read_depth(self.depth_episodes[episode], start, self.depth_cameras))
+            targets.update(read_depth(self.depth_episodes[episode], start, self.depth_cameras, self.horizon))
             meta["depth_camera_ids"] = list(self.depth_cameras)
         return {"inputs": inputs, "targets": targets, "meta": meta}

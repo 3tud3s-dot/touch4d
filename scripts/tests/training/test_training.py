@@ -1,7 +1,7 @@
-"""Disk-free tests: python -B -m unittest scripts.training.test_training -v.
+"""Disk-free tests: python -B -m unittest scripts.tests.training.test_training -v.
 
 Real gsplat backward smoke is opt-in inside an allocated server GPU job:
-TOUCH4D_TEST_CUDA_RENDER=1 python -B -m unittest scripts.training.test_training
+TOUCH4D_TEST_CUDA_RENDER=1 python -B -m unittest scripts.tests.training.test_training
 """
 
 import copy
@@ -18,19 +18,19 @@ import unittest
 import numpy as np
 import torch
 
-from ..data_process import DataProcessor
-from ..data_process.test_data_process import make_batch, add_depth_targets
-from .losses import chamfer_samples, depth_samples, nearest_distances, objective
-from .model import (PositionPredictor, LocalGSBlock, initial_knn,
+from scripts.data_process import DataProcessor
+from scripts.tests.data_process.test_data_process import make_batch, add_depth_targets
+from scripts.training.losses import chamfer_samples, depth_samples, nearest_distances, objective
+from scripts.training.model import (PositionPredictor, LocalGSBlock, initial_knn,
                     rotation_vector_to_quaternion, quaternion_multiply)
-from .evaluate import load_model
-from .rendering import DepthRenderer, GaussianRenderer, assemble_gaussians
-from .train import (EpisodeMetrics, GaussianMetrics, checkpoint_state, evaluate_loader, restore_training,
+from scripts.training.evaluate import load_model
+from scripts.training.rendering import DepthRenderer, GaussianRenderer, assemble_gaussians
+from scripts.training.train import (EpisodeMetrics, GaussianMetrics, checkpoint_state, evaluate_loader, restore_training,
                     train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser,
                     VERSION, GS_LOCAL_VERSION, GS_LEGACY_VERSION, LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
                     resolve_controller_features, resolve_prediction_mode, resolve_output_mode,
                     resolve_local_attention, resolve_chamfer_weight, loss_options)
-from .visualize import png_bytes, viewer_html, main as visualize_main
+from scripts.training.visualize import png_bytes, viewer_html, main as visualize_main
 
 
 def config():
@@ -1068,7 +1068,7 @@ class TrainingTests(unittest.TestCase):
 
     @unittest.skipUnless(os.environ.get('TOUCH4D_TEST_CUDA_RENDER')=='1', 'Real gsplat CUDA backward test requires explicit server GPU run')
     def test_real_gsplat_rgb_alpha_geometry_backward(self):
-        from .train import to_device
+        from scripts.training.train import to_device
         self.assertTrue(torch.cuda.is_available())
         raw=copy.deepcopy(self.raw);keep=raw['inputs']['gs_mask']
         raw['inputs']['gs_xyz'].zero_();raw['inputs']['gs_xyz'][...,2]=.6
@@ -1340,7 +1340,7 @@ class TrainingTests(unittest.TestCase):
 
     @unittest.skipUnless(os.environ.get('TOUCH4D_TEST_CUDA_RENDER')=='1', 'Real gsplat CUDA backward test requires explicit server GPU run')
     def test_real_gsplat_depth_backward(self):
-        from .train import to_device
+        from scripts.training.train import to_device
         self.assertTrue(torch.cuda.is_available())
         raw=copy.deepcopy(self.raw)
         raw['inputs']['gs_xyz'].zero_()

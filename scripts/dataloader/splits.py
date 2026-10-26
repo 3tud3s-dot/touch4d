@@ -28,8 +28,16 @@ def episode_ids(scene: str, split: str, stage: str = "all") -> tuple[int, ...]:
     return SINGLE_HAND_TRAIN[scene] if stage == "single" else SPLITS[scene][split]
 
 
-def window_starts(frames: int, split: str) -> range:
-    """Six consecutive frames per window; no padded tail or cross-episode window."""
+def validate_horizon(horizon: int) -> int:
+    """Keep the legacy default, allowing any positive prediction length."""
+    if type(horizon) is not int or horizon < 1:
+        raise ValueError("horizon must be a positive integer")
+    return horizon
+
+
+def window_starts(frames: int, split: str, horizon: int = HORIZON) -> range:
+    """H+1 consecutive frames; fixed split strides, no padding/cross-episode tail."""
+    validate_horizon(horizon)
     if split not in STRIDES or frames < 0:
         raise ValueError("Expected a known split and nonnegative frame count")
-    return range(0, max(0, frames - HORIZON), STRIDES[split])
+    return range(0, max(0, frames - horizon), STRIDES[split])

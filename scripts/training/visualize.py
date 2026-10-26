@@ -1,4 +1,4 @@
-"""Export one fixed six-frame window as an offline, dependency-free HTML viewer."""
+"""Export initial GS plus H predictions as an offline, dependency-free viewer."""
 
 import argparse
 import html
@@ -11,6 +11,7 @@ import torch
 
 from ..dataloader.collate import collate_fn
 from .evaluate import load_model
+from .losses import prediction_horizon
 from .rendering import DepthRenderer, GaussianRenderer
 from .train import build_loader, to_device, copy_initial
 
@@ -40,12 +41,13 @@ def viewer_html(data, title):
     return '''<!doctype html><html lang="zh"><meta charset="utf-8"><title>GS 预测对比</title>
 <style>body{font:14px system-ui;background:#f5f7fa;color:#172437;margin:20px}h1{font-size:20px}.row{display:flex;gap:12px}.panel{flex:1;background:white;padding:10px;border-radius:8px;min-width:0}canvas{width:100%;height:270px;touch-action:none}img{width:100%}button,select,input{margin:8px}small{color:#64748b}#info{margin:10px 0}</style>
 <h1>''' + html.escape(title) + '''</h1><p>上方为 GS 中心点对比（不是完整高斯光栅图）；三窗共用世界坐标、相机与尺度。拖动旋转，滚轮缩放。下方深度使用真实相机；黑色表示无有效值，误差图只计算目标有效区域。</p>
-<button id="play">播放</button><input id="time" type="range" min="0" max="4" value="0"><span id="label"></span><select id="camera"></select><div id="info"></div>
+<button id="prev">上一帧</button><button id="play">播放</button><button id="next">下一帧</button><input id="time" type="range" min="0" max="0" value="0"><span id="label"></span><select id="camera"></select><div id="info"></div>
 <div class="row"><div class="panel">复制初始 GS<canvas id="initial"></canvas></div><div class="panel">预测 GS<canvas id="prediction"></canvas></div><div class="panel">真实目标 GS<canvas id="target"></canvas></div></div>
 <div class="row"><div class="panel">目标深度<img id="gt"></div><div class="panel">预测深度<img id="pred"></div><div class="panel">复制初态深度<img id="copy"></div><div class="panel">预测误差（±5 mm 截断）<img id="err"></div></div>
 <small>深度零值不是背景或遮挡的确定标签。各时刻目标点数可以不同，没有逐点 ID 对应。可视化显示坐标做六位小数舍入；prediction.npz 保留原始 float32。</small>
 <script>const D=''' + encoded + ''';
 const slider=document.getElementById('time'),camera=document.getElementById('camera');
+slider.max=D.prediction.length;
 D.cameras.forEach((c,i)=>{let o=document.createElement('option');o.value=i;o.textContent=c;camera.appendChild(o)});
 let yaw=.4,pitch=.5,zoom=1,drag=null,timer=null;
 const all=[D.initial,...D.prediction,...D.target].flat(),lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
@@ -54,10 +56,11 @@ const center=lo.map((v,i)=>(v+hi[i])/2),radius=Math.max(...lo.map((v,i)=>hi[i]-v
 function draw(id,pts,colored){let c=document.getElementById(id),r=c.getBoundingClientRect();c.width=Math.round(r.width*devicePixelRatio);c.height=Math.round(r.height*devicePixelRatio);let ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);let s=Math.min(c.width,c.height)*.8/radius*zoom,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
 let projected=pts.map((p,i)=>{let [x,y,z]=p.map((v,j)=>v-center[j]);let u=cy*x-sy*y,v=sy*x+cy*y;return [u,cp*z-sp*v,sp*z+cp*v,i]}).sort((a,b)=>a[2]-b[2]);
 projected.forEach(([x,y,z,i])=>{let color=colored?D.colors[i]:[.25,.42,.62];ctx.fillStyle=`rgb(${color.map(v=>Math.round(v*255)).join(',')})`;ctx.beginPath();ctx.arc(c.width/2+x*s,c.height/2-y*s,1.3*devicePixelRatio,0,Math.PI*2);ctx.fill()});}
-function update(){let k=+slider.value,v=+camera.value;document.getElementById('label').textContent=`预测 t+${k+1} / 原始帧 ${D.frame_ids[k+1]}`;document.getElementById('info').textContent=`初始/预测点数 ${D.initial.length}；目标点数 ${D.target[k].length}；深度颜色范围 ${D.depth_range.map(x=>x.toFixed(3)).join('–')} m`;
-draw('initial',D.initial,true);draw('prediction',D.prediction[k],true);draw('target',D.target[k],false);for(let name of ['gt','pred','copy','err'])document.getElementById(name).src=`figures/frame_${k+1}_view_${v}_${name}.png`;}
+function update(){let h=+slider.value,v=+camera.value,p=h?D.prediction[h-1]:D.initial,t=h?D.target[h-1]:D.initial;document.getElementById('label').textContent=`${h?'预测':'初态'} t+${h} / 原始帧 ${D.frame_ids[h]} / H=${D.prediction.length}`;document.getElementById('info').textContent=`初始/预测点数 ${D.initial.length}；目标点数 ${t.length}；深度颜色范围 ${D.depth_range.map(x=>x.toFixed(3)).join('–')} m${h?'':'；初态深度为初始GS渲染，未提供t0 HDF5误差'}`;
+draw('initial',D.initial,true);draw('prediction',p,true);draw('target',t,false);for(let name of ['gt','pred','copy','err'])document.getElementById(name).src=`figures/frame_${h}_view_${v}_${name}.png`;}
 document.querySelectorAll('canvas').forEach(c=>{c.onpointerdown=e=>{drag=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)};c.onpointerup=()=>drag=null;c.onpointercancel=()=>drag=null;c.onpointermove=e=>{if(drag){yaw+=(e.clientX-drag[0])*.01;pitch+=(e.clientY-drag[1])*.01;drag=[e.clientX,e.clientY];update()}};c.onwheel=e=>{e.preventDefault();zoom=Math.max(.1,Math.min(10,zoom*Math.exp(-e.deltaY*.001)));update()}});
-slider.oninput=update;camera.onchange=update;window.onresize=update;document.getElementById('play').onclick=()=>{if(timer){clearInterval(timer);timer=null}else timer=setInterval(()=>{slider.value=(+slider.value+1)%5;update()},500)};update();</script></html>'''
+function step(d){slider.value=(+slider.value+d+D.frame_ids.length)%D.frame_ids.length;update()}
+slider.oninput=update;camera.onchange=update;window.onresize=update;document.getElementById('prev').onclick=()=>step(-1);document.getElementById('next').onclick=()=>step(1);document.getElementById('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;document.getElementById('play').textContent='播放'}else{timer=setInterval(()=>step(1),500);document.getElementById('play').textContent='暂停'}};update();</script></html>'''
 
 
 def gs_viewer_html(data, title):
@@ -65,17 +68,23 @@ def gs_viewer_html(data, title):
     properties = {'anchors': 'P1a 共享锚点位移；尺度、旋转、颜色及不透明度继承初态。',
                   'anchors_anisotropic': 'P1a.5 初态可学习各向异性 RBF；尺度、旋转、颜色及不透明度继承初态。',
                   'free': '自由 GS Head；位置、尺度、旋转随预测更新，颜色及不透明度继承初态。'}[data.get('gs_decoder', 'free')]
+    if data.get('gs_structure', 'none') == 'anchor_attention':
+        properties = 'P2 结构锚点 attention + P1a 位移 Decoder；尺度、旋转、颜色及不透明度继承初态。'
+    if len(data.get('frame_ids', [])) > 6:
+        properties += '在线条件预测：第k帧读取截至t+k−1的条件；未来动作／触觉逐步到达，并非初态已知全部未来观测。'
     return '''<!doctype html><html lang="zh"><meta charset="utf-8"><title>GS 渲染对比</title>
 <style>body{font:14px system-ui;background:#f5f7fa;color:#172437;margin:20px}.row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.panel{background:white;padding:10px;border-radius:8px}img{width:100%}select,input,button{margin:8px}</style><h1>''' + html.escape(title) + '''</h1>
-<p><a href="geometry.html">独立检查 Gaussian centers、ellipsoids 和五步轨迹</a></p>
+<p><a href="geometry.html">独立检查 Gaussian centers、ellipsoids 和完整预测轨迹</a></p>
 <p>真实高斯光栅渲染，零阶 SH、统一黑色背景。''' + properties + '''误差仅在目标 HDF5 有效区域计算，无效区域显示灰色，不是背景标签。</p>
-<button id="play">播放</button><input id="time" type="range" min="0" max="4" value="0"><span id="label"></span><select id="camera"></select><select id="mode"><option value="rgb">RGB</option><option value="alpha">Alpha</option><option value="depth">期望深度</option></select><p id="info"></p>
+<button id="prev">上一帧</button><button id="play">播放</button><button id="next">下一帧</button><input id="time" type="range" min="0" max="0" value="0"><span id="label"></span><select id="camera"></select><select id="mode"><option value="rgb">RGB</option><option value="alpha">Alpha</option><option value="depth">期望深度</option></select><p id="info"></p>
 <div class="row"><div class="panel">目标 GS<img id="gt"></div><div class="panel">预测 GS<img id="pred"></div><div class="panel">复制初态 GS<img id="copy"></div><div class="panel">预测误差<img id="err"></div></div>
 <p>RGB误差：通道平均绝对误差，0–0.1；alpha误差：0–0.1；深度误差：与HDF5比较，±5mm。深度面板前三图来自GS渲染。颜色仅用于显示，完整世界坐标GS保存在 prediction.npz。</p>
 <script>const D=''' + encoded + ''';const $=id=>document.getElementById(id);let timer=null;
+$('time').max=D.frame_ids.length-1;
 D.cameras.forEach((c,i)=>{let o=document.createElement('option');o.value=i;o.textContent=c;$('camera').append(o)});
-function update(){let k=+$('time').value,v=+$('camera').value,m=$('mode').value;$('label').textContent=`t+${k+1} / 原始帧 ${D.frame_ids[k+1]}`;$('info').textContent=`初始/预测高斯数 ${D.initial_count}；目标高斯数 ${D.target_counts[k]}；深度显示范围 ${D.depth_range.map(x=>x.toFixed(3)).join('–')}m`;for(let n of ['gt','pred','copy','err'])$(n).src=`figures/frame_${k+1}_view_${v}_${m}_${n}.png`;}
-$('time').oninput=$('camera').onchange=$('mode').onchange=update;$('play').onclick=()=>{if(timer){clearInterval(timer);timer=null}else timer=setInterval(()=>{$('time').value=(+$('time').value+1)%5;update()},500)};update();</script></html>'''
+function update(){let h=+$('time').value,v=+$('camera').value,m=$('mode').value;$('label').textContent=`${h?'预测':'初态'} t+${h} / 原始帧 ${D.frame_ids[h]} / H=${D.target_counts.length}`;$('info').textContent=`初始/预测高斯数 ${D.initial_count}；目标高斯数 ${h?D.target_counts[h-1]:D.initial_count}；深度显示范围 ${D.depth_range.map(x=>x.toFixed(3)).join('–')}m${h?'':'；初态三图为同一初始GS渲染，误差面板未提供'}`;for(let n of ['gt','pred','copy','err'])$(n).src=`figures/frame_${h}_view_${v}_${m}_${n}.png`;}
+function step(d){$('time').value=(+$('time').value+d+D.frame_ids.length)%D.frame_ids.length;update()}
+$('time').oninput=$('camera').onchange=$('mode').onchange=update;$('prev').onclick=()=>step(-1);$('next').onclick=()=>step(1);$('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('play').textContent='播放'}else{timer=setInterval(()=>step(1),500);$('play').textContent='暂停'}};update();</script></html>'''
 
 
 def ellipsoid_axes(log_scales, quaternions):
@@ -97,13 +106,21 @@ def ellipsoid_axes(log_scales, quaternions):
 
 def geometry_data(arrays, limit=600):
     """All centers; deterministic template subset for ellipsoids/trajectories only."""
+    horizon = len(arrays['predicted_xyz'])
+    if horizon < 1 or len(arrays['frame_ids']) != horizon+1:
+        raise ValueError('Geometry needs H predictions and H+1 original frame IDs')
+    if (len(arrays['predicted_log_scales']) != horizon
+            or len(arrays['predicted_quaternions']) != horizon
+            or any(f'target_xyz_{h}' not in arrays or f'target_attr_{h}' not in arrays
+                   for h in range(1, horizon+1))):
+        raise ValueError('Missing Gaussian attributes or targets for a predicted horizon')
     def frame(xyz, attr):
         ids = np.linspace(0, len(xyz)-1, min(limit, len(xyz)), dtype=int)
         return dict(centers=xyz.round(6).tolist(), ids=ids.tolist(),
                     axes=ellipsoid_axes(attr[ids, :3], attr[ids, 3:7]).round(9).tolist())
     initial = frame(arrays['initial_xyz'], arrays['initial_attributes'])
     predicted, targets = [], []
-    for h in range(5):
+    for h in range(horizon):
         attr = np.concatenate((arrays['predicted_log_scales'][h], arrays['predicted_quaternions'][h]), -1)
         predicted.append(frame(arrays['predicted_xyz'][h], attr))
         targets.append(frame(arrays[f'target_xyz_{h+1}'], arrays[f'target_attr_{h+1}']))
@@ -117,10 +134,11 @@ def geometry_html(data, title):
 <style>body{font:14px system-ui;margin:18px;background:#f5f7fa;color:#172437}h1{font-size:20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.panel{background:white;padding:8px;border-radius:8px;min-width:0}canvas{width:100%;height:250px;touch-action:none}button,input,select{margin:6px}</style>
 <h1>''' + html.escape(title) + ''' · 结构诊断</h1><a href="index.html">RGB / Alpha 多相机渲染</a>
 <p>上排仅 centers，下排为独立的 1σ 椭球线框（不是光栅图）。拖动旋转、滚轮缩放，所有面板共享坐标与尺度。未来 GT 是独立点集，没有跨帧粒子 ID；仅预测模板可连成轨迹。</p>
-<button id="play">播放</button><input id="frame" type="range" min="0" max="5" value="0"><span id="label"></span>
+<button id="prev">上一帧</button><button id="play">播放</button><button id="next">下一帧</button><input id="frame" type="range" min="0" max="0" value="0"><span id="label"></span>
 <select id="view"><option value="orbit">自由旋转</option><option value="xy">XY</option><option value="xz">XZ</option><option value="yz">YZ</option></select><label><input id="paths" type="checkbox" checked>预测累计轨迹</label><p id="info"></p>
-<div class="grid"><div class="panel">复制初态 centers<canvas id="c0"></canvas></div><div class="panel">预测 centers / 五帧轨迹<canvas id="c1"></canvas></div><div class="panel">目标 centers<canvas id="c2"></canvas></div><div class="panel">复制初态 ellipsoids<canvas id="e0"></canvas></div><div class="panel">预测 ellipsoids<canvas id="e1"></canvas></div><div class="panel">目标 ellipsoids<canvas id="e2"></canvas></div></div>
+<div class="grid"><div class="panel">复制初态 centers<canvas id="c0"></canvas></div><div class="panel">预测 centers / 完整轨迹<canvas id="c1"></canvas></div><div class="panel">目标 centers<canvas id="c2"></canvas></div><div class="panel">复制初态 ellipsoids<canvas id="e0"></canvas></div><div class="panel">预测 ellipsoids<canvas id="e1"></canvas></div><div class="panel">目标 ellipsoids<canvas id="e2"></canvas></div></div>
 <script>const D=''' + encoded + ''';const $=id=>document.getElementById(id);let yaw=.4,pitch=.5,zoom=1,drag=null,timer=null;
+$('frame').max=D.prediction.length;
 const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];
 for(const f of [D.initial,...D.prediction,...D.target])for(const p of f.centers)p.forEach((v,j)=>{lo[j]=Math.min(lo[j],v);hi[j]=Math.max(hi[j],v)});
 const center=lo.map((v,j)=>(v+hi[j])/2),radius=Math.max(...lo.map((v,j)=>hi[j]-v),.001);
@@ -133,10 +151,14 @@ if(id==='c1'&&$('paths').checked){ctx.strokeStyle='#e07c32';ctx.globalAlpha=.45;
 else{ctx.globalAlpha=.28;f.ids.forEach((index,j)=>{const p=f.centers[index],axes=f.axes[j];for(const [a,b] of [[0,1],[0,2],[1,2]]){let ring=[];for(let t=0;t<=20;t++){const angle=t*Math.PI/10;ring.push(p.map((v,k)=>v+Math.cos(angle)*axes[a][k]+Math.sin(angle)*axes[b][k]))}line(ring)}});ctx.globalAlpha=1}}
 function update(){const h=+$('frame').value,frames=[D.initial,h?D.prediction[h-1]:D.initial,h?D.target[h-1]:D.initial];$('label').textContent=`t+${h} / frame ${D.frame_ids[h]}`;$('info').textContent=`centers 全量 ${frames.map(f=>f.centers.length).join(' / ')}；椭球及轨迹最多 ${D.ellipsoid_limit} 个，预测固定同一模板子集。坐标单位米。`;frames.forEach((f,i)=>{draw('c'+i,f,'centers',['#8995a3','#2675bd','#288557'][i]);draw('e'+i,f,'ellipsoids',['#8995a3','#2675bd','#288557'][i])})}
 document.querySelectorAll('canvas').forEach(c=>{c.onpointerdown=e=>{drag=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)};c.onpointerup=c.onpointercancel=()=>drag=null;c.onpointermove=e=>{if(drag){yaw+=(e.clientX-drag[0])*.01;pitch+=(e.clientY-drag[1])*.01;drag=[e.clientX,e.clientY];$('view').value='orbit';update()}};c.onwheel=e=>{e.preventDefault();zoom=Math.max(.1,Math.min(20,zoom*Math.exp(-e.deltaY*.001)));update()}});
-$('frame').oninput=$('view').onchange=$('paths').onchange=window.onresize=update;$('play').onclick=()=>{if(timer){clearInterval(timer);timer=null}else timer=setInterval(()=>{$('frame').value=(+$('frame').value+1)%6;update()},500)};update();</script></html>'''
+function step(d){$('frame').value=(+$('frame').value+d+D.frame_ids.length)%D.frame_ids.length;update()}
+$('frame').oninput=$('view').onchange=$('paths').onchange=window.onresize=update;$('prev').onclick=()=>step(-1);$('next').onclick=()=>step(1);$('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('play').textContent='播放'}else{timer=setInterval(()=>step(1),500);$('play').textContent='暂停'}};update();</script></html>'''
 
 
 def export_gaussians(args, config, raw, batch, prediction, processor):
+    horizon = prediction_horizon(prediction['xyz'], batch)
+    if config.get('horizon', 5) != horizon or raw['meta']['frame_ids'].shape[1] != horizon+1:
+        raise ValueError('Visualization config and original frame IDs must match prediction H')
     settings = config.get('render_settings')
     size = (settings['height'], settings['width']) if settings is not None else None
     renderer = GaussianRenderer(image_size=size)
@@ -147,14 +169,14 @@ def export_gaussians(args, config, raw, batch, prediction, processor):
         if any(not torch.isfinite(image).all() for image in value.values()):
             raise FloatingPointError('Nonfinite rendered image; no visualization written')
     directory = Path(args.output).resolve() if args.output else Path(args.checkpoint).resolve().parent / 'visualizations' / f'{args.split}-episode-{args.episode}-frame-{args.start}'
-    print(f'Creating {directory}: prediction.npz, index.html, geometry.html, figures/frame_{{1..5}}_view_{{v}}_{{rgb,alpha,depth}}_{{gt,pred,copy,err}}.png', flush=True)
+    print(f'Creating {directory}: prediction.npz, index.html, geometry.html, figures/frame_{{0..{horizon}}}_view_{{v}}_{{rgb,alpha,depth}}_{{gt,pred,copy,err}}.png', flush=True)
     keep = batch['inputs']['gs_mask'][0]
     arrays = {'frame_ids': raw['meta']['frame_ids'][0].numpy(),
               'initial_xyz': raw['inputs']['gs_xyz'][0, keep.cpu()].numpy(),
               'initial_attributes': raw['inputs']['gs_attr'][0, keep.cpu()].numpy()}
     for field, value in prediction.items():
         if field == 'xyz':
-            value = processor.denormalize_xyz(value, batch['inputs']['gs_mask'][:, None].expand(-1, 5, -1))
+            value = processor.denormalize_xyz(value, batch['inputs']['gs_mask'][:, None].expand(-1, horizon, -1))
         elif field == 'log_scales':
             value = value + np.log(processor.state_dict()['scale'])
         arrays['predicted_'+field] = value[0, :, keep].cpu().numpy()
@@ -171,7 +193,20 @@ def export_gaussians(args, config, raw, batch, prediction, processor):
     depth = raw['targets']['target_depth'][0].numpy()
     lo, hi = np.percentile(depth[valid], [1, 99]) if valid.any() else (0., 1.)
     images = {name: {key: image[0].cpu().numpy() for key, image in r.items()} for name, r in renders.items()}
-    for k in range(5):
+    # t0 is exactly the observed initial GS. Camera calibration is static in
+    # this protocol, so the copy render already contains its true rasterization.
+    # No t0 HDF5 target was loaded: show initial errors as unavailable, not zero.
+    for v in range(depth.shape[1]):
+        initial = images['copy']
+        initial_images = dict(
+            rgb=np.rint(np.clip(initial['rgb'][0, v], 0, 1)*255).astype(np.uint8),
+            alpha=np.repeat(np.rint(np.clip(initial['alpha'][0, v], 0, 1)*255).astype(np.uint8)[..., None], 3, -1),
+            depth=depth_rgb(initial['depth'][0, v], initial['alpha'][0, v] > 0, lo, hi))
+        for mode, image in initial_images.items():
+            for name in ('gt', 'pred', 'copy', 'err'):
+                value = np.full_like(image, 20) if name == 'err' else image
+                (directory/'figures'/f'frame_0_view_{v}_{mode}_{name}.png').write_bytes(png_bytes(value))
+    for k in range(horizon):
         for v in range(depth.shape[1]):
             output = {}
             for name, value in images.items():
@@ -188,7 +223,8 @@ def export_gaussians(args, config, raw, batch, prediction, processor):
                 (directory/'figures'/f'frame_{k+1}_view_{v}_{name}.png').write_bytes(png_bytes(image))
     data = dict(cameras=raw['meta']['depth_camera_ids'][0], frame_ids=arrays['frame_ids'].tolist(),
                 initial_count=int(keep.sum()), target_counts=raw['targets']['target_lengths'][0].tolist(),
-                depth_range=[float(lo), float(hi)], gs_decoder=config.get('gs_decoder', 'free'))
+                depth_range=[float(lo), float(hi)], gs_decoder=config.get('gs_decoder', 'free'),
+                gs_structure=config.get('gs_structure', 'none'))
     title = f'{config["scene"]} · episode {args.episode} · start {args.start}'
     (directory/'geometry.html').write_text(geometry_html(geometry, title), encoding='utf-8')
     (directory/'index.html').write_text(gs_viewer_html(data, title), encoding='utf-8')
@@ -221,10 +257,13 @@ def main(argv=None):
     if isinstance(prediction, dict):
         export_gaussians(args, config, raw, batch, prediction, processor)
         return 0
+    horizon = prediction_horizon(prediction, batch)
+    if config.get('horizon', 5) != horizon or raw['meta']['frame_ids'].shape[1] != horizon+1:
+        raise ValueError('Visualization config and original frame IDs must match prediction H')
     renderer = DepthRenderer()
     pred_depth = renderer(prediction, batch, processor)[0].cpu().numpy()
-    copy_depth = renderer(batch['inputs']['gs_xyz'][:, None].expand(-1, 5, -1, -1), batch, processor)[0].cpu().numpy()
-    keep = batch['inputs']['gs_mask'][:, None].expand(-1, 5, -1)
+    copy_depth = renderer(batch['inputs']['gs_xyz'][:, None].expand(-1, horizon, -1, -1), batch, processor)[0].cpu().numpy()
+    keep = batch['inputs']['gs_mask'][:, None].expand(-1, horizon, -1)
     predicted_world = processor.denormalize_xyz(prediction, keep)[0, :, keep[0, 0]].cpu().numpy()
     initial = raw['inputs']['gs_xyz'][0, raw['inputs']['gs_mask'][0]].numpy()
     target = [x[0, mask[0]].numpy() for x, mask in zip(raw['targets']['target_xyz'], raw['targets']['target_mask'])]
@@ -233,14 +272,19 @@ def main(argv=None):
     if not np.isfinite(predicted_world).all() or not np.isfinite(pred_depth).all():
         raise FloatingPointError('Nonfinite prediction; no visualization written')
     directory = Path(args.output).resolve() if args.output else Path(args.checkpoint).resolve().parent / 'visualizations' / f'{args.split}-episode-{args.episode}-frame-{args.start}'
-    print(f'Creating {directory}: prediction.npz, index.html, figures/frame_{{1..5}}_view_{{v}}_{{gt,pred,copy,err}}.png', flush=True)
+    print(f'Creating {directory}: prediction.npz, index.html, figures/frame_{{0..{horizon}}}_view_{{v}}_{{gt,pred,copy,err}}.png', flush=True)
     directory.mkdir(parents=True, exist_ok=False)
     (directory / 'figures').mkdir()
     np.savez_compressed(directory / 'prediction.npz', initial_xyz=initial, predicted_xyz=predicted_world,
         initial_attributes=raw['inputs']['gs_attr'][0, raw['inputs']['gs_mask'][0]].numpy(),
         frame_ids=raw['meta']['frame_ids'][0].numpy(), **{f'target_xyz_{k+1}': x for k, x in enumerate(target)})
     lo, hi = np.percentile(target_depth[valid], [1, 99]) if valid.any() else (0., 1.)
-    for k in range(5):
+    for v in range(target_depth.shape[1]):
+        image = depth_rgb(copy_depth[0, v], copy_depth[0, v] > 0, lo, hi)
+        for name in ('gt', 'pred', 'copy', 'err'):
+            value = np.full_like(image, 20) if name == 'err' else image
+            (directory/'figures'/f'frame_0_view_{v}_{name}.png').write_bytes(png_bytes(value))
+    for k in range(horizon):
         for v in range(target_depth.shape[1]):
             images = {'gt': depth_rgb(target_depth[k, v], valid[k, v], lo, hi),
                       'pred': depth_rgb(pred_depth[k, v], pred_depth[k, v] > 0, lo, hi),

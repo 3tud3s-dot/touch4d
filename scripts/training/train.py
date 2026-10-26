@@ -29,7 +29,9 @@ from .losses import objective
 from .model import PositionPredictor
 from .rendering import DepthRenderer, GaussianRenderer
 
-VERSION = "touch4d-gs-v5"
+VERSION = "touch4d-gs-v7"
+GS_STRUCTURAL_VERSION = "touch4d-gs-v6"
+GS_ANISOTROPIC_VERSION = "touch4d-gs-v5"
 GS_ANCHOR_VERSION = "touch4d-gs-v4"
 GS_JOINT_VERSION = "touch4d-gs-v3"
 GS_LOCAL_VERSION = "touch4d-gs-v2"
@@ -39,7 +41,7 @@ LEGACY_VERSION = "touch4d-displacement-v1"
 INDEPENDENT_VERSION = "touch4d-displacement-v2"
 MODEL_KEYS = ("width", "heads", "layers", "controller_features", "prediction_mode", "output_mode",
               "gs_local_attention", "gs_local_k", "gs_decoder", "anchor_count", "anchor_pool_k",
-              "anchor_bandwidth")
+              "anchor_bandwidth", "gs_structure", "horizon")
 DECODER_DEFAULTS = dict(gs_decoder="free", anchor_count=128, anchor_pool_k=16, anchor_bandwidth=1.)
 PROJECT = Path(__file__).resolve().parents[2]
 GS_CAMERAS = {
@@ -71,7 +73,9 @@ def make_renderer(config):
 
 
 def copy_initial(inputs, output_mode="position"):
-    expand = lambda value: value[:, None].expand(-1, 5, -1, -1)
+    condition = inputs.get("action_state", inputs.get("controller_points"))
+    horizon = condition.shape[1] if condition is not None else 5
+    expand = lambda value: value[:, None].expand(-1, horizon, -1, -1)
     if output_mode == "position":
         return expand(inputs["gs_xyz"])
     attr = inputs["gs_attr"]
@@ -120,7 +124,8 @@ def choose_cameras(scene, depth_root, requested=None):
 def build_loader(config, split, epoch=0, stage="all"):
     loader = make_dataloader(config["scene"], split, root=config["root"], stage=stage,
         batch_size=config["batch_size"], num_workers=config["workers"], seed=config["seed"]+epoch,
-        with_depth=True, depth_root=config["depth_root"], depth_cameras=config["depth_cameras"])
+        with_depth=True, depth_root=config["depth_root"], depth_cameras=config["depth_cameras"],
+        horizon=config.get("horizon", 5))
     if split == "train" and config["overfit_windows"]:
         n = config["overfit_windows"]
         if n > len(loader.dataset):
@@ -167,22 +172,26 @@ class GaussianMetrics(EpisodeMetrics):
     """Joint best score on render-available samples; all-sample CD stays diagnostic."""
     def __init__(self, scale, config):
         super().__init__(scale, 0.)
+        self.horizon = config.get("horizon", 5)
         self.weights = loss_options(config)
         self.render = {}
 
     def add(self, ids, metrics):
+        for key in ("render_time_available", "rgb_by_horizon", "alpha_by_horizon"):
+            if metrics[key].shape != (len(ids), self.horizon):
+                raise ValueError(f"{key} disagrees with metric horizon {self.horizon}")
         super().add(ids, metrics)
         for i, episode in enumerate(ids.tolist()):
             row = self.render.setdefault(str(episode), dict(samples=0, rgb=0., alpha=0.,
-                scale_regularization=0., supervised_geometry=0., time_counts=[0]*5, rgb_by_horizon=[0.]*5,
-                alpha_by_horizon=[0.]*5))
+                scale_regularization=0., supervised_geometry=0., time_counts=[0]*self.horizon, rgb_by_horizon=[0.]*self.horizon,
+                alpha_by_horizon=[0.]*self.horizon))
             if not bool(metrics["render_available"][i]):
                 continue
             row["samples"] += 1
             row["supervised_geometry"] += float(metrics["geometry"][i].detach())
             for key in ("rgb", "alpha", "scale_regularization"):
                 row[key] += float(metrics[key][i].detach())
-            for k in range(5):
+            for k in range(self.horizon):
                 if bool(metrics["render_time_available"][i, k]):
                     row["time_counts"][k] += 1
                     for key in ("rgb_by_horizon", "alpha_by_horizon"):
@@ -202,7 +211,7 @@ class GaussianMetrics(EpisodeMetrics):
             result[key] = sum(ep[key] for ep in result["episodes"].values())/len(self.render)
         for key in ("rgb_by_horizon", "alpha_by_horizon"):
             result[key] = []
-            for k in range(5):
+            for k in range(self.horizon):
                 values = [ep[key][k] for ep in result["episodes"].values() if ep[key][k] is not None]
                 result[key].append(sum(values)/len(values) if values else None)
         score = self.weights["rgb_weight"]*result["rgb"] + self.weights["alpha_weight"]*result["alpha"]
@@ -288,8 +297,9 @@ def checkpoint_config(value):
     """Interpret legacy metadata without changing the checkpoint on disk."""
     version = value.get("version")
     if version not in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
-                       GS_LEGACY_VERSION, GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
-        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1/v2/v3/v4/v5 weights; "
+                       GS_LEGACY_VERSION, GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION,
+                       GS_ANISOTROPIC_VERSION, GS_STRUCTURAL_VERSION, VERSION):
+        raise ValueError("Unsupported checkpoint: expected displacement-v1/v2/v3 or gs-v1/v2/v3/v4/v5/v6/v7 weights; "
                          "absolute-position V0 checkpoints require the original V0 code")
     config = dict(value["config"])
     if version in (LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION):
@@ -306,7 +316,7 @@ def checkpoint_config(value):
     if config.get("render_settings") != settings:
         raise ValueError("Checkpoint has missing or unsupported render settings")
     config["render_settings"] = settings
-    if version not in (GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
+    if version not in (GS_JOINT_VERSION, GS_ANCHOR_VERSION, GS_ANISOTROPIC_VERSION, GS_STRUCTURAL_VERSION, VERSION):
         if config.get("chamfer_weight", 0.) != 0:
             raise ValueError("Legacy checkpoint must use zero GS chamfer_weight")
         config["chamfer_weight"] = 0.
@@ -337,7 +347,7 @@ def checkpoint_config(value):
     weight = value["model"].get("controller_encoder.0.weight")
     if not isinstance(weight, torch.Tensor) or tuple(weight.shape) != (config["width"], features):
         raise ValueError("Checkpoint controller weights disagree with feature configuration")
-    if version not in (GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION, VERSION):
+    if version not in (GS_LOCAL_VERSION, GS_JOINT_VERSION, GS_ANCHOR_VERSION, GS_ANISOTROPIC_VERSION, GS_STRUCTURAL_VERSION, VERSION):
         if config.get("gs_local_attention", "none") != "none" or config.get("gs_local_k", 16) != 16:
             raise ValueError("Legacy checkpoint must use disabled local GS attention")
         config.update(gs_local_attention="none", gs_local_k=16)
@@ -348,7 +358,7 @@ def checkpoint_config(value):
     local_weights = any(key.startswith("gs_local.") for key in value["model"])
     if local_weights != (config["gs_local_attention"] == "knn"):
         raise ValueError("Checkpoint local GS attention weights disagree with configuration")
-    if version not in (GS_ANCHOR_VERSION, VERSION):
+    if version not in (GS_ANCHOR_VERSION, GS_ANISOTROPIC_VERSION, GS_STRUCTURAL_VERSION, VERSION):
         for key, default in DECODER_DEFAULTS.items():
             if config.get(key, default) != default:
                 raise ValueError("Legacy checkpoint must use the free GS decoder and default anchor metadata")
@@ -356,16 +366,34 @@ def checkpoint_config(value):
     elif any(key not in config for key in DECODER_DEFAULTS):
         raise ValueError("Checkpoint requires explicit GS decoder and anchor settings")
     validate_decoder_config(config)
-    if version != VERSION and config["gs_decoder"] == "anchors_anisotropic":
+    if version not in (GS_ANISOTROPIC_VERSION, GS_STRUCTURAL_VERSION, VERSION) and config["gs_decoder"] == "anchors_anisotropic":
         raise ValueError("Anisotropic decoder requires v5 checkpoint semantics")
     metric_weights = any(key.startswith("metric_head.") for key in value["model"])
     if metric_weights != (config["gs_decoder"] == "anchors_anisotropic"):
         raise ValueError("Checkpoint metric head disagrees with decoder configuration")
+    if version not in (GS_STRUCTURAL_VERSION, VERSION):
+        if config.get("gs_structure", "none") != "none":
+            raise ValueError("Legacy checkpoint must disable GS structure")
+        config["gs_structure"] = "none"
+    validate_structure_config(config)
+    structural_weights = any(key.startswith("gs_structure.") for key in value["model"])
+    if structural_weights != (config["gs_structure"] == "anchor_attention"):
+        raise ValueError("Checkpoint GS structure weights disagree with configuration")
     if config["output_mode"] == "gs_geometry":
         free_heads = [any(key.startswith(prefix) for key in value["model"])
                       for prefix in ("scale_head.", "rotation_head.")]
         if any(present != (config["gs_decoder"] == "free") for present in free_heads):
             raise ValueError("Checkpoint GS shape heads disagree with decoder configuration")
+    if version != VERSION:
+        if config.get("horizon", 5) != 5:
+            raise ValueError("Legacy checkpoint must use horizon 5")
+        config["horizon"] = 5
+    if type(config.get("horizon")) is not int or config["horizon"] < 1:
+        raise ValueError("Checkpoint requires explicit positive integer horizon")
+    for name in ("condition_time.weight", "prediction_time.weight"):
+        weight = value["model"].get(name)
+        if not isinstance(weight, torch.Tensor) or tuple(weight.shape) != (config["horizon"], config["width"]):
+            raise ValueError("Checkpoint time embedding disagrees with horizon")
     return config
 
 
@@ -381,6 +409,32 @@ def validate_decoder_config(config):
     if config["gs_decoder"] != "free" and (config.get("output_mode") != "gs_geometry"
             or config.get("prediction_mode") != "autoregressive" or config.get("gs_local_attention") != "knn"):
         raise ValueError("Anchor decoder requires autoregressive GS geometry and local kNN features")
+
+
+def validate_structure_config(config):
+    if config.get("gs_structure") not in ("none", "anchor_attention"):
+        raise ValueError("Checkpoint requires explicit gs_structure: none or anchor_attention")
+    if config["gs_structure"] == "anchor_attention" and config.get("gs_decoder") != "anchors":
+        raise ValueError("GS structure requires the isotropic anchors decoder")
+
+
+def resolve_horizon(requested, state=None):
+    """Fresh runs default to five; resume preserves its temporal architecture."""
+    saved = checkpoint_config(state)["horizon"] if state is not None else 5
+    if requested is not None and (type(requested) is not int or requested < 1):
+        raise ValueError("horizon must be a positive integer")
+    if state is not None and requested is not None and requested != saved:
+        raise ValueError("Cannot resume with different horizon; start a new run")
+    return saved if requested is None else requested
+
+
+def resolve_structure(requested, state=None):
+    saved = checkpoint_config(state)["gs_structure"] if state is not None else "none"
+    if requested is not None and requested not in ("none", "anchor_attention"):
+        raise ValueError("gs_structure must be none or anchor_attention")
+    if state is not None and requested is not None and requested != saved:
+        raise ValueError("Cannot resume with different gs_structure; start a new run")
+    return saved if requested is None else requested
 
 
 def resolve_chamfer_weight(requested, output_mode, state=None):
@@ -485,7 +539,7 @@ def recover_best_score(last_state, run):
     # Canonical legacy defaults allow old best and newly saved last to coexist.
     comparable = lambda c: {k: v for k, v in {"controller_features": 3,
                             "prediction_mode": "independent", "output_mode": "position",
-                            "gs_local_attention": "none", "gs_local_k": 16,
+                            "gs_local_attention": "none", "gs_local_k": 16, "gs_structure": "none", "horizon": 5,
                             "gs_convention": None, "render_settings": None, **LOSS_DEFAULTS,
                             **DECODER_DEFAULTS, **c}.items()
                             if k != "epochs"}
@@ -531,6 +585,8 @@ def parser():
     p.add_argument("--fit-contract", help="Reviewed P0 JSON tolerances; required for a new fixed400 run")
     p.add_argument("--fit-diagnostic", action="store_true",
                    help="fixed400 baseline without acceptance thresholds; retain all evaluation checkpoints")
+    p.add_argument("--horizon", type=int, default=None, help="Prediction horizon; default 5, supports 10/15; resume inherits")
+    p.add_argument("--window-manifest", help="Frozen GT-only window manifest required for extended fixed400 horizons")
     p.add_argument("--scene", required=True, choices=SUPPORTED_SCENES)
     p.add_argument("--root", default=str(DEFAULT_ROOT))
     p.add_argument("--depth-root")
@@ -561,6 +617,8 @@ def parser():
                    help="Initial GS neighbors including self; fresh default 16; supports e.g. 32")
     p.add_argument("--gs-decoder", choices=("free", "anchors", "anchors_anisotropic"), default=None,
                    help="free; P1a anchors; P1a.5 anchors_anisotropic with an initial-only learnable metric")
+    p.add_argument("--gs-structure", choices=("none", "anchor_attention"), default=None,
+                   help="P2 two-layer structural anchor attention; default none; resume inherits")
     p.add_argument("--anchor-count", type=int, default=None,
                    help="P1a initial FPS anchor cap; fresh default 128; resume inherits")
     p.add_argument("--anchor-pool-k", type=int, default=None,
@@ -585,9 +643,9 @@ def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
     if args.protocol == "fixed400":
-        from .fixed_fit import run
+        from ..experiments.fixed_window.fixed_fit import run
         return run(args)
-    if args.fit_contract or args.fit_diagnostic:
+    if args.fit_contract or args.fit_diagnostic or args.window_manifest:
         p.error("Fit options require --protocol fixed400")
     if (min(args.epochs, args.batch_size, args.chamfer_chunk) < 1 or args.single_epochs < 0
             or args.single_epochs > args.epochs or min(args.workers, args.seed, args.max_train_batches,
@@ -612,6 +670,7 @@ def main(argv=None):
         state = read_checkpoint(args.resume)
         if state["config"].get("protocol") == "fixed400":
             p.error("A fixed400 checkpoint must resume with --protocol fixed400")
+    args.horizon = resolve_horizon(args.horizon, state)
     args.controller_features = resolve_controller_features(args.controller_features, state)
     args.prediction_mode = resolve_prediction_mode(args.prediction_mode, state)
     args.output_mode = resolve_output_mode(args.output_mode, state)
@@ -622,13 +681,15 @@ def main(argv=None):
                                      args.anchor_bandwidth, state).items():
         setattr(args, key, value)
     validate_decoder_config(vars(args))
+    args.gs_structure = resolve_structure(args.gs_structure, state)
+    validate_structure_config(vars(args))
     if args.output_mode == "gs_geometry" and (args.prediction_mode != "autoregressive"
             or args.depth_weight != 0 or args.rgb_weight <= 0):
         p.error("GS geometry requires autoregressive, positive RGB weight and --depth-weight 0")
     root = Path(args.root).resolve()
     depth_root = Path(args.depth_root).resolve() if args.depth_root else root.parent / "touch4d-depth-v1"
     config = vars(args).copy()
-    for key in ("run_id", "resume", "device", "protocol", "fit_contract", "fit_diagnostic"):
+    for key in ("run_id", "resume", "device", "protocol", "fit_contract", "fit_diagnostic", "window_manifest"):
         config.pop(key)
     requested_cameras = args.depth_cameras
     if requested_cameras is None:
@@ -643,6 +704,7 @@ def main(argv=None):
                               controller_features=args.controller_features,
                               prediction_mode=args.prediction_mode, output_mode=args.output_mode,
                               gs_local_attention=args.gs_local_attention, gs_local_k=args.gs_local_k,
+                              gs_structure=args.gs_structure, horizon=args.horizon,
                               **{key: getattr(args, key) for key in DECODER_DEFAULTS}).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     renderer = make_renderer(config)
