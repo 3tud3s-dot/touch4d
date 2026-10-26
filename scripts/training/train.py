@@ -643,7 +643,7 @@ def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
     if args.protocol == "fixed400":
-        from .fixed_fit import run
+        from ..experiments.fixed_window.fixed_fit import run
         return run(args)
     if args.fit_contract or args.fit_diagnostic or args.window_manifest:
         p.error("Fit options require --protocol fixed400")

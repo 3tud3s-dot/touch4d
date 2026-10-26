@@ -6,11 +6,11 @@ from unittest.mock import patch
 
 import torch
 
-from .gs_decoder import build_initial_anchor_field
-from .gs_structure import StructuralAnchorLayer, StructuralGSBlock
-from .model import PositionPredictor
-from . import test_gs_decoder as anchor_tests
-from .test_gs_decoder import model_config
+from scripts.training.gs_decoder import build_initial_anchor_field
+from scripts.training.gs_structure import StructuralAnchorLayer, StructuralGSBlock
+from scripts.training.model import PositionPredictor
+from scripts.tests.training import test_gs_decoder as anchor_tests
+from scripts.tests.training.test_gs_decoder import model_config
 
 
 class StructuralTests(unittest.TestCase):

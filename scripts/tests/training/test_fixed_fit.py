@@ -1,4 +1,4 @@
-"""Disk-free CPU acceptance: python -B -m unittest scripts.training.test_fixed_fit -v."""
+"""Disk-free CPU acceptance: python -B -m unittest scripts.tests.training.test_fixed_fit -v."""
 
 import copy
 from io import StringIO
@@ -15,15 +15,15 @@ from unittest.mock import patch
 import numpy as np
 import torch
 
-from ..data_process import DataProcessor
-from ..data_process.test_data_process import make_batch, add_depth_targets
-from . import fixed_fit as fit
-from .model import PositionPredictor
-from .rendering import GaussianRenderer
-from .test_training import fake_gaussian_rasterizer
-from .train import checkpoint_state, copy_initial, restore_training, parser, main as train_main
-from .visualize import ellipsoid_axes, geometry_data, geometry_html
-from .evaluate import main as evaluate_main
+from scripts.data_process import DataProcessor
+from scripts.tests.data_process.test_data_process import make_batch, add_depth_targets
+from scripts.experiments.fixed_window import fixed_fit as fit
+from scripts.training.model import PositionPredictor
+from scripts.training.rendering import GaussianRenderer
+from scripts.tests.training.test_training import fake_gaussian_rasterizer
+from scripts.training.train import checkpoint_state, copy_initial, restore_training, parser, main as train_main
+from scripts.training.visualize import ellipsoid_axes, geometry_data, geometry_html
+from scripts.training.evaluate import main as evaluate_main
 
 
 def contract(scene="001-rope"):
@@ -388,7 +388,7 @@ class FixedFitTests(unittest.TestCase):
         self.test_run_orchestration_publishes_final_evaluates_and_exports_both_checkpoints(True,"anchors_anisotropic")
 
     def test_fit_evaluation_cli_reuses_exact_windows_and_rejects_changed_manifest(self):
-        from . import evaluate as evaluation
+        from scripts.training import evaluate as evaluation
         cfg=dict(self.config,depth_cameras=["cam_a","cam_b"])
         raws=[self.raw,single_raw(window=(2,73))]
         evidence=fit.manifest(raws,cfg)

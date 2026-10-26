@@ -42,7 +42,7 @@ def main(argv=None):
     model, processor, config = load_model(args.checkpoint, device)
     fit_info = {}
     if args.split == "fit":
-        from .fixed_fit import fixed_batches, manifest, TargetCache, evaluate_fixed, candidate
+        from ..experiments.fixed_window.fixed_fit import fixed_batches, manifest, TargetCache, evaluate_fixed, candidate
         if config["output_mode"] != "gs_geometry":
             raise ValueError("P0 fit diagnostics require Gaussian geometry output")
         raws = fixed_batches(config)

@@ -1,4 +1,4 @@
-"""Disk-free tests: python -B -m unittest scripts.data_process.test_data_process -v"""
+"""Disk-free tests: python -B -m unittest scripts.tests.data_process.test_data_process -v"""
 
 import copy
 from io import StringIO
@@ -8,12 +8,12 @@ from unittest.mock import patch
 
 import torch
 
-from ..dataloader.check import check_batch
-from ..dataloader.collate import collate_fn
-from ..dataloader.dataset import Touch4DDataset
-from ..dataloader.test_dataloader import MemoryReconstruction
-from .check import check_processed_batch, main as check_main, require_unchanged
-from .processor import DataProcessor, SUPPORTED_SCENES
+from scripts.dataloader.check import check_batch
+from scripts.dataloader.collate import collate_fn
+from scripts.dataloader.dataset import Touch4DDataset
+from scripts.tests.dataloader.test_dataloader import MemoryReconstruction
+from scripts.data_process.check import check_processed_batch, main as check_main, require_unchanged
+from scripts.data_process.processor import DataProcessor, SUPPORTED_SCENES
 
 
 def make_batch(scene="001-rope", split="train", horizon=5):

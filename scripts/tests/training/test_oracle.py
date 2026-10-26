@@ -7,9 +7,9 @@ from unittest.mock import patch
 
 import torch
 
-from .model import PositionPredictor
-from .oracle import OracleLatent, OracleAnchor, ORACLE_VERSION
-from .train import checkpoint_config
+from scripts.training.model import PositionPredictor
+from scripts.experiments.oracle.oracle import OracleLatent, OracleAnchor, ORACLE_VERSION
+from scripts.training.train import checkpoint_config
 
 
 def inputs(count=7, valid=5):

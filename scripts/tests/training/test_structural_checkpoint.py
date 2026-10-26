@@ -9,12 +9,12 @@ from unittest.mock import patch
 
 import torch
 
-from ..data_process import DataProcessor
-from .evaluate import load_model
-from . import fixed_fit
-from .model import PositionPredictor
-from .test_fixed_fit import single_raw
-from .train import (checkpoint_state, checkpoint_config, restore_training,
+from scripts.data_process import DataProcessor
+from scripts.training.evaluate import load_model
+from scripts.experiments.fixed_window import fixed_fit
+from scripts.training.model import PositionPredictor
+from scripts.tests.training.test_fixed_fit import single_raw
+from scripts.training.train import (checkpoint_state, checkpoint_config, restore_training,
                     recover_best_score, publish_checkpoints, resolve_structure)
 
 

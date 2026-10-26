@@ -1,4 +1,4 @@
-"""Local, disk-free tests: python -B -m unittest scripts.dataloader.test_dataloader -v"""
+"""Local, disk-free tests: python -B -m unittest scripts.tests.dataloader.test_dataloader -v"""
 
 from contextlib import ExitStack, contextmanager
 import copy
@@ -20,16 +20,16 @@ try:
 except ImportError:  # Existing point-only tests remain usable without the optional reader.
     h5py = None
 
-from . import dataset as dataset_module
-from .check import check_batch, main as check_main
-from .collate import FIXED_FIELDS, batch_horizon, collate_fn, fixed_fields, validate_depth_batch
-from .dataset import DataFormatError, Touch4DDataset
-from .geometry import (HAND_ORDER, STREAM_ORDER, action_conditions, hand_slots,
+from scripts.dataloader import dataset as dataset_module
+from scripts.dataloader.check import check_batch, main as check_main
+from scripts.dataloader.collate import FIXED_FIELDS, batch_horizon, collate_fn, fixed_fields, validate_depth_batch
+from scripts.dataloader.dataset import DataFormatError, Touch4DDataset
+from scripts.dataloader.geometry import (HAND_ORDER, STREAM_ORDER, action_conditions, hand_slots,
                        pose_validity, tactile_world_coordinates)
-from .loader import make_dataloader
-from .splits import SPLITS, episode_ids, window_starts
-from ..rebuild_dataset import rebuild as rebuild_module
-from ..rebuild_dataset import validate as validate_module
+from scripts.dataloader.loader import make_dataloader
+from scripts.dataloader.splits import SPLITS, episode_ids, window_starts
+from scripts.rebuild_dataset import rebuild as rebuild_module
+from scripts.rebuild_dataset import validate as validate_module
 
 
 def encoded_file(name, value):

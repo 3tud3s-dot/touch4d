@@ -15,17 +15,17 @@ from unittest.mock import patch
 import numpy as np
 import torch
 
-from ..data_process import DataProcessor
-from ..data_process.test_data_process import make_batch, add_depth_targets
-from .evaluate import load_model
-from . import fixed_fit
-from .losses import chamfer_samples, objective, render_samples, depth_samples
-from .model import PositionPredictor
-from .rendering import GaussianRenderer, DepthRenderer
-from .test_training import fake_gaussian_rasterizer, fake_rasterizer
-from .train import (checkpoint_state, checkpoint_config, restore_training, resolve_horizon,
+from scripts.data_process import DataProcessor
+from scripts.tests.data_process.test_data_process import make_batch, add_depth_targets
+from scripts.training.evaluate import load_model
+from scripts.experiments.fixed_window import fixed_fit
+from scripts.training.losses import chamfer_samples, objective, render_samples, depth_samples
+from scripts.training.model import PositionPredictor
+from scripts.training.rendering import GaussianRenderer, DepthRenderer
+from scripts.tests.training.test_training import fake_gaussian_rasterizer, fake_rasterizer
+from scripts.training.train import (checkpoint_state, checkpoint_config, restore_training, resolve_horizon,
                     copy_initial, GaussianMetrics, recover_best_score)
-from .visualize import (export_gaussians, geometry_data, geometry_html,
+from scripts.training.visualize import (export_gaussians, geometry_data, geometry_html,
                         gs_viewer_html)
 
 

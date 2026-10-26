@@ -6,14 +6,14 @@ from unittest.mock import patch
 
 import torch
 
-from .gs_decoder import (bounded_metric, anisotropic_anchor_field,
+from scripts.training.gs_decoder import (bounded_metric, anisotropic_anchor_field,
     build_initial_anchor_field, interpolate_anchor_displacements)
-from .model import PositionPredictor
-from . import test_gs_decoder as anchor_tests
-from .test_gs_decoder import model_config
-from .train import (GS_ANCHOR_VERSION, checkpoint_config, restore_training,
+from scripts.training.model import PositionPredictor
+from scripts.tests.training import test_gs_decoder as anchor_tests
+from scripts.tests.training.test_gs_decoder import model_config
+from scripts.training.train import (GS_ANCHOR_VERSION, checkpoint_config, restore_training,
     checkpoint_state, recover_best_score, publish_checkpoints)
-from .evaluate import load_model
+from scripts.training.evaluate import load_model
 
 
 class AnisotropicTests(unittest.TestCase):
