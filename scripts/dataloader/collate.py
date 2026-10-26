@@ -216,6 +216,25 @@ def collate_fn(samples: list[dict]) -> dict:
             targets[key] = torch.stack([_tensor(s["targets"][key], shape, dtype, key) for s in samples])
         meta["depth_camera_ids"] = [s["meta"]["depth_camera_ids"] for s in samples]
     batch = {"inputs": inputs, "targets": targets, "meta": meta}
+    previous = ["gs_prev_xyz" in s["inputs"] for s in samples]
+    pair_keys = ("gs_prev_xyz", "gs_prev_attr")
+    for sample, present in zip(samples, previous):
+        presence = [k in sample["inputs"] for k in pair_keys]
+        presence += [k in sample["meta"] for k in ("history_frame_ids", "history_timestamp_us")]
+        if any(presence) and not all(presence):
+            raise ValueError("Incomplete previous-frame sample")
+    if any(previous):
+        if not all(previous):
+            raise ValueError("Cannot mix single and two-frame samples")
+        prev_xyz = [_points(s["inputs"]["gs_prev_xyz"], 3, "gs_prev_xyz") for s in samples]
+        prev_attr = [_tensor(s["inputs"]["gs_prev_attr"], (len(p), 11), torch.float32,
+                             "gs_prev_attr") for s, p in zip(samples, prev_xyz)]
+        inputs["gs_prev_xyz"], inputs["gs_prev_mask"], inputs["gs_prev_lengths"] = _pad_points(prev_xyz)
+        inputs["gs_prev_attr"] = _pad_points(prev_attr)[0]
+        for key in ("history_frame_ids", "history_timestamp_us"):
+            meta[key] = torch.stack([_tensor(s["meta"][key], (2,), torch.int64, key) for s in samples])
+    from .temporal_pair import validate_pair_batch
+    validate_pair_batch(batch)
     validate_target_attr_batch(batch)
     validate_depth_batch(batch)
     if any(depth_presence):

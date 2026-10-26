@@ -139,6 +139,8 @@ class DataProcessor:
             for key in ("frame_ids", "observation_timestamp_us"):
                 _require_tensor(meta[key], (b, horizon+1), torch.int64, key)
             validate_depth_batch(batch)
+            from ..dataloader.temporal_pair import validate_pair_batch
+            validate_pair_batch(batch)
         except (KeyError, TypeError) as exc:
             raise ValueError(f"Malformed DataLoader batch: {exc}") from exc
 
@@ -179,6 +181,11 @@ class DataProcessor:
         log_scale = attrs.new_tensor(math.log(params.scale))
         scales = attrs[..., :3] + log_scale if inverse else attrs[..., :3] - log_scale
         inputs["gs_attr"] = _masked(torch.cat((scales, attrs[..., 3:]), dim=-1), inputs["gs_mask"])
+        if "gs_prev_xyz" in inputs:
+            inputs["gs_prev_xyz"] = self._xyz(inputs["gs_prev_xyz"], inputs["gs_prev_mask"], inverse=inverse)
+            attr = inputs["gs_prev_attr"]
+            scales = attr[..., :3] + log_scale if inverse else attr[..., :3] - log_scale
+            inputs["gs_prev_attr"] = _masked(torch.cat((scales, attr[..., 3:]), -1), inputs["gs_prev_mask"])
         actions, valid = inputs["action_state"], inputs["action_valid"]
         position = self._xyz(actions[..., :3], valid, inverse=inverse)
         scale = actions.new_tensor(params.scale)

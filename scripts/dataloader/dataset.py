@@ -270,7 +270,9 @@ class Touch4DDataset(Dataset):
     """
 
     def __init__(self, scene: str, split: str, root=DEFAULT_ROOT, *, stage="all", cache_episodes=2,
-                 with_depth=False, depth_root=None, depth_cameras=None, horizon=HORIZON):
+                 with_depth=False, depth_root=None, depth_cameras=None, horizon=HORIZON, history=1):
+        from .temporal_pair import validate_history
+        self.history = validate_history(history)
         self.horizon = validate_horizon(horizon)
         selected = episode_ids(scene, split, stage)
         if type(cache_episodes) is not int or cache_episodes < 1:
@@ -301,7 +303,8 @@ class Touch4DDataset(Dataset):
             if stage == "single" and sum(s is not None for s in info.slots) != 1:
                 raise DataFormatError(f"{info.path}: reviewed single-hand curriculum conflicts with metadata")
             self.episodes[episode] = info
-            self.windows.extend((episode, start) for start in window_starts(info.frames, split, self.horizon))
+            self.windows.extend((episode, start) for start in window_starts(info.frames, split, self.horizon)
+                                if start >= self.history-1)
             if with_depth:
                 self.depth_episodes[episode] = _depth_info(
                     self.depth_root / scene / f"episode_{episode}", info, scene)
@@ -362,4 +365,8 @@ class Touch4DDataset(Dataset):
         if self.with_depth:
             targets.update(read_depth(self.depth_episodes[episode], start, self.depth_cameras, self.horizon))
             meta["depth_camera_ids"] = list(self.depth_cameras)
-        return {"inputs": inputs, "targets": targets, "meta": meta}
+        sample = {"inputs": inputs, "targets": targets, "meta": meta}
+        if self.history == 2:
+            from .temporal_pair import add_previous
+            add_previous(sample, info, start)
+        return sample

@@ -72,7 +72,7 @@ at initialization while allowing the structural layers to become trainable.
         nn.init.zeros_(self.output.weight)
         nn.init.zeros_(self.output.bias)
 
-    def forward(self, features, xyz, keep, field):
+    def encode_anchors(self, features, xyz, keep, field):
         if (features.ndim != 3 or xyz.shape != (*features.shape[:2], 3)
                 or keep.shape != features.shape[:2] or keep.dtype != torch.bool):
             raise ValueError("Structural features need [B,N,D], XYZ [B,N,3] and Boolean keep [B,N]")
@@ -82,6 +82,11 @@ at initialization while allowing the structural layers to become trainable.
         centers = _masked(xyz[batch, field.anchor_indices], field.anchor_mask)
         for block in self.blocks:
             anchors = block(anchors, centers, field.anchor_mask)
+        return anchors, centers
+
+    def forward(self, features, xyz, keep, field):
+        anchors, _ = self.encode_anchors(features, xyz, keep, field)
+        features = _masked(features, keep)
         residual = _masked(self.output(anchors), field.anchor_mask)
         residual = interpolate_anchor_displacements(residual, field, keep)
         return _masked(features + residual, keep)
