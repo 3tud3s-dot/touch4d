@@ -141,5 +141,29 @@ class SpatialTests(unittest.TestCase):
                 x[k]=x[k][:,:1].expand(-1,h,*x[k].shape[2:])
             m=SpatialPredictor(spatial='S2-C1',**dict(self.arch,horizon=h));out=m(x)
             self.assertEqual(out['xyz'].shape[1],h)
+    def test_spatial_bias_nonzero_is_current_only(self):
+        x=self.active();m=self.nonzero(self.model('S2-C1'))
+        for layer in m.spatial_bias:torch.nn.init.normal_(layer[-1].weight,std=.1)
+        out=m(x)['xyz'];future=copy.deepcopy(x);future['controller_points'][:,3:]+=10
+        torch.testing.assert_close(out[:,:3],m(future)['xyz'][:,:3],atol=0,rtol=0)
+        missing=copy.deepcopy(x);missing['controller_mask'][:,2]=False
+        altered=copy.deepcopy(missing);altered['controller_points'][:,2]=float('nan')
+        torch.testing.assert_close(m(missing)['xyz'],m(altered)['xyz'],atol=0,rtol=0)
+    def test_h15_extension_is_explicit_and_preserves_prefix(self):
+        from scripts.experiments.spatial_dynamics.visualize import load_research
+        with tempfile.TemporaryDirectory() as d:
+            m=self.nonzero(self.model('S2-C1'));p=Path(d)/'test.pt'
+            save_checkpoint(p,m,torch.optim.AdamW(m.parameters()),self.processor,'x',400,[])
+            extended,old,warning,state=load_research(p,15);self.assertIsNotNone(warning)
+            x=self.active();long=copy.deepcopy(x)
+            for k in ('action_state','action_valid','controller_points','controller_mask','tactile','valid_mask','tactile_spatial_mask','tactile_age_us'):
+                long[k]=torch.cat((x[k],x[k][:,-1:].expand(-1,10,*x[k].shape[2:])),1)
+            torch.testing.assert_close(old(x)['xyz'],extended(long)['xyz'][:,:5],atol=0,rtol=0)
+    def test_decision_tree_does_not_promote_tiny_gain(self):
+        from scripts.experiments.spatial_dynamics.decisions import stage1,h15_trigger
+        fake={'model':{'summary':{'mean_cd_mm':2.,'rgb':[.1]*5,'alpha':[.1]*5,'episodes':{str(e):{'mean_cd_mm':2.} for e in (3,6)}},'windows':[{'episode':e,'motion':[{'near_cd_mm':2.,'centroid_error_mm':2.,'neighbor_distance_change_mm':.1,'bbox_span_ratio':[1,1,1]}]} for e in (3,6)]},'copy_initial':{'summary':{'mean_cd_mm':1.9}}}
+        result=stage1({s:copy.deepcopy(fake) for s in CANDIDATES})
+        self.assertTrue(result['diagnostic_only']);self.assertEqual(result['selected'],'S2-C1');self.assertEqual(result['d1_status'],'NOT_TRIGGERED')
+        self.assertFalse(h15_trigger({42:(fake,fake),43:(fake,fake)})['triggered'])
 
 if __name__=='__main__':unittest.main()
