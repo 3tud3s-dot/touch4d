@@ -14,6 +14,7 @@ def collect(mapping):
         if len(history)!=n or [r['update'] for r in history]!=list(range(1,n+1)):raise ValueError('Optimizer count mismatch')
         results[name]=dict(status=status,config=config,metrics=data,updates=history,path=str(root))
         s=data['model']['summary'];base=data['copy_initial']['summary']
+        best_update,best_metrics=min(status['evaluations'].items(),key=lambda item:item[1]['mean_cd_mm'])
         table.append(dict(experiment=name,code_sha=status['source_sha'],seed=config['seed'],updates=n,
             spatial=config['model']['spatial'],decoder=config['model']['decoder'],feedback=config['model']['feedback'],
             r1=config['model']['regularization'],horizon=config['model']['horizon'],job=config['slurm_job_id'],
@@ -22,13 +23,14 @@ def collect(mapping):
             joint=s['joint'],action_delta_cd_mm=float(np.mean(data['freeze_action']['delta_cd_mm'])),
             tactile_delta_cd_mm=float(np.mean(data['zero_tactile']['delta_cd_mm'])),
             gpu_peak_gib=status['resources']['allocated_peak_bytes']/2**30,seconds=status['resources']['elapsed_seconds'],
+            best_update=int(best_update),best_cd_mm=best_metrics['mean_cd_mm'],last_minus_best_mm=s['mean_cd_mm']-best_metrics['mean_cd_mm'],
             checkpoint=str(root/'last.pt'),checkpoint_sha256=status['checkpoint_sha256']))
     return results,table
 
 
 def render(results,table,conclusion,visuals):
-    columns=['experiment','updates','cd_mm','copy_cd_mm','relative_copy_percent','rgb','alpha','action_delta_cd_mm','tactile_delta_cd_mm','gpu_peak_gib']
-    headings=['实验','更新','CD mm','复制初态 mm','相对复制 %','RGB','Alpha','冻结动作 ΔCD','零触觉 ΔCD','峰值 GiB']
+    columns=['experiment','updates','cd_mm','best_update','best_cd_mm','copy_cd_mm','relative_copy_percent','rgb','alpha','action_delta_cd_mm','tactile_delta_cd_mm','gpu_peak_gib']
+    headings=['实验','更新','Last CD mm','Best更新','Best CD mm','复制初态 mm','相对复制 %','RGB','Alpha','冻结动作 ΔCD','零触觉 ΔCD','峰值 GiB']
     rows=''.join('<tr>'+''.join('<td>'+html.escape(f'{r[k]:.6f}' if isinstance(r[k],float) else str(r[k]))+'</td>' for k in columns)+'</tr>' for r in table)
     encoded=json.dumps(results,ensure_ascii=False,allow_nan=False).replace('<','\\u003c')
     vdata=json.dumps(visuals,ensure_ascii=False,allow_nan=False).replace('<','\\u003c')

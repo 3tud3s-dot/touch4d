@@ -12,6 +12,16 @@ from .runner import dataset,read_manifest,sha,hand_inputs,make_renderer
 from .model import SpatialPredictor
 from .metrics import enriched_metrics
 
+CONDITION_KEYS=('action_state','action_valid','controller_points','controller_mask',
+                'tactile','valid_mask','tactile_spatial_mask','tactile_age_us')
+
+
+def condition_prefix(inputs,horizon):
+    short=dict(inputs)
+    for key in CONDITION_KEYS:
+        short[key]=short[key][:,:horizon].contiguous()
+    return short
+
 
 def load_research(path,horizon):
     state=torch.load(path,map_location='cpu',weights_only=False)
@@ -25,6 +35,16 @@ def load_research(path,horizon):
     for name in ('condition_time.weight','prediction_time.weight'):
         weights[name]=torch.cat((weights[name],weights[name][-1:].expand(horizon-old_h,-1)),0)
     model.load_state_dict(weights)
+    # Diagnostic only: CUDA GEMM rounding depends on flattened B*H dimensions.
+    # Compute the trained prefix at its original shape, not by relaxing equality.
+    # The remainder still uses cumulative controls relative to the true initial
+    # state. No target GS enters either encoder; rollout is unchanged.
+    full_encoder=model.encode_conditions
+    def stable_prefix(inputs):
+        tokens,valid=full_encoder(inputs)
+        prefix,prefix_valid=old.encode_conditions(condition_prefix(inputs,old_h))
+        return torch.cat((prefix,tokens[:,old_h:]),1),torch.cat((prefix_valid,valid[:,old_h:]),1)
+    model.encode_conditions=stable_prefix
     return model,old,'H5权重外推至H15；末项时间编码保持；h6–15未经训练，不是H15训练结果',state
 
 
@@ -45,9 +65,7 @@ def main():
             batch['inputs']=hand_inputs(batch['inputs'],batch['meta']['episode_id'],batch['meta']['scene'])
             prediction=model(batch['inputs'])
             if warning:
-                short=dict(batch['inputs'])
-                for k in ('action_state','action_valid','controller_points','controller_mask','tactile','valid_mask','tactile_spatial_mask','tactile_age_us'):
-                    short[k]=short[k][:,:5]
+                short=condition_prefix(batch['inputs'],5)
                 ref=old(short)
                 assert all(torch.equal(prediction[k][:,:5],ref[k]) for k in prediction),'Extrapolation changed trained H5 prefix'
             folder=out/f'{label}-ep{ep}-s{start}'
@@ -70,6 +88,7 @@ def main():
                 checkpoint_sha256=before,config=state['config'],updates=state['completed_updates'],warning=warning,
                 folder=folder.name,metrics=metrics,prediction_frame_sha256=distinct,
                 unique_prediction_states=len(set(distinct)),first_h5_exact=True if warning else None)
+            record['prefix_encoding_policy']='original H5 GEMM shape; later tokens use full cumulative conditions'
             atomic_json(folder/'evidence.json',record);records.append(record)
             del raw,batch,prediction;model.trace=[]
         assert sha(path)==before
