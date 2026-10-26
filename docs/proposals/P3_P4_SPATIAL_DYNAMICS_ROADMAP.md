@@ -114,7 +114,11 @@ GPU：Slurm单卡5090，每组独立输出、最多4并发。新SHA固定独立�
 
 ## 9. 交付与证据目录
 
-开发worktree：`D:/Amax/Projects/touch4d-worktrees/p3-p4-spatial-dynamics-v1`。报告：`D:/Amax/Projects/touch4d/audit/p3-p4-spatial-dynamics-v1/`。服务器代码 `/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-<SHA>/`；运行目录 `/data1/userdata/tcweng/projects/touch4d/runs/001-rope/p3p4-<ID>-s<seed>-<SHA>/`。
+开发worktree：`D:/Amax/Projects/touch4d-worktrees/p3-p4-spatial-dynamics-v1`。服务器代码 `/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-<SHA>/`，运行期间固定SHA，不改动main或历史worktree。
+
+2026-10-27 非破坏性运行隔离补充：尚未提交的后续作业统一使用项目外输出根 `/data1/userdata/tcweng/experiments/touch4d/p3-p4-spatial-dynamics-v1/`，其中 `runs/p3p4-<ID>-s<seed>-<SHA>/` 保存checkpoint/config/metrics，`logs/` 保存Slurm输出，`reports/` 保存汇总与可视化。目录创建时拒绝覆盖；不同作业不得共写同一run。最终本地报告位于 `D:/Amax/Projects/touch4d-experiments/p3-p4-spatial-dynamics-v1/`。
+
+已经提交的CUDA验收Job 30856不迁移、不重启，继续绑定 `p3-p4-3556608`（完整SHA `3556608016e718c926c4a951faed49a0e116b247`）。其唯一输出 `/data1/userdata/tcweng/projects/touch4d/audit/p3-p4-spatial-dynamics-v1/cuda-3556608/` 及 `cuda-30856.out/.err` 安全保留。已有manifest/CPU证据仍在该独立audit根及本地 `D:/Amax/Projects/touch4d/audit/p3-p4-spatial-dynamics-v1/`，不移动、不覆盖。上述仅修正执行路径，不改变任何研究假设、预算、数据窗口或验收标准。
 
 保存manifest、config、数据hash、init配对、commands、SlurmID、resources、updates、每评估点metrics、checkpoint及hash、status/error。总表CSV/JSON追溯每window/horizon；离线HTML包含GT/pred/copy、h1/5/10/15、多相机、几何/运动/铺展、条件消融和训练曲线，不依赖CDN。
 
@@ -122,6 +126,7 @@ GPU：Slurm单卡5090，每组独立输出、最多4并发。新SHA固定独立�
 
 - PREPARED：远程main与已知SHA一致；原工作区未提交文件保留；当前无用户Slurm作业；新分支从main建立。
 - 尚无本轮训练结果。Stage0–4均PENDING；条件分支尚未判定。
+- CPU：本地236项，210通过/26跳过/0失败；服务器236项，234通过/2个CUDA opt-in跳过/0失败。H5/H15各24训练、8验证窗口及6个H15目的案例通过CPU数据契约核查。CUDA验收Job 30856已提交，当前绑定代码与输出保持不变；后续输出改用第9节的项目外命名空间。
 
 ## 11. 最终研究结论
 
