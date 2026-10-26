@@ -1,5 +1,5 @@
 """CPU collection and offline report, keeping every window and horizon in JSON."""
-import argparse,csv,html,json
+import argparse,csv,html,json,os
 from pathlib import Path
 import numpy as np
 
@@ -37,14 +37,23 @@ def collect(mapping):
 
 def add_copy_geometry(visuals,root):
     """CPU independent-set CD in world mm, no target row correspondence."""
-    from scipy.spatial import cKDTree
+    import torch
+    from scripts.training.losses import nearest_distances
+    cache={}
     for row in visuals:
         with np.load(Path(root)/row['folder']/'prediction.npz') as data:
-            initial=data['initial_xyz'];tree=cKDTree(initial);values=[]
+            # Repeated best/last views share identical input/target geometry.
+            import hashlib
+            digest=hashlib.sha256(data['initial_xyz'].tobytes())
+            for h in range(1,len(row['frames'])):digest.update(data[f'target_xyz_{h}'].tobytes())
+            key=digest.hexdigest()
+            if key in cache:
+                row['copy_cd_mm']=cache[key];continue
+            initial=torch.from_numpy(data['initial_xyz']).double();values=[]
             for h in range(1,len(row['frames'])):
-                target=data[f'target_xyz_{h}']
-                values.append(float((tree.query(target)[0].mean()+cKDTree(target).query(initial)[0].mean())*500))
-            row['copy_cd_mm']=values
+                target=torch.from_numpy(data[f'target_xyz_{h}']).double()
+                values.append(float((nearest_distances(target,initial).mean()+nearest_distances(initial,target).mean())*500))
+            row['copy_cd_mm']=cache[key]=values
     return visuals
 
 
@@ -83,10 +92,12 @@ def main():
     out=Path(a.output);out.mkdir(parents=True,exist_ok=True)
     if (out/'results.json').exists():raise FileExistsError(out/'results.json')
     results,table=collect(json.loads(Path(a.runs).read_text()))
+    visuals=json.loads(Path(a.visuals).read_text()) if a.visuals else []
+    if visuals:add_copy_geometry(visuals,Path(a.visuals).parent)
+    visual_root=Path(os.path.relpath(Path(a.visuals).parent,out)).as_posix() if a.visuals else 'visuals'
+    document=render(results,table,Path(a.conclusion).read_text(encoding='utf-8'),visuals,visual_root)
     (out/'results.json').write_text(json.dumps(results,indent=2),encoding='utf-8')
     with (out/'experiments.csv').open('w',newline='',encoding='utf-8-sig') as f:
         writer=csv.DictWriter(f,fieldnames=list(table[0]));writer.writeheader();writer.writerows(table)
-    visuals=json.loads(Path(a.visuals).read_text()) if a.visuals else []
-    if visuals:add_copy_geometry(visuals,Path(a.visuals).parent)
-    (out/'report.html').write_text(render(results,table,Path(a.conclusion).read_text(encoding='utf-8'),visuals,Path(a.visuals).parent.name if a.visuals else 'visuals'),encoding='utf-8')
+    (out/'report.html').write_text(document,encoding='utf-8')
 if __name__=='__main__':main()
