@@ -90,10 +90,11 @@ def source_paths(root, prefix, evidence):
     return relative, geometry, checked
 
 
-def assemble(root):
+def assemble(root, diagnosis_name="diagnosis"):
     root = Path(root).resolve()
-    diagnosis = root / "diagnosis"
-    stages = {name: read_json(root / name / "status.json") for name in ("diagnosis", "E1", "E2")}
+    if Path(diagnosis_name).name!=diagnosis_name:raise ValueError('One diagnosis directory name required')
+    diagnosis = root / diagnosis_name
+    stages = {name: read_json(root / (diagnosis_name if name=='diagnosis' else name) / "status.json") for name in ("diagnosis", "E1", "E2")}
     if any(value.get("status") != "complete" for value in stages.values()):
         raise ValueError("Report requires all audit and paired-fit stages to complete")
     history = read_json(diagnosis / "checkpoint_results.json")
@@ -131,7 +132,7 @@ def assemble(root):
     for record in history:
         metrics = record["metrics"]
         add(f'{record["label"]} · {record["split"]} ep{record["episode"]}/start{record["start"]}',
-            "historical", metrics["model"], metrics["copy_initial"], record["evidence"], "diagnosis",
+            "historical", metrics["model"], metrics["copy_initial"], record["evidence"], diagnosis_name,
             {k: v for k, v in record.items() if k not in ("metrics", "evidence")},
             {key: metrics[key] for key in ("freeze_action", "zero_tactile")})
     for mode, trial in trials.items():
@@ -144,15 +145,15 @@ def assemble(root):
                 {key: metrics[key] for key in ("freeze_action", "zero_tactile")})
     for mode, result in oracle.items():
         add(f'Oracle D0 {mode} · update 400', "offline_oracle", result["final"],
-            result["baselines"]["copy_initial"], result["visuals"]["final"], "diagnosis",
+            result["baselines"]["copy_initial"], result["visuals"]["final"], diagnosis_name,
             dict(scene="001-rope", split="train", episode=2, start=73, update=400,
-                 checkpoint=f"diagnosis/oracle-{mode}/prediction_400.pt", config=result["config"]))
+                 checkpoint=f"{diagnosis_name}/oracle-{mode}/prediction_400.pt", config=result["config"]))
     result = oracle["cd"]
     add("GT 质心平移 Oracle · 非真实材料运动", "offline_oracle",
         result["baselines"]["centroid_translation"], result["baselines"]["copy_initial"],
-        result["visuals"]["centroid"], "diagnosis",
+        result["visuals"]["centroid"], diagnosis_name,
         dict(scene="001-rope", split="train", episode=2, start=73, update=0,
-             checkpoint="diagnosis/oracle-cd/centroid_translation.pt", offline_target_oracle=True))
+             checkpoint=f"{diagnosis_name}/oracle-cd/centroid_translation.pt", offline_target_oracle=True))
     conclusion = read_json(root / "conclusion.json") if (root / "conclusion.json").exists() else None
     extra = {name: read_json(root / name) for name in ("data_audit.json", "execution_manifest.json", "acceptance.json")
              if (root / name).exists()}
@@ -202,12 +203,13 @@ def render(results):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", required=True)
+    parser.add_argument("--diagnosis-dir", default="diagnosis")
     args = parser.parse_args(argv)
     root = Path(args.root).resolve()
     for name in OUTPUTS:
         if (root / name).exists():
             raise FileExistsError(root / name)
-    result = assemble(root)
+    result = assemble(root,args.diagnosis_dir)
     page = render(result)
     # Keep geometry only in the self-contained HTML; exact arrays remain NPZ.
     numerical = dict(result, rows=[{k: v for k, v in row.items() if k != "geometry"} for row in result["rows"]])

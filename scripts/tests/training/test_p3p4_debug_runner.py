@@ -1,7 +1,13 @@
 """The audit must isolate objectives and preserve the one-window protocol."""
 import unittest
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 import torch
 from scripts.experiments.debug_audit.runner import weights,parameter_stats,CHECKPOINTS,BASE
+from scripts.experiments.debug_audit.common import export_evidence
+from scripts.training.train import copy_initial
+from scripts.data_process import DataProcessor
 
 
 class DebugRunnerTests(unittest.TestCase):
@@ -24,6 +30,22 @@ class DebugRunnerTests(unittest.TestCase):
         result=parameter_stats(model,before)['0']
         self.assertAlmostEqual(result['gradient_norm'],2**.5)
         self.assertAlmostEqual(result['update_norm'],.25*2**.5)
+
+    def test_export_without_optional_image_libraries(self):
+        x=dict(gs_xyz=torch.zeros(1,3,3),gs_attr=torch.zeros(1,3,11),gs_mask=torch.ones(1,3,dtype=torch.bool),
+               action_state=torch.zeros(1,5,2,13))
+        batch=dict(inputs=x,targets=dict(target_xyz=[torch.zeros(1,4,3) for _ in range(5)],
+            target_mask=[torch.ones(1,4,dtype=torch.bool) for _ in range(5)]),meta=dict(frame_ids=torch.arange(6)[None]))
+        class Renderer:
+            def __call__(self,*args):return dict(rgb=torch.zeros(1,5,3,4,6,3),alpha=torch.zeros(1,5,3,4,6))
+            render_targets=__call__
+        with tempfile.TemporaryDirectory() as folder,patch.dict('sys.modules',{'PIL':None,'matplotlib':None}):
+            out=Path(folder)/'evidence'
+            evidence=export_evidence(out,copy_initial(x,'gs_geometry'),batch,DataProcessor('001-rope'),Renderer())
+            self.assertEqual(len(list(out.glob('*.png'))),90)
+            self.assertEqual(evidence['cameras'],3)
+            self.assertTrue((out/'geometry.npz').exists())
+            self.assertTrue((out/'h05-c2-alpha-pred.png').read_bytes().startswith(b'\x89PNG'))
 
 
 if __name__=='__main__':unittest.main()

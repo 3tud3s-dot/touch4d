@@ -56,7 +56,7 @@ def evaluate_conditions(model,batch,processor,renderer):
 @torch.no_grad()
 def export_evidence(directory,pred,batch,processor,renderer):
     """Small offline three-camera evidence, all five distinct states, no CDN."""
-    from PIL import Image
+    from scripts.training.visualize import png_bytes
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=False)
     copy=copy_initial(batch['inputs'],'gs_geometry')
     rendered={'gt':renderer.render_targets(batch,processor),'pred':renderer(pred,batch,processor),
@@ -67,7 +67,8 @@ def export_evidence(directory,pred,batch,processor,renderer):
             for h in range(len(image)):
                 for view in range(image.shape[1]):
                     frame=np.round(image[h,view]*255).astype(np.uint8)
-                    Image.fromarray(frame).save(directory/f'h{h+1:02d}-c{view}-{mode}-{label}.png')
+                    if frame.ndim==2:frame=np.repeat(frame[...,None],3,-1)
+                    (directory/f'h{h+1:02d}-c{view}-{mode}-{label}.png').write_bytes(png_bytes(frame))
     keep=batch['inputs']['gs_mask'][0]
     units=processor.state_dict()['scale']
     center=np.asarray(processor.state_dict()['center'])
@@ -78,22 +79,7 @@ def export_evidence(directory,pred,batch,processor,renderer):
         mask=batch['targets']['target_mask'][h][0]
         arrays[f'gt_h{h+1}_xyz_m']=batch['targets']['target_xyz'][h][0,mask].cpu().numpy()*units+center
     np.savez_compressed(directory/'geometry.npz',**arrays)
-    # Independent center-set panels, common axes; no target point correspondence.
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    all_points=np.concatenate([arrays['initial_xyz_m'],arrays['prediction_xyz_m'].reshape(-1,3),
-                               *[arrays[f'gt_h{h+1}_xyz_m'] for h in range(pred['xyz'].shape[1])]])*1000
-    low,high=all_points.min(0),all_points.max(0);margin=np.maximum((high-low)*.05,1.)
-    for h in range(pred['xyz'].shape[1]):
-        fig,axes=plt.subplots(2,3,figsize=(12,6),layout='constrained')
-        for col,(label,points) in enumerate([('GT',arrays[f'gt_h{h+1}_xyz_m']),
-                      ('Prediction',arrays['prediction_xyz_m'][h]),('Copy initial',arrays['initial_xyz_m'])]):
-            for row,(a,b) in enumerate([(0,2),(0,1)]):
-                ax=axes[row,col];ax.scatter(points[:,a]*1000,points[:,b]*1000,s=1,alpha=.6)
-                ax.set(xlim=(low[a]-margin[a],high[a]+margin[a]),ylim=(low[b]-margin[b],high[b]+margin[b]),
-                       xlabel='XYZ'[a]+' (mm)',ylabel='XYZ'[b]+' (mm)',title=f'{label} h{h+1}')
-                ax.set_aspect('equal')
-        fig.savefig(directory/f'h{h+1:02d}-centers.png',dpi=120);plt.close(fig)
+    # Report draws independent center sets and trajectories directly from this
+    # NPZ on offline canvas; no Pillow/Matplotlib dependency on the GPU server.
     return dict(folder=directory.name,horizon=pred['xyz'].shape[1],cameras=rendered['gt']['alpha'].shape[2],
                 frame_ids=arrays['frame_ids'].tolist(),units='world metres')

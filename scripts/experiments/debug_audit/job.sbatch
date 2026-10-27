@@ -17,6 +17,7 @@ export PATH="$CUDA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
 export TORCH_EXTENSIONS_DIR=/data1/userdata/tcweng/.cache/touch4d-debug-audit-extensions
 export XDG_CACHE_HOME=/data1/userdata/tcweng/.cache/touch4d-debug-audit
+mkdir -p "$XDG_CACHE_HOME/torch/kernels"
 PY=/data1/userdata/tcweng/projects/touch4d/.venv/bin/python
 ARGS=("$COMMAND" --root /data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1 --output "$OUTPUT" --expected-sha "$EXPECTED_SHA")
 if [[ "$COMMAND" == fit ]]; then ARGS+=(--mode "${MODE:?}"); fi
