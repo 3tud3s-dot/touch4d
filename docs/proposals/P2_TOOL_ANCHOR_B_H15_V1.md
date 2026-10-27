@@ -35,7 +35,7 @@ A0/T3与Hand Mask逐字移植冻结 `265d28a:scripts/experiments/condition_ident
 
 Base与B：seed42、batch1、AdamW lr/wd均1e-4、clip1、400成功更新、两窗交替各200；原loss `CD+RGB+0.1Alpha+0.01Scale`，depth0。两模型共有初始化与监督一致。每20步（含0）评估两窗全部H15；best按两窗/15时刻等权平均CD严格最小选择，相等保留较早；另保留last_400。不追加预算/seed、不恢复旧H5权重。
 
-CPU先测试旧行为与新Shape、null、Mask、位置单位、固定场、D0累计、当前Anchor、因果性、梯度与checkpoint冲突。真实CUDA smoke每模型3更新，再单独用h15输出反向检查15次Head都有梯度；smoke结束重新seed42开始正式实验，不继承smoke权重。数值不finite即停止并保留证据。
+CPU先测试旧行为与新Shape、null、Mask、位置单位、固定场、D0累计、当前Anchor、因果性、梯度与checkpoint冲突。真实CUDA smoke每模型先记录3次更新，再用末步输出反向及固定1e16放大的无更新诊断检查15步路径；原始零/极小梯度必须保留。另做checkpoint恢复后的下一次更新对照：权重、AdamW状态、前向及同一梯度下的更新须精确一致；独立重复CUDA反向差异单列，不混同为恢复错误。smoke结束重新seed42开始正式实验，不继承smoke权重。数值不finite即停止并保留证据。
 
 主要成功条件：B best平均CD不高于配对Base best，并且h15几何、RGB/Alpha及可视化无明显退化。best与last均公开；若best达标、last明显退化则仅有表达能力证据，稳定性未通过。次要质量依据完整指标和逐帧图像判断，不事后编造数值容差。通过也只称“候选工程Base”，不宣称Action-conditioned dynamics或泛化。
 
@@ -43,4 +43,28 @@ CPU先测试旧行为与新Shape、null、Mask、位置单位、固定场、D0�
 
 ## 实际结果
 
-待必要测试、单卡配对训练及集中验收完成后填入。本节只记录真实结果，不追加新研究。
+2026-10-27 完成。实际训练/CUDA源码 **`e35a55397a6ef9d95af4d99e192791af697eaea9`**，Slurm smoke **30930**、单GPU顺序配对 **30933** 均 COMPLETED。Base/B各400成功更新，两窗各200，每20次评估完整。模型架构、Loss和训练协议与211ab698相同，仅修正诊断和checkpoint验收。新增文档提交不改变冻结训练SHA。
+
+| 模型 | checkpoint/update | ep1 CD mm | ep2 CD mm | 两窗平均CD mm |
+|---|---|---:|---:|---:|
+| Copy Initial | — | 5.882825 | 8.682838 | 7.282831 |
+| Base/S0 | best=last/400 | 1.925477 | 1.998949 | 1.962213 |
+| B | best/360 | 1.833874 | 1.988052 | 1.910963 |
+| B | last/400 | 1.831863 | 1.993445 | 1.912654 |
+
+B best平均CD降低**2.6119%**；last相对best增加**0.0885%**，仍优于Base。收益主要来自ep1。ep2 best h15 CD为2.255230，对照2.242819 mm；RGB/Alpha均值相对恶化约2.54%/6.65%，邻域P95由1.6004升到1.7178 mm。不得称为每窗每项全面改善。末步三相机best/last对照未见明显新增运动反向或严重铺展，全部finite且协方差正定，其它属性严格继承初态。B best末步位移RMS为21.2945/28.0525 mm，不是近静态复制。
+
+**限定结论：Tool-to-Anchor B通过H15固定窗口运动拟合非退化验收，可作为后续研究的候选工程Base。尚未证明Action-conditioned dynamics，也尚未验证跨Episode泛化。** 本轮没有明显末次崩溃；单seed两窗不能证明普遍稳定性。动作冻结的CD差仅约0.0025/0.0124 mm，触觉影响更小，不宣称条件辨识已通过。
+
+工程：本地238项（212通过/26跳过），服务器CPU238项（236通过/2跳过），零失败；独立真实CUDA/gsplat smoke通过。Base/B参数981,263/1,098,131；训练+每20次评估263.88/287.89秒；allocated峰值8.957/8.555 GiB。
+
+梯度诊断：原Base末步probe前两步梯度数值为0，固定放大再还原约2.42e-50/1.18e-46；B第一步原始0、放大还原约4.89e-44。15步有数值响应，不支持仅凭零值断定detach，也不代表有效长程学习。原始与放大结果均保存。Job30926在新增的独立反向更新位级一致断言处停止，保留于resume-v3；后续隔离证明checkpoint状态、前向、同梯度AdamW更新精确一致。独立反向最大梯度差2.98e-8，未定位具体CUDA kernel，不宣称训练位级可重现。
+
+证据：
+
+- 本地 `D:\Amax\Projects\touch4d-experiments\p2-tool-anchor-b-h15-v1\resume-v4\report.html`、同目录`report.md / results.json / metrics.csv / acceptance.json / execution.json / checkpoint-index.json`。
+- 服务器 `/data1/userdata/tcweng/experiments/touch4d/p2-tool-anchor-b-h15-v1/resume-v4/`；checkpoint为`paired/{base,candidate}/{best,last_400}.pt`，哈希见索引。
+- 冻结执行worktree `/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-e35a553`。没有修改历史worktree或干预用户30903。
+- 1,080张PNG解码和下载SHA256核验通过；8组预测各有15个独立状态，未重复h5填充。JavaScript语法及离线依赖静态检查通过。已查看真实渲染图；**浏览器工具安全策略禁止file://，未完成真实浏览器交互/截图验收**，没有绕过限制。
+
+本轮到此停止，不合并main，不开始额外架构或全训练。
