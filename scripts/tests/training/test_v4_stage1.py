@@ -27,9 +27,9 @@ class V4Tests(unittest.TestCase):
 
     def setUp(self):
         torch.manual_seed(11)
-        self.model = V4Stage1Predictor()
+        self.model = V4Stage1Predictor(horizon=5, prediction_interval=10)
         self.processor = DataProcessor("001-rope")
-        self.raw = synthetic_batch(points=64)
+        self.raw = synthetic_batch(points=64, horizon=5, prediction_interval=10)
         self.batch = prepare_batch(self.raw, self.processor, self.model)
         self.x = self.batch["inputs"]
 
@@ -215,7 +215,7 @@ class V4Tests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)/"state.pt"
             save_checkpoint(path, self.model, opt, 1, source_sha="test", processor_state=self.processor.state_dict())
-            restored = V4Stage1Predictor(); optimizer = torch.optim.AdamW(restored.parameters())
+            restored = V4Stage1Predictor(horizon=5, prediction_interval=10); optimizer = torch.optim.AdamW(restored.parameters())
             state = load_checkpoint(path, restored, optimizer, processor_state=self.processor.state_dict())
             self.assertEqual(state["successful_steps"], 1)
             torch.testing.assert_close(restored(self.x)["xyz"], self.model(self.x)["xyz"], rtol=0, atol=0)
@@ -236,7 +236,7 @@ class V4Tests(unittest.TestCase):
             with self.assertRaises(ValueError): load_checkpoint(bad, restored)
 
     def test_config_and_data_contract_fail_closed(self):
-        for cfg in ({"horizon": 15}, {"prediction_interval": 1}, {"horizon": True}):
+        for cfg in ({"horizon": 0}, {"prediction_interval": 0}, {"horizon": True}, {"prediction_interval": 1.5}):
             with self.assertRaises(ValueError): V4Stage1Predictor(**cfg)
         raw = copy.deepcopy(self.raw); raw["meta"]["frame_ids"][0, -1] += 1
         with self.assertRaises(ValueError): prepare_batch(raw, self.processor, self.model)

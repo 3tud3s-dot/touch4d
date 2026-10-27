@@ -8,6 +8,7 @@ from torch import nn
 
 from scripts.rebuild_dataset.rebuild import GRID_ROWS, GRID_COLS
 from scripts.dataloader.hand_policy import HAND_POLICY, operation_hands
+from scripts.dataloader.splits import validate_horizon
 from .model import masked
 
 
@@ -26,9 +27,9 @@ def local_geometry():
 
 
 class V4ConditionEncoder(nn.Module):
-    def __init__(self, horizon=5, width=128):
+    def __init__(self, horizon=10, width=128):
         super().__init__()
-        self.horizon = horizon
+        self.horizon = validate_horizon(horizon)
         self.hand = nn.Sequential(nn.Linear(13, width), nn.GELU(), nn.Linear(width, width))
         self.controller = nn.Sequential(nn.Linear(13, width), nn.GELU(), nn.Linear(width, width))
         self.identity = nn.Embedding(62, width)

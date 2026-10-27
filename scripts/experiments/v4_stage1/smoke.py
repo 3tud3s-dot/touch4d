@@ -24,15 +24,15 @@ def norm(tensor):
     return float(torch.linalg.vector_norm(tensor.detach().double()))
 
 
-def run(output, data_root=None):
+def run(output, data_root=None, horizon=10, prediction_interval=1):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     torch.set_num_threads(2)
     torch.manual_seed(42)
     begin = time.perf_counter()
-    model = build_model("v4_stage1")
+    model = build_model("v4_stage1", horizon=horizon, prediction_interval=prediction_interval)
     processor = DataProcessor("001-rope")
-    raw = synthetic_batch()
+    raw = synthetic_batch(horizon=horizon, prediction_interval=prediction_interval)
     batch = prepare_batch(raw, processor, model)
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)
     renderer = GaussianRenderer(analytic_rasterizer)
@@ -81,7 +81,7 @@ def run(output, data_root=None):
                   source_dirty=bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip()))
     path = output / "smoke.pt"
     save_checkpoint(path, model, optimizer, 3, source_sha=sha, processor_state=processor.state_dict())
-    loaded = build_model("v4_stage1")
+    loaded = build_model("v4_stage1", horizon=horizon, prediction_interval=prediction_interval)
     restored_optimizer = torch.optim.AdamW(loaded.parameters(), lr=1e-4, weight_decay=1e-4)
     state = load_checkpoint(path, loaded, restored_optimizer, processor_state=processor.state_dict())
     with torch.no_grad():
@@ -91,7 +91,7 @@ def run(output, data_root=None):
     record.update(checkpoint_resume_steps=state["successful_steps"], checkpoint_exact_output_match=True,
                   checkpoint_sha256=hashlib.sha256(path.read_bytes()).hexdigest())
     if data_root:
-        dataset = build_dataset("001-rope", "train", data_root)
+        dataset = build_dataset("001-rope", "train", data_root, horizon=horizon, prediction_interval=prediction_interval)
         real = prepare_batch(collate_fn([dataset[0]]), processor, model)
         with torch.no_grad():
             real_prediction = model(real["inputs"])
@@ -112,8 +112,10 @@ def main():
     parser.add_argument("--architecture", required=True, choices=["v4_stage1"])
     parser.add_argument("--output", required=True)
     parser.add_argument("--data-root")
+    parser.add_argument("--horizon", type=int, default=10)
+    parser.add_argument("--prediction-interval", type=int, default=1)
     args = parser.parse_args()
-    run(args.output, args.data_root)
+    run(args.output, args.data_root, args.horizon, args.prediction_interval)
 
 
 if __name__ == "__main__":

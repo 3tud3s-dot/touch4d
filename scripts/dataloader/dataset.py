@@ -372,7 +372,7 @@ class Touch4DDataset(Dataset):
             "observation_timestamp_us": torch.from_numpy(
                 info.timestamps[start:start + (self.horizon + 1) * delta:delta].copy()),
         }
-        if delta != 1:
+        if delta != 1 or self.operation_hand_policy is not None:
             meta["prediction_interval"] = delta
         if self.operation_hand_policy is not None:
             inputs["operation_hands"] = operation_hands([self.scene], torch.tensor([episode]))[0]

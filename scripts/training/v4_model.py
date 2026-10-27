@@ -12,6 +12,7 @@ from .model import LocalGSBlock, initial_knn, masked
 from .gs_decoder import build_initial_anchor_field, pool_anchor_features, interpolate_anchor_displacements
 from .v4_conditions import V4ConditionEncoder, HAND_POLICY
 from .v4_attention import GeometryCrossBlock
+from scripts.dataloader.splits import validate_horizon, validate_prediction_interval
 
 
 def fixed_field(xyz, keep):
@@ -27,12 +28,10 @@ def fixed_field(xyz, keep):
 
 
 class V4Stage1Predictor(nn.Module):
-    def __init__(self, horizon=5, prediction_interval=10):
+    def __init__(self, horizon=10, prediction_interval=1):
         super().__init__()
-        if type(horizon) is not int or horizon != 5:
-            raise ValueError("V4 Stage 1 is frozen to H=5")
-        if type(prediction_interval) is not int or prediction_interval != 10:
-            raise ValueError("V4 Stage 1 is frozen to prediction_interval=10")
+        validate_horizon(horizon)
+        validate_prediction_interval(prediction_interval)
         self.config = dict(architecture="v4_stage1", horizon=horizon, prediction_interval=prediction_interval,
                            width=128, heads=4, layers=2, local_k=16, anchor_count=128, pool_k=16,
                            anchor_bandwidth=1., sigma_geo_multiplier=1., hand_policy=HAND_POLICY,
@@ -54,9 +53,9 @@ class V4Stage1Predictor(nn.Module):
         if (frame_ids is None or frame_ids.dtype != torch.int64
                 or frame_ids.shape != (len(x["gs_xyz"]), h)
                 or not torch.all(frame_ids[:, 1:]-frame_ids[:, :-1] == self.config["prediction_interval"])):
-            raise ValueError("V4 requires checked sparse condition_frame_ids [B,5] with interval 10")
+            raise ValueError("V4 condition_frame_ids [B,H] must match configured prediction_interval")
         if any(x[key].shape[1] != h for key in ("action_state", "controller_points", "tactile")):
-            raise ValueError("V4 requires exactly five sampled condition frames")
+            raise ValueError("V4 requires exactly H sampled condition frames")
         keep = x["gs_mask"]
         if keep.dtype != torch.bool or not keep.any(1).all():
             raise ValueError("Each sample needs at least one valid GS")

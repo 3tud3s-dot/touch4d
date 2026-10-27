@@ -4,6 +4,8 @@ Legacy train/evaluate CLI defaults and v7 checkpoint readers are unchanged.
 V4 callers use this adapter rather than feeding V4 state into PositionPredictor.
 """
 from pathlib import Path
+import os
+import tempfile
 import torch
 
 from scripts.dataloader.collate import batch_horizon
@@ -28,8 +30,8 @@ def build_model(architecture="legacy", **config):
     raise ValueError("architecture must be legacy or v4_stage1")
 
 
-def build_dataset(scene, split, root, **kwargs):
-    return Touch4DDataset(scene, split, root, horizon=5, prediction_interval=10,
+def build_dataset(scene, split, root, *, horizon=10, prediction_interval=1, **kwargs):
+    return Touch4DDataset(scene, split, root, horizon=horizon, prediction_interval=prediction_interval,
                           operation_hand_policy=HAND_POLICY, **kwargs)
 
 
@@ -59,16 +61,37 @@ def v4_objective(prediction, batch, processor, renderer, chunk=512):
                      scale_weight=0., depth_weight=0.)
 
 
-def save_checkpoint(path, model, optimizer, successful_steps, *, source_sha, processor_state):
+def save_checkpoint(path, model, optimizer, successful_steps, *, source_sha, processor_state,
+                    run_state=None, replace_existing=False):
     if type(successful_steps) is not int or successful_steps < 0:
         raise ValueError("successful_steps must be a nonnegative integer")
     payload = dict(version=VERSION, config=model.config, model=model.state_dict(),
                    optimizer=optimizer.state_dict(), successful_steps=successful_steps,
                    source_sha=source_sha, base_sha=BASE_SHA, spec_sha256=SPEC_SHA256,
-                   processor=processor_state, rng_state=torch.get_rng_state())
-    # Refuse overwriting any historical checkpoint, including in smoke runs.
-    with Path(path).open("xb") as stream:
-        torch.save(payload, stream)
+                   processor=processor_state, rng_state=torch.get_rng_state(), run_state=run_state,
+                   cuda_rng_state=torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None)
+    path = Path(path)
+    if path.exists():
+        if not replace_existing:
+            raise FileExistsError(path)
+        old = torch.load(path, map_location="cpu", weights_only=False)
+        if (old.get("source_sha") != source_sha or old.get("config") != model.config
+                or run_state is None or (old.get("run_state") or {}).get("run_id") != run_state.get("run_id")):
+            raise ValueError("Refusing to overwrite a different run/checkpoint")
+    fd, temporary = tempfile.mkstemp(prefix=path.name+".", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            torch.save(payload, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if replace_existing:
+            os.replace(temporary, path)
+        else:
+            # Atomic no-clobber publication: readers never see a partial file.
+            os.link(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
 def load_checkpoint(path, model, optimizer=None, *, processor_state=None):
@@ -88,4 +111,6 @@ def load_checkpoint(path, model, optimizer=None, *, processor_state=None):
     if optimizer is not None:
         optimizer.load_state_dict(state["optimizer"])
         torch.set_rng_state(state["rng_state"])
+        if state.get("cuda_rng_state") is not None and torch.cuda.is_available():
+            torch.cuda.set_rng_state_all(state["cuda_rng_state"])
     return state
