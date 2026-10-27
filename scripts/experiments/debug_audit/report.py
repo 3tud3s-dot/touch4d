@@ -155,7 +155,7 @@ def assemble(root, diagnosis_name="diagnosis"):
         dict(scene="001-rope", split="train", episode=2, start=73, update=0,
              checkpoint=f"{diagnosis_name}/oracle-cd/centroid_translation.pt", offline_target_oracle=True))
     conclusion = read_json(root / "conclusion.json") if (root / "conclusion.json").exists() else None
-    extra = {name: read_json(root / name) for name in ("data_audit.json", "execution_manifest.json", "acceptance.json")
+    extra = {name: read_json(root / name) for name in ("data_audit.json", "execution_manifest.json", "acceptance.json", "sampling_audit.json", "checkpoint_seen.json")
              if (root / name).exists()}
     return dict(schema="touch4d-debug-audit-report-v1", rows=rows, stages=stages, gradients=gradient,
                 oracle=oracle, trials=trials, historical_checkpoint_sha256=before,

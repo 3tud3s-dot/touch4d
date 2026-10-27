@@ -19,6 +19,10 @@ export TORCH_EXTENSIONS_DIR=/data1/userdata/tcweng/.cache/touch4d-debug-audit-ex
 export XDG_CACHE_HOME=/data1/userdata/tcweng/.cache/touch4d-debug-audit
 mkdir -p "$XDG_CACHE_HOME/torch/kernels"
 PY=/data1/userdata/tcweng/projects/touch4d/.venv/bin/python
+if [[ "$COMMAND" == seen ]]; then
+  "$PY" -B -m scripts.experiments.debug_audit.checkpoint_seen --root /data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1 --manifest /data1/userdata/tcweng/projects/touch4d/audit/p3-p4-spatial-dynamics-v1/windows.json --output "$OUTPUT" --expected-sha "$EXPECTED_SHA"
+  exit 0
+fi
 ARGS=("$COMMAND" --root /data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1 --output "$OUTPUT" --expected-sha "$EXPECTED_SHA")
 if [[ "$COMMAND" == fit ]]; then ARGS+=(--mode "${MODE:?}"); fi
 "$PY" -B -m scripts.experiments.debug_audit.runner "${ARGS[@]}"
