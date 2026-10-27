@@ -20,7 +20,7 @@ function exportsUpdate(){
 }
 for(const item of M.episodes){const b=document.createElement('button');b.id='ep'+item.episode;b.onclick=()=>selectEpisode(item.episode);$('episodes').append(b);}
 function stop(){if(timer!==null)clearTimeout(timer);timer=null;$('play').textContent='播放';}
-function setReady(ok){for(const id of ['frame','frameSlider','start','end','setStart','setEnd','setEndN','play','prev','next','prev10','next10','signalStart','signalEnd'])$(id).disabled=!ok;if(!ok)$('confirm').disabled=true;}
+function setReady(ok){for(const id of ['frame','frameSlider','start','end','setStart','setEnd','setEndN','play','prev','next','prev10','next10','signalStart','signalEnd','notes','clear','unreview'])$(id).disabled=!ok;if(!ok)$('confirm').disabled=true;}
 async function selectEpisode(ep){
   stop();const request=++loading;episode=ep;data=null;setReady(false);exportsUpdate();$('episodeTitle').textContent=`ep${ep} · 加载中…`;notice('');
   const meta=M.episodes.find(x=>x.episode===ep);
@@ -68,7 +68,7 @@ $('confirm').onclick=()=>{if(data&&C.valid(state[episode].start,state[episode].e
 $('unreview').onclick=()=>{state[episode].confirmed=false;annotationUpdate();};
 $('clear').onclick=()=>{state[episode]=C.empty();$('start').value='';$('end').value='';$('notes').value='';annotationUpdate();};
 $('notes').oninput=()=>{state[episode].notes=$('notes').value;exportsUpdate();persist();};
-function drawTimeline(){if(!data)return;const cv=$('timeline'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,left=68,right=16,top=30,band=70;
+function drawTimeline(){if(!data)return;const cv=$('timeline');cv.width=Math.max(480,Math.round(cv.getBoundingClientRect().width));const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,left=68,right=16,top=30,band=70;
   ctx.clearRect(0,0,W,H);const x=f=>left+f/data.frames*(W-left-right),a=state[episode];
   if(C.valid(a.start,a.end,data.frames)){ctx.fillStyle='#deeee7';ctx.fillRect(x(a.start),top,x(a.end)-x(a.start),H-top-24);}
   const colors=['#ab4a8e','#d18722','#216ca7','#2b947b'];
@@ -84,7 +84,7 @@ function drawTimeline(){if(!data)return;const cv=$('timeline'),ctx=cv.getContext
   ctx.setLineDash([4,5]);ctx.strokeStyle='#87939a';for(const r of data.references)for(const [s,e] of r.intervals)for(const f of [s,e]){ctx.beginPath();ctx.moveTo(x(f),top);ctx.lineTo(x(f),H-25);ctx.stroke();}ctx.setLineDash([]);
   ctx.strokeStyle='#3073be';ctx.beginPath();ctx.moveTo(x(frame),top);ctx.lineTo(x(frame),H-25);ctx.stroke();ctx.fillStyle='#223d50';
   for(let f=0;f<=data.frames;f+=Math.max(1,Math.round(data.frames/10)))ctx.fillText(String(f),x(f)-6,H-6);ctx.fillText(String(data.frames),W-35,H-6);
-  ctx.fillText(data.hands.length===1?'右指0 / 右指1；手级曲线为右手':'左指0 / 左指1 / 右指0 / 右指1；手级曲线按左、右顺序',220,16);
+  ctx.fillText(data.hands.length===1?'右指0 / 右指1':'左指0/1 · 右指0/1',220,16);
   for(const id of ['start','end']){const el=$(id+'Handle'),v=a[id];el.hidden=v===null||!Number.isFinite(v);if(!el.hidden){el.style.left=(x(v)/W*100)+'%';el.setAttribute('aria-valuenow',v);el.setAttribute('aria-valuemin','0');el.setAttribute('aria-valuemax',data.frames);}}
 }
 function eventFrame(e){const rect=$('timeline').getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width*$('timeline').width;return Math.max(0,Math.min(data.frames,Math.round((px-68)/($('timeline').width-84)*data.frames)));}
@@ -120,4 +120,5 @@ function download(name,body,type){const url=URL.createObjectURL(new Blob([body],
 $('downloadJSON').onclick=()=>download('contact_boundaries.json',JSON.stringify(C.serialize(state,M),null,2),'application/json');
 $('downloadCSV').onclick=()=>download('contact_boundaries.csv',C.csv(C.serialize(state,M)),'text/csv;charset=utf-8');
 $('import').onchange=async()=>{const file=$('import').files[0];if(!file)return;try{const candidate=C.restore(JSON.parse(await file.text()),M);state=candidate;persist();exportsUpdate();await selectEpisode(episode);notice('已恢复 JSON 中的标注与草稿，请检查。');}catch(error){notice('未导入：'+error.message);}finally{$('import').value='';}};
+window.addEventListener('resize',()=>{if(data)drawTimeline();});
 exportsUpdate();selectEpisode(0);
