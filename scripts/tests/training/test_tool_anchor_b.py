@@ -10,7 +10,7 @@ from scripts.training.model import PositionPredictor
 from scripts.training.gs_decoder import build_initial_anchor_field,interpolate_anchor_displacements
 from scripts.experiments.tool_anchor_b.model import ARCH,AnchorBPredictor,ToolAnchorAttention
 from scripts.experiments.tool_anchor_b.conditions import ToolPredictor,hand_inputs,sanitize
-from scripts.experiments.tool_anchor_b.run import fresh,payload,restore,stable_gradient_norm
+from scripts.experiments.tool_anchor_b.run import fresh,payload,restore,stable_gradient_norm,gradient_probe
 
 def fixture():
     b=DataProcessor('001-rope')(make_batch(horizon=15))
@@ -41,6 +41,32 @@ class ToolAnchorBTests(unittest.TestCase):
         value=torch.full((128,3),1e-30,dtype=torch.float32)
         self.assertEqual(float(value.norm()),0.)
         self.assertGreater(stable_gradient_norm(value),0.)
+
+    def test_diagnostic_amplification_distinguishes_underflow_from_detach(self):
+        def chain(multiplier):
+            x=torch.tensor(1.,requires_grad=True);y=x
+            for _ in range(13):y=y*1e-4
+            (y*multiplier).backward();return x.grad
+        self.assertEqual(float(chain(1.)),0.)
+        recovered=float(chain(1e16).double()/1e16)
+        self.assertGreater(recovered,0.);self.assertAlmostEqual(recovered/1e-52,1.,places=5)
+
+    def test_probe_distinguishes_missing_zero_and_nonzero_without_update(self):
+        class ProbeModel(torch.nn.Module):
+            def __init__(self,kind):
+                super().__init__();self.kind=kind;self.position_head=torch.nn.Linear(1,1,bias=False)
+                self.position_head.weight.data.fill_(1.)
+            def forward(self,x):
+                first=self.position_head(x)
+                source=x if self.kind=='missing' else first*(0. if self.kind=='zero' else 1.)
+                last=self.position_head(source)
+                return {'xyz':last[:,None]}
+        for kind,classification in [('missing','not_reached_by_probe'),('zero','present_zero_ambiguous'),('live','present_nonzero')]:
+            m=ProbeModel(kind);before=copy.deepcopy(m.state_dict())
+            result=gradient_probe(m,torch.ones(1,1),1e16)
+            self.assertEqual(result['classification'][0],classification)
+            self.assertEqual(result['connected'][0],kind!='missing')
+            for name,value in m.state_dict().items():self.assertTrue(torch.equal(value,before[name]))
 
     def test_h15_shapes_padding_finite_and_inherited_attributes(self):
         x=fixture()['inputs'];m=small();active(m);p=m(x)

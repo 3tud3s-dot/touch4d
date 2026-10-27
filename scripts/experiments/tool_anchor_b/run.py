@@ -24,6 +24,30 @@ def stable_gradient_norm(value):
     """Measure tiny FP32 AR gradients in FP64; do not square them in FP32."""
     return float(value.detach().double().norm())
 
+def gradient_probe(model,inputs,multiplier=1.):
+    """No optimizer update. Scalar amplification diagnoses FP32 underflow only.
+
+    Report norms in original loss units. A missing .grad means this probe did not reach the retained output.
+    A present zero may be underflow OR a true zero derivative; a tiny nonzero
+    derivative proves response, not useful long-range learning.
+    """
+    if not np.isfinite(multiplier) or multiplier<=0:raise ValueError('Invalid diagnostic multiplier')
+    captured=[]
+    def hook(module,inputs,value):value.retain_grad();captured.append(value)
+    handle=model.position_head.register_forward_hook(hook)
+    model.zero_grad(set_to_none=True)
+    try:
+        pred=model(inputs);(pred['xyz'][:,-1].square().sum()*multiplier).backward()
+    finally:handle.remove()
+    return dict(loss_multiplier=multiplier,connected=[v.grad is not None for v in captured],
+        norms_float64=[stable_gradient_norm(v.grad)/multiplier if v.grad is not None else None for v in captured],
+        norms_float32=[float(v.grad.norm())/multiplier if v.grad is not None else None for v in captured],
+        nonzero_elements=[int(v.grad.count_nonzero()) if v.grad is not None else 0 for v in captured],
+        finite=[bool(torch.isfinite(v.grad).all()) if v.grad is not None else None for v in captured],
+        classification=['not_reached_by_probe' if v.grad is None else
+            'nonfinite' if not torch.isfinite(v.grad).all() else
+            'present_nonzero' if v.grad.count_nonzero() else 'present_zero_ambiguous' for v in captured])
+
 def fresh(mode,device='cpu',config=None):
     random.seed(42);np.random.seed(42);torch.manual_seed(42)
     if mode not in ('base','candidate'):raise ValueError(mode)
@@ -87,27 +111,46 @@ def smoke(out,bs,processor,renderers,source):
         for n in range(3):
             values,grad=step(model,opt,bs[n%2],processor,renderers[n%2],True)
             updates.append(dict(update=n+1,**values,gradients=grad))
-        # Isolate last-horizon backward to prove the entire AR feedback chain is live.
-        captured=[]
-        def hook(module,inputs,value):value.retain_grad();captured.append(value)
-        handle=model.position_head.register_forward_hook(hook)
-        opt.zero_grad(set_to_none=True);pred=model(bs[0]['inputs']);pred['xyz'][:,-1].square().sum().backward();handle.remove()
-        cross=[stable_gradient_norm(v.grad) if v.grad is not None else 0. for v in captured]
-        atomic_json(out/f'{mode}-gradient-chain.json',dict(norms_float64=cross,
-            norms_float32=[float(v.grad.norm()) if v.grad is not None else None for v in captured],
-            nonzero_elements=[int(v.grad.count_nonzero()) if v.grad is not None else 0 for v in captured]))
-        if len(cross)!=15 or not all(v>0 and np.isfinite(v) for v in cross):raise AssertionError('Truncated AR gradient')
+            atomic_json(out/f'{mode}-updates.json',updates)
+        # Preserve actual unamplified gradients, including numerical zeros. The
+        # second fixed diagnostic changes no model weight or optimizer state.
+        state_before=digest(model.state_dict());optimizer_steps_before=[int(v['step']) for v in opt.state.values()]
+        unscaled=gradient_probe(model,bs[0]['inputs'])
+        atomic_json(out/f'{mode}-gradient-chain.json',dict(unscaled=unscaled))
+        amplified=gradient_probe(model,bs[0]['inputs'],1e16)
+        if digest(model.state_dict())!=state_before or optimizer_steps_before!=[int(v['step']) for v in opt.state.values()]:
+            raise AssertionError('Diagnostic changed training state')
+        atomic_json(out/f'{mode}-gradient-chain.json',dict(unscaled=unscaled,amplified=amplified,model_unchanged=True,optimizer_steps_unchanged=True,
+            interpretation='Amplified derivative is a connectivity diagnostic only; unscaled zeros and tiny responses remain learning limitations.'))
+        cross=amplified['norms_float64']
+        if len(cross)!=15 or not all(unscaled['connected']) or not all(amplified['connected']):raise AssertionError('Disconnected AR gradient')
+        if not all(unscaled['finite']) or not all(amplified['finite']) or not all(v>0 and np.isfinite(v) for v in cross):raise AssertionError('AR derivative not verified even with fixed diagnostic amplification')
         if mode=='candidate':
             for name in ('tool_attention.bias','tool_attention.value','tool_attention.motion_fusion','gs_encoder','position_head'):
                 value=sum(float(p.grad.abs().sum()) for n,p in model.named_parameters() if n.startswith(name) and p.grad is not None)
                 if not value>0:raise AssertionError('Missing branch gradient: '+name)
         with torch.no_grad():saved=model(bs[0]['inputs'])
-        path=out/f'{mode}.pt';atomic_checkpoint(path,payload(model,opt,mode,3,source));restore(path,model,opt,mode)
-        with torch.no_grad():loaded=model(bs[0]['inputs'])
+        path=out/f'{mode}.pt';atomic_checkpoint(path,payload(model,opt,mode,3,source))
+        restored=fresh(mode,'cuda');restored_opt=torch.optim.AdamW(restored.parameters(),lr=1e-4,weight_decay=1e-4)
+        checkpoint=restore(path,restored,restored_opt,mode)
+        with torch.no_grad():loaded=restored(bs[0]['inputs'])
         assert all(torch.equal(saved[k],loaded[k]) for k in saved)
-        results[mode]=dict(updates=updates,cross_step_head_gradients=cross,restore_exact=True,
+        # Paired fourth smoke update verifies optimizer moments/step restoration.
+        # Neither branch is reused by formal training, which starts from seed42.
+        next_live,_=step(model,opt,bs[1],processor,renderers[1])
+        next_restored,_=step(restored,restored_opt,bs[1],processor,renderers[1])
+        assert next_live==next_restored
+        assert digest(model.state_dict())==digest(restored.state_dict())
+        for key,state in opt.state_dict()['state'].items():
+            for name,value in state.items():
+                other=restored_opt.state_dict()['state'][key][name]
+                assert torch.equal(value,other) if torch.is_tensor(value) else value==other
+        results[mode]=dict(updates=updates,cross_step_gradient_probe=dict(unscaled=unscaled,amplified=amplified),restore_exact=True,
+            restore_next_update_exact=True,checkpoint_sha256=sha(path),checkpoint_completed_updates=checkpoint['completed_updates'],
+            next_update=next_live,model_unchanged_by_probe=True,
             peak_allocated_bytes=torch.cuda.max_memory_allocated(),peak_reserved_bytes=torch.cuda.max_memory_reserved(),elapsed_seconds=time.monotonic()-t)
-        del model,opt,pred,saved,loaded,captured;torch.cuda.empty_cache()
+        atomic_json(out/f'{mode}-smoke.json',results[mode])
+        del model,opt,restored,restored_opt,saved,loaded,checkpoint;torch.cuda.empty_cache()
     return results
 
 def train(mode,out,bs,processor,renderers,source,manifest):
