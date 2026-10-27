@@ -10,7 +10,7 @@ from scripts.training.model import PositionPredictor
 from scripts.training.gs_decoder import build_initial_anchor_field,interpolate_anchor_displacements
 from scripts.experiments.tool_anchor_b.model import ARCH,AnchorBPredictor,ToolAnchorAttention
 from scripts.experiments.tool_anchor_b.conditions import ToolPredictor,hand_inputs,sanitize
-from scripts.experiments.tool_anchor_b.run import fresh,payload,restore,stable_gradient_norm,gradient_probe
+from scripts.experiments.tool_anchor_b.run import fresh,payload,restore,stable_gradient_norm,gradient_probe,assert_optimizer_equal,tensor_differences
 
 def fixture():
     b=DataProcessor('001-rope')(make_batch(horizon=15))
@@ -182,6 +182,22 @@ class ToolAnchorBTests(unittest.TestCase):
         x=fixture()['inputs'];m=small();seen=[]
         hook=m.blocks[0].register_forward_pre_hook(lambda mod,args:seen.append(args[1].shape[1]))
         m(x);hook.remove();self.assertEqual(seen,[1+66*(k+1) for k in range(15)])
+
+    def test_optimizer_replay_with_identical_gradients_and_difference_evidence(self):
+        m=small('base');opt=torch.optim.AdamW(m.parameters(),lr=1e-4)
+        for p in m.parameters():p.grad=torch.ones_like(p)*.01
+        opt.step()
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'state.pt';torch.save(payload(m,opt,'base',1,'test'),path)
+            restored=small('base');other=torch.optim.AdamW(restored.parameters(),lr=1e-4)
+            restore(path,restored,other,'base');assert_optimizer_equal(opt,other)
+            for instance,optimizer in ((m,opt),(restored,other)):
+                for p in instance.parameters():p.grad=torch.ones_like(p)*.02
+                optimizer.step()
+            self.assertEqual(tensor_differences(m.state_dict(),restored.state_dict()),{})
+            assert_optimizer_equal(opt,other)
+            next(restored.parameters()).data.add_(.1)
+            self.assertTrue(tensor_differences(m.state_dict(),restored.state_dict()))
 
     def test_checkpoint_roundtrip_and_wrong_mode_rejection(self):
         for mode in ('base','candidate'):

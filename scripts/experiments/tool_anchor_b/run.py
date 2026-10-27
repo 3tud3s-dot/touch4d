@@ -103,6 +103,32 @@ def step(model,opt,b,processor,renderer,record=False):
         **{k:float(v[k].detach().mean()) for k in ('geometry','rgb','alpha','scale_regularization')})
     return row,g
 
+def tensor_differences(left,right):
+    """Evidence only: retain every non-bitwise-equal tensor, without a tolerance."""
+    if left.keys()!=right.keys():raise AssertionError('State keys differ')
+    rows={}
+    for key,a in left.items():
+        b=right[key]
+        if a is None or b is None:
+            if a is not b:rows[key]={'missing_gradient':True}
+        elif not torch.equal(a.cpu(),b.cpu()):
+            delta=a.detach().cpu().double()-b.detach().cpu().double()
+            rows[key]=dict(max_abs=float(delta.abs().max()),l2=float(delta.norm()),
+                changed_elements=int(delta.count_nonzero()),elements=a.numel())
+    return rows
+
+
+def assert_optimizer_equal(left,right):
+    a,b=left.state_dict(),right.state_dict()
+    assert a['param_groups']==b['param_groups']
+    assert a['state'].keys()==b['state'].keys()
+    for key,state in a['state'].items():
+        assert state.keys()==b['state'][key].keys()
+        for name,value in state.items():
+            other=b['state'][key][name]
+            assert torch.equal(value.cpu(),other.cpu()) if torch.is_tensor(value) else value==other
+
+
 def smoke(out,bs,processor,renderers,source):
     results={}
     for mode in ('base','candidate'):
@@ -133,24 +159,40 @@ def smoke(out,bs,processor,renderers,source):
         path=out/f'{mode}.pt';atomic_checkpoint(path,payload(model,opt,mode,3,source))
         restored=fresh(mode,'cuda');restored_opt=torch.optim.AdamW(restored.parameters(),lr=1e-4,weight_decay=1e-4)
         checkpoint=restore(path,restored,restored_opt,mode)
+        assert digest(model.state_dict())==digest(restored.state_dict())
+        assert_optimizer_equal(opt,restored_opt)
         with torch.no_grad():loaded=restored(bs[0]['inputs'])
         assert all(torch.equal(saved[k],loaded[k]) for k in saved)
-        # Paired fourth smoke update verifies optimizer moments/step restoration.
-        # Neither branch is reused by formal training, which starts from seed42.
+        # Separate CUDA backward repeatability from checkpoint/AdamW restoration.
+        # Keep the independently recomputed fourth-update differences as evidence.
         next_live,_=step(model,opt,bs[1],processor,renderers[1])
+        fixed_grads={n:p.grad.detach().clone() if p.grad is not None else None for n,p in model.named_parameters()}
         next_restored,_=step(restored,restored_opt,bs[1],processor,renderers[1])
-        assert next_live==next_restored
+        repeated_grads={n:p.grad for n,p in restored.named_parameters()}
+        replay=dict(checkpoint_state_exact=True,checkpoint_optimizer_exact=True,forward_exact=True,
+            live_update=next_live,restored_update=next_restored,
+            repeated_backward_gradient_differences=tensor_differences(fixed_grads,repeated_grads),
+            repeated_backward_parameter_differences=tensor_differences(model.state_dict(),restored.state_dict()))
+        atomic_json(out/f'{mode}-restore.json',replay)
+        # Restore BOTH to step3; identical recorded (clipped) gradients must yield
+        # bitwise equal step4 weights AND moments. No tolerance is introduced.
+        restore(path,model,opt,mode);restore(path,restored,restored_opt,mode)
+        for instance,optimizer in ((model,opt),(restored,restored_opt)):
+            optimizer.zero_grad(set_to_none=True)
+            for name,param in instance.named_parameters():
+                param.grad=fixed_grads[name].clone() if fixed_grads[name] is not None else None
+            optimizer.step()
         assert digest(model.state_dict())==digest(restored.state_dict())
-        for key,state in opt.state_dict()['state'].items():
-            for name,value in state.items():
-                other=restored_opt.state_dict()['state'][key][name]
-                assert torch.equal(value,other) if torch.is_tensor(value) else value==other
+        assert_optimizer_equal(opt,restored_opt)
+        replay['identical_gradient_update_exact']=True
+        replay['interpretation']='Independent CUDA backward differences are retained; checkpoint, forward, and identical-gradient AdamW replay must be bitwise exact.'
+        atomic_json(out/f'{mode}-restore.json',replay)
         results[mode]=dict(updates=updates,cross_step_gradient_probe=dict(unscaled=unscaled,amplified=amplified),restore_exact=True,
-            restore_next_update_exact=True,checkpoint_sha256=sha(path),checkpoint_completed_updates=checkpoint['completed_updates'],
+            restore_identical_gradient_update_exact=True,restore_diagnostics=replay,checkpoint_sha256=sha(path),checkpoint_completed_updates=checkpoint['completed_updates'],
             next_update=next_live,model_unchanged_by_probe=True,
             peak_allocated_bytes=torch.cuda.max_memory_allocated(),peak_reserved_bytes=torch.cuda.max_memory_reserved(),elapsed_seconds=time.monotonic()-t)
         atomic_json(out/f'{mode}-smoke.json',results[mode])
-        del model,opt,restored,restored_opt,saved,loaded,checkpoint;torch.cuda.empty_cache()
+        del model,opt,restored,restored_opt,saved,loaded,checkpoint,fixed_grads,repeated_grads;torch.cuda.empty_cache()
     return results
 
 def train(mode,out,bs,processor,renderers,source,manifest):
