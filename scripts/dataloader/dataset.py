@@ -19,7 +19,8 @@ from torch.utils.data import Dataset
 
 from .geometry import (OPENING_RANGE, RIGID_ATOL, action_conditions, hand_slots,
                        tactile_world_coordinates)
-from .splits import HORIZON, episode_ids, validate_horizon, window_starts
+from .splits import HORIZON, episode_ids, validate_horizon, validate_prediction_interval, window_starts
+from .hand_policy import HAND_POLICY, operation_hands
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[2] / "datasets" / "touch4d-v1"
 GS_WIDTHS = {"xyz": 3, "log_scales": 3, "quaternions": 4,
@@ -104,9 +105,11 @@ def _depth_info(directory: Path, core: EpisodeInfo, scene: str) -> DepthInfo:
     return DepthInfo(directory, frames, cameras, meta["height"], meta["width"], intrinsics, camera_to_world)
 
 
-def read_depth(info: DepthInfo, start: int, cameras: tuple, horizon: int = HORIZON) -> dict:
-    """Read only t+1..t+H; all HDF5 handles close before return."""
+def read_depth(info: DepthInfo, start: int, cameras: tuple, horizon: int = HORIZON,
+               prediction_interval: int = 1) -> dict:
+    """Read the sampled target frames; all HDF5 handles close before return."""
     validate_horizon(horizon)
+    delta = validate_prediction_interval(prediction_interval)
     try:
         import h5py
     except ImportError as exc:
@@ -127,7 +130,7 @@ def read_depth(info: DepthInfo, start: int, cameras: tuple, horizon: int = HORIZ
                     raise DataFormatError(f"{path}: data must be uint16 [F,H,W] matching depth metadata")
                 if data.is_virtual or data.external:
                     raise DataFormatError(f"{path}: external/virtual H5 storage is not supported")
-                future = data[start + 1:start + horizon + 1]
+                future = data[start + delta:start + (horizon + 1) * delta:delta]
         except (OSError, ValueError, KeyError) as exc:
             raise DataFormatError(f"{path}: cannot read required depth frames: {exc}") from exc
         if future.shape != (horizon, info.height, info.width):
@@ -270,8 +273,15 @@ class Touch4DDataset(Dataset):
     """
 
     def __init__(self, scene: str, split: str, root=DEFAULT_ROOT, *, stage="all", cache_episodes=2,
-                 with_depth=False, depth_root=None, depth_cameras=None, horizon=HORIZON):
+                 with_depth=False, depth_root=None, depth_cameras=None, horizon=HORIZON,
+                 prediction_interval=1, operation_hand_policy=None):
         self.horizon = validate_horizon(horizon)
+        self.prediction_interval = validate_prediction_interval(prediction_interval)
+        if operation_hand_policy not in (None, HAND_POLICY):
+            raise ValueError("Unknown operation_hand_policy")
+        if operation_hand_policy is not None and scene != "001-rope":
+            raise ValueError("The reviewed operation hand policy is limited to 001-rope")
+        self.operation_hand_policy = operation_hand_policy
         selected = episode_ids(scene, split, stage)
         if type(cache_episodes) is not int or cache_episodes < 1:
             raise ValueError("cache_episodes must be a positive integer")
@@ -301,7 +311,8 @@ class Touch4DDataset(Dataset):
             if stage == "single" and sum(s is not None for s in info.slots) != 1:
                 raise DataFormatError(f"{info.path}: reviewed single-hand curriculum conflicts with metadata")
             self.episodes[episode] = info
-            self.windows.extend((episode, start) for start in window_starts(info.frames, split, self.horizon))
+            self.windows.extend((episode, start) for start in window_starts(
+                info.frames, split, self.horizon, self.prediction_interval))
             if with_depth:
                 self.depth_episodes[episode] = _depth_info(
                     self.depth_root / scene / f"episode_{episode}", info, scene)
@@ -333,7 +344,8 @@ class Touch4DDataset(Dataset):
                 self._cache.popitem(last=False)
         self._cache.move_to_end(episode)
         conditions = self._cache[episode]
-        take = slice(start, start + self.horizon)
+        delta = self.prediction_interval
+        take = slice(start, start + self.horizon * delta, delta)
         inputs = {key: torch.from_numpy(conditions[key][take].copy()) for key in (
             "action_state", "action_valid", "controller_points", "controller_mask", "tactile", "valid_mask")}
         xyz, spatial = tactile_world_coordinates(
@@ -347,7 +359,7 @@ class Touch4DDataset(Dataset):
         inputs["gs_attr"] = torch.from_numpy(np.concatenate(
             [initial[key] for key in GS_ATTR_FIELDS], axis=-1))
         targets = {"target_xyz": [], "target_attr": []}
-        for frame in range(start + 1, start + self.horizon + 1):
+        for frame in range(start + delta, start + (self.horizon + 1) * delta, delta):
             # Read once so positions and attributes share exactly the same frame
             # and point ordering. There is no cross-frame Gaussian ID assumption.
             future = read_gs(info, frame)
@@ -356,10 +368,17 @@ class Touch4DDataset(Dataset):
                 [future[key] for key in GS_ATTR_FIELDS], axis=-1)))
         meta = {
             "scene": self.scene, "episode_id": episode,
-            "frame_ids": torch.arange(start, start + self.horizon + 1, dtype=torch.int64),
-            "observation_timestamp_us": torch.from_numpy(info.timestamps[start:start + self.horizon + 1].copy()),
+            "frame_ids": torch.arange(start, start + (self.horizon + 1) * delta, delta, dtype=torch.int64),
+            "observation_timestamp_us": torch.from_numpy(
+                info.timestamps[start:start + (self.horizon + 1) * delta:delta].copy()),
         }
+        if delta != 1:
+            meta["prediction_interval"] = delta
+        if self.operation_hand_policy is not None:
+            inputs["operation_hands"] = operation_hands([self.scene], torch.tensor([episode]))[0]
+            meta["operation_hand_policy"] = self.operation_hand_policy
         if self.with_depth:
-            targets.update(read_depth(self.depth_episodes[episode], start, self.depth_cameras, self.horizon))
+            targets.update(read_depth(self.depth_episodes[episode], start, self.depth_cameras,
+                                      self.horizon, delta))
             meta["depth_camera_ids"] = list(self.depth_cameras)
         return {"inputs": inputs, "targets": targets, "meta": meta}

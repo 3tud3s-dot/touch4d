@@ -21,7 +21,8 @@ def _seed_worker(worker_id):
 def make_dataloader(scene: str, split: str, *, root=DEFAULT_ROOT, stage="all",
                     batch_size=1, num_workers=0, seed=0, pin_memory=False,
                     persistent_workers=False, cache_episodes=2, with_depth=False,
-                    depth_root=None, depth_cameras=None, horizon=HORIZON) -> DataLoader:
+                    depth_root=None, depth_cameras=None, horizon=HORIZON,
+                    prediction_interval=1, operation_hand_policy=None) -> DataLoader:
     """Train: seeded shuffle, stride 1. Val/test: fixed order, stride 5.
 
     All splits retain the final partial batch. To advance curriculum, construct
@@ -40,7 +41,8 @@ def make_dataloader(scene: str, split: str, *, root=DEFAULT_ROOT, stage="all",
         raise ValueError("persistent_workers requires num_workers > 0")
     dataset = Touch4DDataset(scene, split, root, stage=stage, cache_episodes=cache_episodes,
                             with_depth=with_depth, depth_root=depth_root, depth_cameras=depth_cameras,
-                            horizon=horizon)
+                            horizon=horizon, prediction_interval=prediction_interval,
+                            operation_hand_policy=operation_hand_policy)
     if not len(dataset):
         raise ValueError(f"{scene}/{split}/{stage}: no complete {horizon+1}-frame windows")
     generator = torch.Generator().manual_seed(seed)

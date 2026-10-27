@@ -1,10 +1,13 @@
 """Regression coverage for public paths and migrated experiment entry points."""
 
 import importlib
+import hashlib
+from io import BytesIO
 import pickle
 from pathlib import Path
 import subprocess
 import sys
+import tarfile
 import unittest
 from unittest.mock import patch
 
@@ -15,6 +18,27 @@ ALIASES = {
     'scripts.training.oracle': 'scripts.experiments.oracle.oracle',
     'scripts.training.oracle_fit': 'scripts.experiments.oracle.oracle_fit',
 }
+
+
+def frozen_migration_inventory():
+    """Positive migration fixture is the reviewed P2 tree, not future source edits.
+
+    Keep the original golden hash and production rejection logic unchanged.
+    Read Git objects only: never reset or temporarily replace the live checkout.
+    """
+    from scripts.experiments.fixed_window import provenance as p
+    data = subprocess.check_output([
+        'git', 'archive', '64b1320d3718e7d05d590ce854b8aeb05f14236f', 'scripts'], cwd=ROOT)
+    result = {}
+    with tarfile.open(fileobj=BytesIO(data)) as archive:
+        for member in archive:
+            path = Path(member.name)
+            if (member.isfile() and path.suffix == '.py' and not path.name.startswith('test_')
+                    and path.parent.as_posix() in {'scripts/'+d for d in p.DIRECTORIES}
+                    and member.name != p.SELF_PATH):
+                source = archive.extractfile(member).read().decode('utf-8').replace('\r\n', '\n')
+                result[member.name] = hashlib.sha256(source.encode()).hexdigest()
+    return result
 
 
 class ModuleLayoutTests(unittest.TestCase):
@@ -49,22 +73,32 @@ class ModuleLayoutTests(unittest.TestCase):
                      'oracle/oracle.py', 'oracle/oracle_fit.py'):
             self.assertIn('scripts/experiments/'+name, files)
         self.assertFalse(any('/tests/' in name for name in files))
-        self.assertEqual(p.inventory_digest(p.normalized_inventory(ROOT)), p.MIGRATED_FILES_SHA256)
+        self.assertEqual(p.inventory_digest(frozen_migration_inventory()), p.MIGRATED_FILES_SHA256)
 
     def test_source_migration_is_narrow_and_preserves_config_checks(self):
         from scripts.experiments.fixed_window import provenance as p
         from scripts.experiments.fixed_window.fixed_fit import digest
         current = dict(source_sha256=digest(p.source_files(ROOT)), horizon=15, gs_structure='anchor_attention')
         self.assertTrue(p.resume_config_matches(current, current, ROOT))
+        frozen = frozen_migration_inventory()
         for known in p.LEGACY_SOURCE_HASHES:
             old = dict(current, source_sha256=known)
-            self.assertTrue(p.resume_config_matches(old, current, ROOT))
-            for changed in (dict(current, horizon=5), dict(current, gs_structure='none')):
-                self.assertFalse(p.resume_config_matches(old, changed, ROOT))
-            inventory = dict(p.normalized_inventory(ROOT), **{'scripts/training/model.py': 'changed'})
+            with patch.object(p, 'normalized_inventory', return_value=frozen):
+                self.assertTrue(p.resume_config_matches(old, current, ROOT))
+                for changed in (dict(current, horizon=5), dict(current, gs_structure='none')):
+                    self.assertFalse(p.resume_config_matches(old, changed, ROOT))
+            inventory = dict(frozen, **{'scripts/training/model.py': 'changed'})
             with patch.object(p, 'normalized_inventory', return_value=inventory):
                 self.assertFalse(p.resume_config_matches(old, current, ROOT))
         self.assertFalse(p.resume_config_matches(dict(current, source_sha256='unreviewed'), current, ROOT))
+
+    def test_v4_sources_do_not_silently_extend_historical_resume_bridge(self):
+        from scripts.experiments.fixed_window import provenance as p
+        from scripts.experiments.fixed_window.fixed_fit import digest
+        current = dict(source_sha256=digest(p.source_files(ROOT)), horizon=15, gs_structure='anchor_attention')
+        self.assertNotEqual(p.inventory_digest(p.normalized_inventory(ROOT)), p.MIGRATED_FILES_SHA256)
+        for known in p.LEGACY_SOURCE_HASHES:
+            self.assertFalse(p.resume_config_matches(dict(current, source_sha256=known), current, ROOT))
 
     def test_fresh_process_import_orders(self):
         orders = [list(ALIASES), list(reversed(list(ALIASES.values()))),

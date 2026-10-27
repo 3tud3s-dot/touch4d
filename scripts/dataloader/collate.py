@@ -2,7 +2,8 @@
 
 import torch
 
-from .splits import HORIZON, validate_horizon
+from .splits import HORIZON, validate_horizon, validate_prediction_interval
+from .hand_policy import HAND_POLICY, operation_hands
 
 FIXED_FIELDS = {
     "action_state": ((5, 2, 13), torch.float32),
@@ -30,6 +31,10 @@ def batch_horizon(batch):
     if (not isinstance(frames, torch.Tensor) or frames.ndim != 2
             or frames.dtype != torch.int64 or frames.shape[0] < 1):
         raise ValueError("frame_ids must be int64 [B,H+1]")
+    if "prediction_interval" in batch["meta"]:
+        interval = validate_prediction_interval(batch["meta"]["prediction_interval"])
+        if not torch.all(frames[:, 1:] - frames[:, :-1] == interval):
+            raise ValueError("frame_ids disagree with prediction_interval")
     return validate_horizon(frames.shape[1]-1)
 
 
@@ -195,6 +200,21 @@ def collate_fn(samples: list[dict]) -> dict:
         [s["meta"]["episode_id"] for s in samples], dtype=torch.int64)}
     for key in ("frame_ids", "observation_timestamp_us"):
         meta[key] = torch.stack([_tensor(s["meta"][key], (horizon+1,), torch.int64, key) for s in samples])
+    if any("prediction_interval" in s["meta"] for s in samples):
+        intervals = [validate_prediction_interval(s["meta"].get("prediction_interval", 1)) for s in samples]
+        if len(set(intervals)) != 1:
+            raise ValueError("Cannot mix prediction intervals")
+        meta["prediction_interval"] = intervals[0]
+        batch_horizon({"meta": meta})
+    hand_presence = ["operation_hands" in s["inputs"] for s in samples]
+    if any(hand_presence) or any("operation_hand_policy" in s["meta"] for s in samples):
+        if not all(hand_presence) or any(s["meta"].get("operation_hand_policy") != HAND_POLICY for s in samples):
+            raise ValueError("Cannot mix operation hand policies")
+        inputs["operation_hands"] = torch.stack([
+            _tensor(s["inputs"]["operation_hands"], (2,), torch.bool, "operation_hands") for s in samples])
+        if not torch.equal(inputs["operation_hands"], operation_hands(scenes, meta["episode_id"])):
+            raise ValueError("Operation hands disagree with reviewed episode labels")
+        meta["operation_hand_policy"] = HAND_POLICY
     targets = {"target_xyz": target_xyz, "target_mask": target_mask,
                "target_lengths": torch.stack(target_lengths, dim=1)}
     if all(attr_presence):

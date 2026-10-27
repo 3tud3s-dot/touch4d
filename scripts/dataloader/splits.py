@@ -35,9 +35,17 @@ def validate_horizon(horizon: int) -> int:
     return horizon
 
 
-def window_starts(frames: int, split: str, horizon: int = HORIZON) -> range:
-    """H+1 consecutive frames; fixed split strides, no padding/cross-episode tail."""
+def validate_prediction_interval(interval: int) -> int:
+    if type(interval) is not int or interval < 1:
+        raise ValueError("prediction_interval must be a positive integer")
+    return interval
+
+
+def window_starts(frames: int, split: str, horizon: int = HORIZON,
+                  prediction_interval: int = 1) -> range:
+    """H+1 sampled frames; sampling interval is independent of window stride."""
     validate_horizon(horizon)
+    validate_prediction_interval(prediction_interval)
     if split not in STRIDES or frames < 0:
         raise ValueError("Expected a known split and nonnegative frame count")
-    return range(0, max(0, frames - horizon), STRIDES[split])
+    return range(0, max(0, frames - horizon * prediction_interval), STRIDES[split])
