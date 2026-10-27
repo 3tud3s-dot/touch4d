@@ -16,3 +16,5 @@ CPU: `python -B -m unittest discover -s scripts/tests -t . -v`.
 CUDA: submit run.sbatch with SOURCE, EXPECTED_SHA, OUTPUT_ROOT and STAGE=preflight. Only after gate.json passes submit STAGE=short array1-8%4. Long jobs require all eight completed records and selection.json, at most two GPUs. Existing30947 is read-only and never canceled.
 
 No automatic numerical retries. All outputs are new; frozen inputs, main, other worktrees and historical checkpoints stay unchanged. GPU work requires Slurm. HTML and final scientific conclusions are generated only from actual records. Geometry file validity and manual overall contact intervals do not establish frame-level physical contact or reconstruction completeness.
+
+Recovery is explicit and only for an approved infrastructure interruption. Atomic progress checkpoints are written after each successful update, before validation. A pending validation is repeated without repeating its optimizer step. Source SHA, complete experiment configuration, run identity and the contiguous update ledger must match; best-checkpoint selection history is retained. No numerical failure changes configuration automatically.

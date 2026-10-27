@@ -51,3 +51,12 @@ def select_candidate(scores):
       and x['equal']['render_score']<=base['equal']['render_score']):eligible.append(name)
  winner=min(eligible,key=lambda n:(scores[n]['equal']['mean_cd_mm'],scores[n]['equal']['common_joint'])) if eligible else 'S6'
  return dict(winner=winner,eligible=eligible,fallback=not eligible,rule='No worse ep3/ep6 CD and render score than S5; lowest equal CD, tie common joint. Else S6 exploratory. No seed43 repeats.')
+
+
+def validate_resume(state,config,source_sha,run_id):
+ old=state.get('run_state') or {};steps=state.get('successful_steps')
+ if state.get('source_sha')!=source_sha or old.get('config')!=config or old.get('run_id')!=run_id:raise ValueError('Unsafe resume source/config/run conflict')
+ if type(steps) is not int or not 0<=steps<=config['updates']:raise ValueError('Invalid step count')
+ if old.get('successful_updates')!=steps:raise ValueError('Checkpoint and ledger update counts disagree')
+ if [r['update'] for r in old.get('updates',[])]!=list(range(1,steps+1)):raise ValueError('Invalid successful step ledger')
+ return old

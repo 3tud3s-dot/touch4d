@@ -11,7 +11,7 @@ from scripts.training.losses import chamfer_samples
 from scripts.training.rendering import GaussianRenderer
 from scripts.experiments.fixed_window.fixed_fit import TargetCache,digest,prediction_metrics
 from scripts.experiments.v4_stage1.single_window import group_stats,norm
-from .protocol import labels,keys,representative,sequence,matrix,select_candidate,sha
+from .protocol import labels,keys,representative,sequence,matrix,select_candidate,sha,validate_resume
 from .loss import loss,squared_chamfer_samples
 SHARED=Path('/data1/userdata/tcweng/projects/touch4d')
 FROZEN=Path('/data1/userdata/tcweng/experiments/touch4d/contact-boundaries-001-frozen-v1')
@@ -110,14 +110,14 @@ def snapshot(source,dest):
  if sha(dest)!=h or sha(source)!=h:raise RuntimeError('Historical checkpoint changed during snapshot; no training started')
  return dict(source=str(source),snapshot=str(dest),sha256=h)
 
-def gradient_audit(model,b,p):
+def gradient_audit(model,b,p,mode="cd",weight=1.):
  pred=model(b['inputs']);cache=TargetCache(GaussianRenderer());_,parts=loss(pred,b,p,cache,'cd',1.)
- geo=chamfer_samples(pred['xyz'],b).mean();terms={'cd':geo,'rgb':parts['rgb'].mean(),'alpha':parts['alpha'].mean()}
+ geo=(chamfer_samples(pred['xyz'],b).mean() if mode=='cd' else weight*squared_chamfer_samples(pred['xyz'],b).mean());terms={'geometry':geo,'rgb':parts['rgb'].mean(),'alpha':parts['alpha'].mean()}
  params=list(model.parameters());vectors={};groups={}
  for name,value in terms.items():
   model.zero_grad(set_to_none=True);value.backward(retain_graph=True);groups[name]=dict(value=float(value.detach()),groups=group_stats(model,gradients=True));vectors[name]=torch.cat([(q.grad if q.grad is not None else torch.zeros_like(q)).flatten() for q in params]).detach()
- cosine={a+'_'+c:float(torch.nn.functional.cosine_similarity(vectors[a][None],vectors[c][None])) for a,c in (('cd','rgb'),('cd','alpha'),('rgb','alpha'))}
- model.zero_grad(set_to_none=True);return dict(terms=groups,cosine=cosine)
+ cosine={a+'_'+c:float(torch.nn.functional.cosine_similarity(vectors[a][None],vectors[c][None])) for a,c in (('geometry','rgb'),('geometry','alpha'),('rgb','alpha'))}
+ model.zero_grad(set_to_none=True);return dict(geometry_mode=mode,geometry_weight=weight if mode=='squared' else 1.,terms=groups,cosine=cosine)
 
 def preflight(root):
  out=root/'provenance';out.mkdir(exist_ok=False);data=Data();m=fresh();p=data.processor
@@ -184,7 +184,8 @@ def train(root,run_id,config,resume=False):
  gate=json.loads((root/'provenance/gate.json').read_text());assert gate['passed'] and gate['annotation_sha256']==sha(FROZEN/'contact_boundaries.json') and gate['initial_hash']==digest(m.state_dict())
  windows=[k for k in data.windows['train'] if k[0] in config['episodes']];order=sequence(windows,config['sampling'],config['updates'],config['seed'])
  config=dict(config,lambda_sq=weight,lr=1e-4,weight_decay=1e-4,clip_norm=1.,horizon=10,prediction_interval=1,render_settings=gs_render_settings(),cameras=GS_CAMERAS['001-rope'],annotation_sha256=gate['annotation_sha256'],initial_model_hash=digest(m.state_dict()))
- dump(out/'config.json',dict(experiment=config,model=m.config));dump(out/'source_provenance.json',prov);dump(out/'window_manifest.json',dict(training=windows,validation=data.windows['val'],sample_order=order))
+ if not resume:
+  dump(out/'config.json',dict(experiment=config,model=m.config));dump(out/'source_provenance.json',prov);dump(out/'window_manifest.json',dict(training=windows,validation=data.windows['val'],sample_order=order))
  ledger=dict(run_id=str(out),config=config,updates=[],evaluations=[],best_joint=None,lowest_cd=None,successful_updates=0)
  def save(name):save_checkpoint(out/name,m,opt,ledger['successful_updates'],source_sha=prov['source_sha'],processor_state=p.state_dict(),run_state=ledger,replace_existing=(out/name).exists())
  if resume:
@@ -192,29 +193,33 @@ def train(root,run_id,config,resume=False):
   if not candidates:raise ValueError('No recovery checkpoint')
   states=[(torch.load(q,map_location='cpu',weights_only=False),q) for q in candidates]
   state,path=max(states,key=lambda pair:pair[0]['successful_steps'])
-  old=state.get('run_state') or {}
-  if state['source_sha']!=prov['source_sha'] or old.get('config')!=config or old.get('run_id')!=str(out):raise ValueError('Unsafe resume: source/config/run conflict')
-  if [r['update'] for r in old['updates']]!=list(range(1,state['successful_steps']+1)):raise ValueError('Invalid successful step ledger')
+  old=validate_resume(state,config,prov['source_sha'],str(out))
   load_checkpoint(path,m,opt,processor_state=p.state_dict());ledger=old
  else:save('initial.pt')
+ def validate_step(step):
+  val=evaluate(m,data,data.windows['val']);val['update']=step;ledger['evaluations'].append(val);score=val['equal']['common_joint'];cd=val['equal']['mean_cd_mm']
+  if ledger['best_joint'] is None or score<ledger['best_joint']:ledger['best_joint']=score;ledger['best_step']=step;save('best_joint.pt')
+  if ledger['lowest_cd'] is None or cd<ledger['lowest_cd']:ledger['lowest_cd']=cd;ledger['lowest_cd_step']=step;save('lowest_cd.pt')
+  save('last.pt');dump(out/'metrics.json',ledger);save('progress.pt');print(run_id,step,val['equal'],flush=True)
  completed=ledger['successful_updates'];start=time.time();torch.cuda.reset_peak_memory_stats()
+ # A crash during validation must repeat validation, never the completed update.
+ if completed and (completed%config['eval_every']==0 or completed==len(order)) and not any(v['update']==completed for v in ledger['evaluations']):validate_step(completed)
  for step,key in enumerate(order,1):
   if step<=completed:continue
   before=time.time();_,b=data.batch(key,m);row=update(m,opt,b,p,config['loss'],weight);row.update(update=step,key=key,seconds=time.time()-before);ledger['updates'].append(row);ledger['successful_updates']=step
+  save('progress.pt')  # Publish optimizer state before potentially lengthy validation.
   if step%config['eval_every']==0 or step==len(order):
-   val=evaluate(m,data,data.windows['val']);val['update']=step;ledger['evaluations'].append(val);score=val['equal']['common_joint'];cd=val['equal']['mean_cd_mm']
-   if ledger['best_joint'] is None or score<ledger['best_joint']:ledger['best_joint']=score;ledger['best_step']=step;save('best_joint.pt')
-   if ledger['lowest_cd'] is None or cd<ledger['lowest_cd']:ledger['lowest_cd']=cd;ledger['lowest_cd_step']=step;save('lowest_cd.pt')
-   save('last.pt');dump(out/'metrics.json',ledger);print(run_id,step,val['equal'],flush=True)
-  elif step%100==0:save('progress.pt');print(run_id,step,'train_loss',row['loss'],flush=True)
+   validate_step(step)
+  elif step%100==0:print(run_id,step,'train_loss',row['loss'],flush=True)
  assert ledger['successful_updates']==config['updates']
  ledger['seconds']=time.time()-start;ledger['allocated_peak']=torch.cuda.max_memory_allocated();ledger['reserved_peak']=torch.cuda.max_memory_reserved()
  load_checkpoint(out/'best_joint.pt',m,processor_state=p.state_dict())
  ledger['best_validation']=evaluate(m,data,data.windows['val'],diagnostics=True)
  ledger['train_diagnostic']=evaluate(m,data,windows if run_id in ('S1','S2','S3','S4') else representative(windows))
+ ledger['train_copy']=evaluate(m,data,windows if run_id in ('S1','S2','S3','S4') else representative(windows),is_copy=True)
  if not run_id.startswith('S'):
   ledger['all_window_validation']=evaluate(m,data,list(data.datasets['val'].windows))
-  _,b=data.batch(representative(data.windows['train'])[0],m);ledger['gradient_audit']=gradient_audit(m,b,p)
+  _,b=data.batch(representative(data.windows['train'])[0],m);ledger['gradient_audit']=gradient_audit(m,b,p,config['loss'],weight)
  ledger['checkpoint_hashes']={n:sha(out/n) for n in ('initial.pt','best_joint.pt','lowest_cd.pt','last.pt')}
  dump(out/'metrics.json',ledger)
  with (out/'training_metrics.csv').open('w',newline='') as f:

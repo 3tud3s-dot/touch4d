@@ -1,4 +1,5 @@
 import copy,json,tempfile,unittest
+from unittest.mock import patch
 from pathlib import Path
 import torch
 from scripts.experiments.v4_contact_optimization.protocol import *
@@ -30,9 +31,40 @@ class ContactOptimizationTests(unittest.TestCase):
   y=torch.tensor([[[1.,0.,0.],[3.,0.,0.],[4.,0.,0.],[999.,0.,0.]]])
   b={'inputs':{'gs_xyz':x[:,0].detach(),'gs_mask':torch.tensor([[True,True,False]])},'targets':{'target_xyz':[y],'target_mask':[torch.tensor([[True,True,True,False]])]}}
   value=squared_chamfer_samples(x,b,2);self.assertAlmostEqual(float(value),1.5);value.sum().backward();self.assertTrue(torch.isfinite(x.grad).all());self.assertEqual(float(x.grad[:,:,2].abs().sum()),0)
+ def test_resume_keeps_selection_ledger_and_rejects_conflicts(self):
+  cfg={'updates':800,'loss':'cd'};ledger={'config':cfg,'run_id':'r','updates':[{'update':1}],'best_joint':.1,'best_step':1,'successful_updates':1}
+  state={'source_sha':'s','successful_steps':1,'run_state':ledger}
+  self.assertEqual(validate_resume(state,cfg,'s','r')['best_joint'],.1)
+  for changed in ({'updates':800,'loss':'squared'},{'updates':0,'loss':'cd'}):
+   with self.assertRaises(ValueError):validate_resume(state,changed,'s','r')
+  with self.assertRaises(ValueError):validate_resume(state,cfg,'different','r')
+  state['successful_steps']=2
+  with self.assertRaises(ValueError):validate_resume(state,cfg,'s','r')
  def test_original_loss_equivalence_and_squared_backward(self):
   torch.manual_seed(42);m=build_model('v4_stage1',horizon=2);p=DataProcessor('001-rope');b=prepare_batch(synthetic_batch(points=16,horizon=2),p,m);pred=m(b['inputs']);r=GaussianRenderer(analytic_rasterizer)
   a,_=v4_objective(pred,b,p,r);z,_=loss(pred,b,p,r,'cd',1.);torch.testing.assert_close(a,z,rtol=0,atol=0)
   s,_=loss(pred,b,p,r,'squared',10.);s.backward();self.assertTrue(torch.isfinite(s));self.assertIsNotNone(m.motion[-1].weight.grad)
+ def test_interrupted_validation_resumes_without_repeating_optimizer_step(self):
+  from scripts.experiments.v4_contact_optimization import run
+  def fresh_cpu():
+   torch.manual_seed(42);return build_model('v4_stage1',horizon=2)
+  class FakeData:
+   processor=DataProcessor('001-rope');windows={'train':[(1,0)],'val':[(3,0)]}
+   def batch(self,key,model):
+    raw=synthetic_batch(points=16,horizon=2);return raw,prepare_batch(raw,self.processor,model)
+  metric={'equal':{'common_joint':.1,'mean_cd_mm':1.}}
+  with tempfile.TemporaryDirectory() as td:
+   root=Path(td);(root/'provenance').mkdir();(root/'contact_boundaries.json').write_text('{}')
+   (root/'provenance/calibration.json').write_text(json.dumps({'lambda_sq':1.}))
+   (root/'provenance/gate.json').write_text(json.dumps({'passed':True,'annotation_sha256':sha(root/'contact_boundaries.json'),'initial_hash':run.digest(fresh_cpu().state_dict())}))
+   cfg={'loss':'cd','sampling':'window','episodes':[1],'updates':2,'eval_every':1,'seed':42}
+   with patch.object(run,'FROZEN',root),patch.object(run,'Data',FakeData),patch.object(run,'fresh',fresh_cpu),patch.object(run,'provenance',return_value={'source_sha':'test'}),patch.object(run,'GaussianRenderer',side_effect=lambda:GaussianRenderer(analytic_rasterizer)),patch.object(run.torch.cuda,'reset_peak_memory_stats'),patch.object(run.torch.cuda,'max_memory_allocated',return_value=0),patch.object(run.torch.cuda,'max_memory_reserved',return_value=0),patch.object(run,'update',wraps=run.update) as updates:
+    with patch.object(run,'evaluate',side_effect=RuntimeError('simulated validation interruption')):
+     with self.assertRaisesRegex(RuntimeError,'simulated'):run.train(root,'S1',cfg)
+    with patch.object(run,'evaluate',side_effect=lambda *a,**k:copy.deepcopy(metric)):
+     run.train(root,'S1',cfg,resume=True)
+    self.assertEqual(updates.call_count,2)
+    result=json.loads((root/'short_experiments/S1/metrics.json').read_text())
+    self.assertEqual(result['successful_updates'],2);self.assertEqual(result['best_step'],1)
 
 if __name__=='__main__':unittest.main()

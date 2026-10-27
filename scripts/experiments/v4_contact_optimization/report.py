@@ -7,7 +7,7 @@ import torch
 from scripts.training.v4_runtime import load_checkpoint
 from scripts.training.train import gs_render_settings
 from scripts.training.visualize import export_gaussians
-from .run import Data,fresh,evaluate,representative,provenance,snapshot,BASELINE,dump,sha,gradient_audit
+from .run import Data,fresh,evaluate,representative,provenance,snapshot,BASELINE,FROZEN,dump,sha,gradient_audit
 from .protocol import select_candidate,matrix
 
 def select(root):
@@ -21,6 +21,12 @@ def select(root):
 
 @torch.no_grad()
 def final(root):
+ manifest=json.loads((root/'contact_window_manifest.json').read_text())
+ if sha(FROZEN/'contact_boundaries.json')!=manifest['annotation_sha256']:raise RuntimeError('Frozen annotation changed')
+ for name in matrix():
+  state=json.loads((root/'short_experiments'/name/'status.json').read_text());assert state['status']=='COMPLETED' and state['successful_updates']==800
+ for name in ('A','B'):
+  state=json.loads((root/f'long_experiment_{name}'/name/'status.json').read_text());assert state['status']=='COMPLETED' and state['successful_updates']==12352
  out=root/'comparisons';out.mkdir(exist_ok=False);data=Data();p=data.processor;m=fresh()
  historical=json.loads((BASELINE/'metrics.json').read_text());status=BASELINE/'status.json'
  if not status.exists() or json.loads(status.read_text()).get('state')!='COMPLETED':raise RuntimeError('Baseline still running; preserve it and wait for final comparison')
@@ -34,7 +40,7 @@ def final(root):
   initial=raw['inputs']['gs_xyz'][0,keep.cpu()].numpy();record['initial']=initial[ids].tolist()
   for h in range(10):
    gt=raw['targets']['target_xyz'][h][0,raw['targets']['target_mask'][h][0]].numpy();record['gt'].append(gt[np.linspace(0,len(gt)-1,min(700,len(gt)),dtype=int)].tolist())
-   cp=raw['inputs']['controller_points'][0,h].reshape(60,3);cm=raw['inputs']['controller_mask'][0,h].reshape(60);record['controllers'].append(cp[cm].tolist())
+   cp=raw['inputs']['controller_points'][0,h].reshape(60,3);cm=raw['inputs']['controller_mask'][0,h].reshape(60)&raw['inputs']['operation_hands'][0].repeat_interleave(30);record['controllers'].append(cp[cm].tolist())
   for tag in ('baseline_best','A_best','B_best'):
    load_checkpoint(out/f'{tag}.pt',m,processor_state=p.state_dict());pred=m(b['inputs']);world=p.denormalize_xyz(pred['xyz'],b['inputs']['gs_mask'][:,None].expand(-1,10,-1))[0,:,keep].cpu().numpy();record['models'][tag]=world[:,ids].tolist()
    dest=root/'visualizations'/f'ep{ep}_start{t}'/tag;dest.parent.mkdir(parents=True,exist_ok=True)
@@ -49,7 +55,34 @@ def curve_svg(hist):
  points=' '.join(f'{40+x/maxx*620:.1f},{190-y/maxy*160:.1f}' for x,y in values)
  return f'<svg viewBox="0 0 700 220"><path d="M40 20V190H670" fill="none" stroke="#789"/><polyline points="{points}" fill="none" stroke="#087e8b" stroke-width="2"/><text x="45" y="16">Episode-equal CD / mm (0–{maxy:.3f})</text><text x="450" y="210">successful updates / {maxx}</text></svg>'
 
+def scientific_tables(root,results):
+ """Descriptive comparisons only; every row retains both validation episodes."""
+ modes={}
+ for tag,v in results.items():
+  modes[tag]={}
+  for ep,e in v['episodes'].items():
+   copy_cd=np.array(results['copy']['episodes'][ep]['cd_mm']);base_cd=np.array(results['baseline_best']['episodes'][ep]['cd_mm']);cd=np.array(e['cd_mm'])
+   r=dict(**e,copy_improvement_percent=((copy_cd-cd)/copy_cd*100).tolist(),baseline_improvement_percent=((base_cd-cd)/base_cd*100).tolist())
+   windows=[w for w in v['windows'] if str(w['episode'])==ep]
+   r['conditions']={}
+   for mode in ('freeze_action','zero_tactile'):
+    ww=[w for w in windows if mode in w.get('conditions',{})]
+    if ww:
+     r['conditions'][mode]=dict(delta_cd_mm=float(np.mean([w['conditions'][mode]['delta_cd_mm'] for w in ww])),output_change_rms_mm=np.mean([w['conditions'][mode]['output_change_rms_mm'] for w in ww],axis=0).tolist(),signed_motion_change_mm=np.mean([np.array(w['conditions'][mode]['metrics']['signed_mean_motion_mm'])-np.array(w['signed_mean_motion_mm']) for w in ww],axis=0).tolist())
+   modes[tag][ep]=r
+ short={n:json.loads((root/'short_experiments'/n/'metrics.json').read_text()) for n in matrix()};pairs={}
+ for a,b in [('S5','S6'),('S7','S8'),('S5','S7'),('S6','S8')]:
+  pairs[a+'_to_'+b]={ep:short[b]['best_validation']['episodes'][ep]['mean_cd_mm']-short[a]['best_validation']['episodes'][ep]['mean_cd_mm'] for ep in ('3','6')}
+ optimization={}
+ for n,m in short.items():
+  optimization[n]=dict(clipped_fraction=float(np.mean([r['clipped'] for r in m['updates']])),best_step=m['best_step'],last_validation=m['evaluations'][-1]['equal'],train=m['train_diagnostic']['equal'],train_copy=m['train_copy']['equal'],allocated_peak=m['allocated_peak'],reserved_peak=m['reserved_peak'],seconds=m['seconds'])
+ for n in ('A','B'):
+  m=json.loads((root/f'long_experiment_{n}'/n/'metrics.json').read_text());optimization[n]=dict(clipped_fraction=float(np.mean([r['clipped'] for r in m['updates']])),best_step=m['best_step'],last_validation=m['evaluations'][-1]['equal'],allocated_peak=m['allocated_peak'],reserved_peak=m['reserved_peak'],seconds=m['seconds'],gradient_audit=m['gradient_audit'])
+ out=dict(models=modes,short_factorial_delta_cd_mm=pairs,optimization=optimization,interpretation='Positive ablation delta CD means normal conditions helped on these windows; sensitivity is not contact causality. Best checkpoints selected on this same validation set; single seed.')
+ dump(root/'comparisons/research_analysis.json',out);return out
+
 def build_report(root,results,refs):
+ analysis=scientific_tables(root,results)
  rows=[];lines=[];registry=json.loads((root/'experiment_registry.json').read_text())
  for key,v in results.items():
   row=dict(model=key,cd_mm=v['equal']['mean_cd_mm'],ep3=v['episodes']['3']['mean_cd_mm'],ep6=v['episodes']['6']['mean_cd_mm'],rgb=v['equal']['mean_rgb'],alpha=v['equal']['mean_alpha'],joint=v['equal']['common_joint']);rows.append(row)
@@ -57,7 +90,7 @@ def build_report(root,results,refs):
  short=[]
  for name in matrix():
   d=root/'short_experiments'/name;m=json.loads((d/'metrics.json').read_text());short.append(dict(id=name,cd_mm=m['best_validation']['equal']['mean_cd_mm'],ep3=m['best_validation']['episodes']['3']['mean_cd_mm'],ep6=m['best_validation']['episodes']['6']['mean_cd_mm'],joint=m['best_validation']['equal']['common_joint'],best_step=m['best_step'],updates=m['successful_updates']))
-  registry['short'][name].update(source=json.loads((d/'source_provenance.json').read_text()),successful_updates=m['successful_updates'],checkpoint=str(d/'best_joint.pt'),best_validation=m['best_validation']['equal'],status='COMPLETED')
+  registry['short'][name].update(source=json.loads((d/'source_provenance.json').read_text()),configuration=json.loads((d/'config.json').read_text()),successful_updates=m['successful_updates'],checkpoint=str(d/'best_joint.pt'),best_validation=m['best_validation']['equal'],status='COMPLETED')
  with (root/'short_experiment_summary.csv').open('w',newline='') as f:w=csv.DictWriter(f,fieldnames=list(short[0]));w.writeheader();w.writerows(short)
  curves=''
  for n in ('A','B'):
