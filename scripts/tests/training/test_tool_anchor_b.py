@@ -10,7 +10,7 @@ from scripts.training.model import PositionPredictor
 from scripts.training.gs_decoder import build_initial_anchor_field,interpolate_anchor_displacements
 from scripts.experiments.tool_anchor_b.model import ARCH,AnchorBPredictor,ToolAnchorAttention
 from scripts.experiments.tool_anchor_b.conditions import ToolPredictor,hand_inputs,sanitize
-from scripts.experiments.tool_anchor_b.run import fresh,payload,restore
+from scripts.experiments.tool_anchor_b.run import fresh,payload,restore,stable_gradient_norm
 
 def fixture():
     b=DataProcessor('001-rope')(make_batch(horizon=15))
@@ -36,6 +36,11 @@ class ToolAnchorBTests(unittest.TestCase):
         for k,v in a.state_dict().items():self.assertTrue(torch.equal(v,b.state_dict()[k]),k)
         x=fixture()['inputs'];pa,pb=a(x),b(x)
         for key in pa:self.assertTrue(torch.equal(pa[key],pb[key]))
+
+    def test_gradient_diagnostic_does_not_underflow_small_fp32_values(self):
+        value=torch.full((128,3),1e-30,dtype=torch.float32)
+        self.assertEqual(float(value.norm()),0.)
+        self.assertGreater(stable_gradient_norm(value),0.)
 
     def test_h15_shapes_padding_finite_and_inherited_attributes(self):
         x=fixture()['inputs'];m=small();active(m);p=m(x)

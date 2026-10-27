@@ -20,6 +20,10 @@ from .data import WEIGHTS,dataset,batches,audit,sha,metrics,evaluate,export
 
 VERSION='tool-anchor-b-h15-v1'
 
+def stable_gradient_norm(value):
+    """Measure tiny FP32 AR gradients in FP64; do not square them in FP32."""
+    return float(value.detach().double().norm())
+
 def fresh(mode,device='cpu',config=None):
     random.seed(42);np.random.seed(42);torch.manual_seed(42)
     if mode not in ('base','candidate'):raise ValueError(mode)
@@ -88,7 +92,10 @@ def smoke(out,bs,processor,renderers,source):
         def hook(module,inputs,value):value.retain_grad();captured.append(value)
         handle=model.position_head.register_forward_hook(hook)
         opt.zero_grad(set_to_none=True);pred=model(bs[0]['inputs']);pred['xyz'][:,-1].square().sum().backward();handle.remove()
-        cross=[float(v.grad.norm()) for v in captured]
+        cross=[stable_gradient_norm(v.grad) if v.grad is not None else 0. for v in captured]
+        atomic_json(out/f'{mode}-gradient-chain.json',dict(norms_float64=cross,
+            norms_float32=[float(v.grad.norm()) if v.grad is not None else None for v in captured],
+            nonzero_elements=[int(v.grad.count_nonzero()) if v.grad is not None else 0 for v in captured]))
         if len(cross)!=15 or not all(v>0 and np.isfinite(v) for v in cross):raise AssertionError('Truncated AR gradient')
         if mode=='candidate':
             for name in ('tool_attention.bias','tool_attention.value','tool_attention.motion_fusion','gs_encoder','position_head'):
