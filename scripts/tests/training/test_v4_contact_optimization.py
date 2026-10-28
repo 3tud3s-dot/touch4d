@@ -66,5 +66,25 @@ class ContactOptimizationTests(unittest.TestCase):
     self.assertEqual(updates.call_count,2)
     result=json.loads((root/'short_experiments/S1/metrics.json').read_text())
     self.assertEqual(result['successful_updates'],2);self.assertEqual(result['best_step'],1)
+ def test_report_curve_finite_and_safe_labels(self):
+  from scripts.experiments.v4_contact_optimization.report import multi_curve,loss_curves
+  svg=multi_curve({'a':[(1,0.),(2,0.)]},'<title>','horizon')
+  self.assertIn('&lt;title&gt;',svg);self.assertNotIn('nan',svg)
+  for value in ({},{'a':[]},{'a':[(1,float('nan'))]}):
+   with self.assertRaises(ValueError):multi_curve(value,'x','h')
+  rows=[dict(update=i,loss=.2,geometry=.03,rgb=.16,alpha=.1) for i in range(1,401)]
+  self.assertIn('400',loss_curves({'updates':rows},'CD'))
+ def test_report_answers_use_episode_equal_values_and_keep_limits(self):
+  from scripts.experiments.v4_contact_optimization.report import summary_sections
+  results={}
+  for n,value in {'copy':5.,'baseline_best':4.,'baseline_last':4.1,'A_best':3.,'A_last':3.2,'B_best':2.,'B_last':2.2}.items():
+   e=dict(mean_cd_mm=value,mean_rgb=.1,mean_alpha=.2,common_joint=.3,cd_mm=[value]*10,rgb=[.1]*10,alpha=[.2]*10,motion_rms_mm=[1.]*10)
+   results[n]={'equal':e,'episodes':{'3':e,'6':e}}
+  analysis={'models':{n:{e:{'conditions':{}} for e in ('3','6')} for n in results},'short_factorial_delta_cd_mm':{'S5_to_S7':{'3':.1,'6':-.2}},'optimization':{n:{'best_step':1544,'clipped_fraction':.5,'allocated_peak':1024**3} for n in ('A','B')}}
+  refs={n:{'source_sha':'frozen'} for n in ('A_best','baseline_best')}
+  with tempfile.TemporaryDirectory() as td:
+   root=Path(td);(root/'selection.json').write_text(json.dumps({'winner':'S6','fallback':True}))
+   md,charts=summary_sections(root,results,analysis,[],refs)
+   self.assertIn('+25.00%',md);self.assertIn('Long B',md);self.assertIn('不是独立、无偏的泛化证明',md);self.assertIn('12352',md);self.assertIn('horizon',charts)
 
 if __name__=='__main__':unittest.main()
