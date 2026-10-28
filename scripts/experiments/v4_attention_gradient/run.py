@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -205,9 +206,10 @@ def main():
     parser.add_argument('--root',type=Path,required=True)
     parser.add_argument('--stage',choices=['preflight','pilot','full','report','package'],required=True)
     parser.add_argument('--expected-sha',required=True)
-    parser.add_argument('--postprocess-attempt',default='initial',choices=['initial','local_recovery'],
+    parser.add_argument('--postprocess-attempt',default='initial',
                         help='CPU report/package recovery only; preserves the original failed status')
     args=parser.parse_args();actual=env()['source_sha']
+    if not re.fullmatch(r'[a-z0-9_]{1,40}',args.postprocess_attempt):raise ValueError('Invalid attempt label')
     if args.postprocess_attempt!='initial' and args.stage not in ('report','package'):
         raise ValueError('GPU/data stages cannot be retried through postprocessing')
     status_name=args.stage if args.postprocess_attempt=='initial' else args.stage+'_'+args.postprocess_attempt

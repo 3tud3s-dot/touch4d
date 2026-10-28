@@ -65,4 +65,3 @@ provenance; it does not pretend that Linux checkpoint paths exist on Windows.
 Both GPU execution and final postprocessing source snapshots are included.
 The final package gate requires successful preflight/pilot/full and recovered
 report, and accepts EXIT=1 only for the recorded missing-matplotlib failure.
-

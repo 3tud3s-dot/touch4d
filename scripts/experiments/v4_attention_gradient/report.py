@@ -26,6 +26,7 @@ def csv_file(path,rows):
 
 
 def figures(root,records,fdrows):
+    (root/'figures').mkdir(exist_ok=True)
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -269,8 +270,9 @@ def build_report(root):
 
 def package(root):
     from .run import env
-    report_status=root/'status/report_local_recovery.json'
-    if not report_status.exists():report_status=root/'status/report.json'
+    reports=[p for p in (root/'status').glob('report*.json') if json.loads(p.read_text()).get('passed') is True]
+    if not reports:raise RuntimeError('Report not completed')
+    report_status=max(reports,key=lambda p:p.stat().st_mtime)
     if not json.loads(report_status.read_text())['passed']:raise RuntimeError('Report not completed')
     execution_exit=root/'provenance/execution_exit.txt'
     for stage in ('preflight','pilot','full'):
@@ -278,7 +280,7 @@ def package(root):
     if not execution_exit.exists():raise RuntimeError('GPU pipeline has not ended')
     if execution_exit.read_text().strip()!='EXIT=0':
         initial=json.loads((root/'status/report.json').read_text())
-        if not (execution_exit.read_text().strip()=='EXIT=1' and report_status.name=='report_local_recovery.json'
+        if not (execution_exit.read_text().strip()=='EXIT=1' and report_status.name.startswith('report_local_recovery')
                 and not initial['passed'] and "No module named 'matplotlib'" in initial['error']):
             raise RuntimeError('Unresolved pipeline failure')
     source=Path.cwd();target=root/'source';target.mkdir(exist_ok=True)
