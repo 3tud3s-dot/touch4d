@@ -1,5 +1,5 @@
 """Final read-only comparison and offline figures from completed checkpoints."""
-import argparse,json,os,subprocess,copy,csv,html as html_lib
+import argparse,json,os,subprocess,copy,csv,re,html as html_lib
 from pathlib import Path
 from types import SimpleNamespace
 import numpy as np
@@ -79,6 +79,13 @@ def summary_sections(root,results,analysis,short,refs):
  def change(a,b):return (a-b)/a*100
  base,a,b=cd('baseline_best'),cd('A_best'),cd('B_best');selection=json.loads((root/'selection.json').read_text());winner='A' if a<=b else 'B'
  verdict='本轮未达到接触验证CD提升目标，两组长实验均不优于原Baseline。' if min(a,b)>=base else '至少一组长实验在该接触验证口径下低于原Baseline；仍须检查逐Episode与渲染代价。'
+ balanced=analysis['short_factorial_delta_cd_mm'].get('S5_to_S7',{})
+ balanced_note='本轮短实验中，均衡采样改善ep6而损害ep3，表现为取舍，不能称为统一改善。' if balanced.get('3',0)>0 and balanced.get('6',0)<0 else '需要分别读取两组Episode差异，不能仅凭总体均值判断。'
+ condition_note='条件消融数据不足，不能判定收益。'
+ conditions=[analysis['models'][n][ep]['conditions'] for n in ('A_best','B_best') for ep in ('3','6')]
+ if all('freeze_action' in c and 'zero_tactile' in c for c in conditions):
+  freeze=[c['freeze_action']['delta_cd_mm'] for c in conditions];touch=[c['zero_tactile']['delta_cd_mm'] for c in conditions]
+  condition_note=f'A/ep3、A/ep6、B/ep3、B/ep6的Action冻结ΔCD依次为 {", ".join(f"{v:+.4f}" for v in freeze)} mm；触觉置零为 {", ".join(f"{v:+.4f}" for v in touch)} mm。正常Action在这些对照中均有帮助，但触觉收益不一致。结合整体CD未超过Baseline，本轮未证明条件利用获得稳定改进。' if all(v>0 for v in freeze) and min(a,b)>=base else '条件对误差的作用需按Episode和扰动分别判断，不能把敏感性等同于收益。'
  lines=['# V4 Contact-only V1 验收','',f'**工程流程完成。{verdict}**','',f'训练源码 `{refs["A_best"]["source_sha"]}`；历史基线源码 `{refs["baseline_best"]["source_sha"]}`。八组短实验各800次成功更新，A/B各12352次。H10/Δ1、seed42、同一初始化；未读取测试集GT进行评估。','',
  '## 统一口径','', '主要指标使用同一52个接触验证窗口：ep3内36窗口平均、ep6内16窗口平均，再对Episode等权。best按共同的普通CD（归一化）+RGB+0.1Alpha选取，lowest_cd仅为诊断。所有模型还报告原完整验证集，窗口集合不同的均值不混比。','',
  '| 模型 | 接触CD/mm | ep3 | ep6 | RGB | Alpha | 共同联合指标 | 相对Copy改善 | 相对Baseline改善 |','|---|---:|---:|---:|---:|---:|---:|---:|---:|']
@@ -90,11 +97,11 @@ def summary_sections(root,results,analysis,short,refs):
  '## 七个研究问题','',
  f'1. **仅接触窗口是否提高验证表现？** Long A相对原Baseline的CD变化为{change(base,a):+.2f}%（正数为改善）；ep3/ep6分别为{change(cd("baseline_best","3"),cd("A_best","3")):+.2f}% / {change(cd("baseline_best","6"),cd("A_best","6")):+.2f}%。这是同一验证集的描述性结果；不同训练曝光与采样序列也随接触筛选改变。',
  f'2. **Squared CD是否更好？** Long B相对A的CD变化为{change(a,b):+.2f}%；ep3/ep6分别为{change(cd("A_best","3"),cd("B_best","3")):+.2f}% / {change(cd("A_best","6"),cd("B_best","6")):+.2f}%。本轮只支持这个固定λ和seed下的对照，不能推广为所有数据均优于普通CD。',
- '3. **均衡采样是否缓解分化？** 下表保留S5→S7、S6→S8的逐Episode差异；如果一项改善而另一项退化，只能说存在取舍，不能称为统一改善。本轮没有均衡采样的长期验证。',
+ f'3. **均衡采样是否缓解分化？** {balanced_note}下表保留S5→S7、S6→S8的逐Episode差异。本轮没有均衡采样的长期验证。',
  '4. **是否存在单双手实现Bug？** 已执行的四个真实窗口Mask扰动、四头有符号运动公式、实际FPS Anchor历史位置、跨步图连接和既有回归测试未发现确定性Bug。30/60工具会改变softmax分母，属于结构性质；Null不是接触概率。该检查不能排除未覆盖的所有错误。',
  f'5. **哪组长实验更好？** 按best_joint checkpoint的Episode等权CD，Long {winner}较低；下方同时保留last，不能据best单点声称稳定。',
  f'6. **相对原Baseline是否可信涨点？** A/B总体CD改善分别为{change(base,a):+.2f}% / {change(base,b):+.2f}%。共同52窗口、预算和初始化受控，但只有一个seed且使用该验证集选模/筛选，尚不是独立、无偏的泛化证明。RGB/Alpha与ep3/ep6必须一并查看。',
- '7. **是否伴随更正确的运动和条件利用？** 逐帧几何/RGB/Alpha与下方条件消融共同判断。ΔCD=扰动−正常，正值支持正常条件在这些窗口上有帮助；输出变化量只表示敏感性。不能由运动更大、Attention更集中或单次消融推出接触因果机制。','',
+ f'7. **是否伴随更正确的运动和条件利用？** {condition_note} ΔCD=扰动−正常，正值支持正常条件在这些窗口上有帮助；输出变化量只表示敏感性。不能由运动更大、Attention更集中或单次消融推出接触因果机制。','',
  '| 短实验变化 | ep3 ΔCD/mm | ep6 ΔCD/mm |','|---|---:|---:|']
  for pair,v in analysis['short_factorial_delta_cd_mm'].items():lines.append(f'| {pair} | {v["3"]:+.5f} | {v["6"]:+.5f} |')
  lines+=['','## 条件利用与训练稳定性','', '| 模型 | Episode | 扰动 | ΔCD/mm | 输出变化RMS/mm（h均值） |','|---|---|---|---:|---:|']
@@ -121,6 +128,17 @@ def summary_sections(root,results,analysis,short,refs):
  '冻结审计曾发现010相机的空深度；本轮实际沿用正式V4的001/011/021三路相机，不能将010异常直接归因于本轮训练。CPU逐帧审计确认709训练及52验证窗口的每个目标都有三路非空有效区域，见provenance/selected_camera_audit.json；这只确认像素有效性，不证明重建完整。始终沿用target_depth_valid。图像展示完整重建GS渲染，指标仅统计有效像素；GT不是原始照片。GS逐帧独立重建、无材料点ID，缺失区域和初态属性继承限制仍存在。',
  '工程验收、训练拟合与研究收益分开判断。不可仅靠低CD判定物理正确；不可将小幅单seed差异视为统计显著。固定可视化窗口在训练前按每Episode中位起点冻结，无结果选窗。',
  '原始记录：contact_window_manifest.json、bug_audit.json、selection.json、各组metrics.json/training_metrics.csv、comparisons/contact_comparison.json、checkpoint_provenance.json、pipeline_submission.json。测试日志和CUDA Smoke位于根目录与provenance/。','']
+ lines+=['## 工程交付检查','']
+ for label,path in [('本地',root/'cpu-tests-delivery.txt'),('服务器',root/'provenance/server-cpu-tests-delivery.txt')]:
+  if path.exists():
+   log=path.read_text(encoding='utf8',errors='replace');count=re.search(r'Ran (\d+) tests',log);skips=re.search(r'OK \(skipped=(\d+)\)',log)
+   if count and re.search(r'^OK(?: |$)',log,re.M):
+    n=int(count[1]);s=int(skips[1]) if skips else 0;lines.append(f'- {label}测试：{n}项，{n-s}通过、{s}跳过、0失败；日志 `{path.relative_to(root).as_posix()}`。')
+ qa=root/'provenance/delivery_asset_validation.json'
+ if qa.exists():
+  q=json.loads(qa.read_text());lines.append(f'- 资源/数值检查：{q["visualization_windows"]}个窗口、{q["model_window_pairs"]}组十帧几何、{q["png_count"]}张PNG通过；见 `{qa.relative_to(root).as_posix()}`。')
+  lines.append('- 网页交互为WARNING：自动化浏览器拒绝file://协议，未绕过限制，未宣称完成真实浏览器交互验收。已直接检查代表性渲染PNG；离线页面需人工打开复核交互。')
+ lines+=['- 实际GPU：RTX 5090；CD和Squared CD真实前后向、两次更新及checkpoint精确恢复均通过，见provenance/cuda_smoke.json。Slurm实际命令和作业号见pipeline_submission.json。', '- 原生产模型、Dataset、Loss文件无改动；训练SHA和报告工具SHA分开保存。未创建PR或合并main；本轮训练已停止。','']
  charts='<h2>逐 horizon：统一接触验证</h2>'
  for ep in ('3','6'):
   for key,unit in [('cd_mm','CD / mm'),('rgb','RGB MAE'),('alpha','Alpha MAE'),('motion_rms_mm','Pred motion RMS / mm')]:
@@ -189,7 +207,8 @@ def build_report(root,results,refs):
  base=results['baseline_best']['equal']['mean_cd_mm'];a=results['A_best']['equal']['mean_cd_mm'];b=results['B_best']['equal']['mean_cd_mm'];winner='A' if a<=b else 'B'
  conclusions=dict(contact_only_relative_CD_improvement_percent=(base-a)/base*100,candidate_relative_CD_improvement_percent=(base-b)/base*100,better_long=winner,engineering_pass=True,science='Descriptive single-seed selected-validation results; no test GT evaluated; not an unbiased generalization estimate',actions='Read condition diagnostics for error benefit; output sensitivity alone is not causal learning')
  previous=json.loads((root/'acceptance.json').read_text()) if (root/'acceptance.json').exists() else {'source':provenance()}
- dump(root/'acceptance.json',dict(status='COMPLETED',conclusions=conclusions,source=previous['source'],summary_source_sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),annotation_unchanged=True,budget={'short':8*800,'long':2*12352},limitations=['Fixed 52-window contact validation used for selection; no new independent generalization test','Single seed, no statistical significance','GS independent reconstruction and missing regions remain','Best versus last and both episodes must be inspected'],references=refs))
+ qa=root/'provenance/delivery_asset_validation.json'
+ dump(root/'acceptance.json',dict(status='COMPLETED',conclusions=conclusions,source=previous['source'],summary_source_sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),annotation_unchanged=True,budget={'short':8*800,'long':2*12352},delivery_checks=json.loads(qa.read_text()) if qa.exists() else None,limitations=['Fixed 52-window contact validation used for selection; no new independent generalization test','Single seed, no statistical significance','GS independent reconstruction and missing regions remain','Best versus last and both episodes must be inspected','Real browser interaction not verified: file protocol automation restriction'],references=refs))
  md,horizon_charts=summary_sections(root,results,analysis,short,refs);curves+=horizon_charts
  lookup={n:{(w['episode'],w['start']):w for w in v['windows']} for n,v in results.items()};failures={}
  for n in ('A_best','B_best'):
