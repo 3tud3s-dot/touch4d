@@ -1,4 +1,4 @@
-"""Fresh V4 H10/interval1, eight full epochs. Reuses production epoch loops."""
+"""Fresh configurable-horizon V4/interval1, eight full epochs. Reuses production epoch loops."""
 import argparse
 from collections import Counter
 import os
@@ -15,10 +15,12 @@ from scripts.training.train import (GS_CAMERAS, gs_render_settings, make_rendere
     train_epoch, evaluate_loader, atomic_json)
 
 
-def configuration(root, depth_root, sha):
+def configuration(root, depth_root, sha, horizon=10):
+    if type(horizon) is not int or horizon <= 0:
+        raise ValueError("horizon must be a positive integer")
     return dict(source_sha=sha, scene='001-rope', architecture='v4_stage1', protocol='epochs',
                 root=str(Path(root).resolve()), depth_root=str(Path(depth_root).resolve()),
-                epochs=8, single_epochs=0, horizon=10, prediction_interval=1,
+                epochs=8, single_epochs=0, horizon=horizon, prediction_interval=1,
                 batch_size=1, seed=42, lr=1e-4, weight_decay=1e-4, workers=0,
                 output_mode='gs_geometry', chamfer_weight=1., rgb_weight=1., alpha_weight=.1,
                 scale_weight=0., depth_weight=0., chamfer_chunk=512,
@@ -33,7 +35,7 @@ def loader(config, split, epoch=0):
     return make_dataloader(config['scene'],split,root=config['root'],stage='all',
         batch_size=1,num_workers=0,seed=config['seed']+epoch,with_depth=True,
         depth_root=config['depth_root'],depth_cameras=config['depth_cameras'],
-        horizon=10,prediction_interval=1,operation_hand_policy=HAND_POLICY)
+        horizon=config["horizon"],prediction_interval=1,operation_hand_policy=HAND_POLICY)
 
 
 class PreparedLoader:
@@ -64,7 +66,9 @@ def data_manifest(loaders):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     for key in ('root','depth-root','output','expected-sha'): parser.add_argument('--'+key,required=True)
+    parser.add_argument("--horizon",type=int,default=10)
     args=parser.parse_args()
+    if args.horizon <= 0: parser.error("--horizon must be positive")
     sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
     if sha!=args.expected_sha or subprocess.check_output(['git','status','--porcelain'],text=True).strip():
         raise RuntimeError('Source must be clean and pinned to the submitted SHA')
@@ -74,9 +78,9 @@ def main():
     try:
         torch.set_num_threads(4);torch.manual_seed(42);random.seed(42)
         torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
-        config=configuration(args.root,args.depth_root,sha)
+        config=configuration(args.root,args.depth_root,sha,args.horizon)
         processor=DataProcessor('001-rope'); adapter=PreparedProcessor(processor)
-        model=build_model('v4_stage1',horizon=10,prediction_interval=1).cuda()
+        model=build_model('v4_stage1',horizon=config['horizon'],prediction_interval=1).cuda()
         optimizer=torch.optim.AdamW(model.parameters(),lr=1e-4,weight_decay=1e-4)
         renderer=make_renderer(config)
         import gsplat

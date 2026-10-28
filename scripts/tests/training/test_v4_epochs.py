@@ -54,3 +54,24 @@ class V4EpochTests(unittest.TestCase):
         torch.testing.assert_close(adapter.denormalize_batch(actual)['inputs']['gs_xyz'],p.denormalize_batch(expected)['inputs']['gs_xyz'])
         self.assertEqual(adapter.state_dict(),p.state_dict())
         with self.assertRaises(ValueError):adapter(raw)
+
+    def test_h15_configuration_routes_loader(self):
+        c=configuration('data','depth','sha',horizon=15)
+        self.assertEqual(c['horizon'],15)
+        for split in ('train','val'):
+            with patch('scripts.experiments.full_training.v4_epochs.make_dataloader') as make:
+                loader(c,split)
+                self.assertEqual(make.call_args.kwargs['horizon'],15)
+        for invalid in (0,-1,1.5,True):
+            with self.assertRaises(ValueError):configuration('data','depth','sha',horizon=invalid)
+
+    def test_h15_real_model_backward(self):
+        p=DataProcessor('001-rope');m=build_model('v4_stage1',horizon=15,prediction_interval=1)
+        batch=prepare_batch(synthetic_batch(32,15),p,m)
+        output=m(batch['inputs'])
+        xyz=output['xyz']
+        self.assertEqual(xyz.shape[1],15)
+        self.assertTrue(torch.isfinite(xyz).all())
+        loss=xyz.square().mean();loss.backward()
+        self.assertIsNotNone(m.motion[-1].weight.grad)
+        self.assertTrue(torch.isfinite(m.motion[-1].weight.grad).all())
