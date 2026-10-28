@@ -38,6 +38,12 @@ class OracleTests(unittest.TestCase):
         self.assertTrue(torch.equal(b['targets']['target_xyz'][0],self.b['targets']['target_xyz'][9]))
         self.assertTrue(torch.equal(b['targets']['target_depth'],self.b['targets']['target_depth'][:,9:10]))
 
+    def test_world_export_mask(self):
+        p=decode(self.x,self.f,torch.zeros_like(self.t['steps'][0]['cumulative_d']))
+        world=self.p.denormalize_xyz(p['xyz'],self.x['gs_mask'][:,None])
+        reference=self.p.denormalize_xyz(self.x['gs_xyz'],self.x['gs_mask'])
+        torch.testing.assert_close(world[:,0],reference)
+
     def test_gradient_only_d_and_model_hash(self):
         before=digest(self.m.state_dict());fhash=digest(self.f.__dict__)
         d=torch.nn.Parameter(torch.zeros_like(self.t['steps'][0]['cumulative_d']));opt=torch.optim.Adam([d],lr=.001)

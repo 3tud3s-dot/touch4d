@@ -81,13 +81,13 @@ def execute(root,expected):
             key=f'ep{ep}_start{start}_h{h:02}';one=one_horizon(b,h);npred={k:v[:,h-1:h] for k,v in normal.items()}
             with torch.no_grad():target=renderer.render_targets(one,processor)
             images_save(root,key,'gt',target)
-            arrays={'initial':processor.denormalize_xyz(b['inputs']['gs_xyz'])[0,keep].cpu().numpy(),'gt':processor.denormalize_xyz(one['targets']['target_xyz'][0])[0,one['targets']['target_mask'][0][0]].cpu().numpy(),'near':regions['near'].cpu().numpy(),'far':regions['far'].cpu().numpy()}
+            arrays={'initial':processor.denormalize_xyz(b['inputs']['gs_xyz'],b['inputs']['gs_mask'])[0,keep].cpu().numpy(),'gt':processor.denormalize_xyz(one['targets']['target_xyz'][0],one['targets']['target_mask'][0])[0,one['targets']['target_mask'][0][0]].cpu().numpy(),'near':regions['near'].cpu().numpy(),'far':regions['far'].cpu().numpy()}
             baseline={}
             for name,p in [('copy',decode(b['inputs'],f,torch.zeros_like(trace['steps'][h-1]['cumulative_d']))),('normal',npred)]:
                 vals,heat=evaluate(p,one,processor,renderer,target,regions,edge,npred);baseline[name]=vals
                 all_rows.append(dict(window=key,split=split,horizon=h,method=name,initialization='none',snapshot='fixed',selected_step=0,**vals))
                 with torch.no_grad():images_save(root,key,name,renderer(p,one,processor))
-                arrays[name]=processor.denormalize_xyz(p['xyz'])[0,0,keep].cpu().numpy();arrays[name+'_heat']=heat[keep].cpu().numpy()
+                arrays[name]=processor.denormalize_xyz(p['xyz'],b['inputs']['gs_mask'][:,None])[0,0,keep].cpu().numpy();arrays[name+'_heat']=heat[keep].cpu().numpy()
             for loss_name in ('cd','joint'):
                 for initialization in ('zero','normal'):
                     initial=trace['steps'][h-1]['cumulative_d'].detach().clone()
@@ -128,7 +128,7 @@ def execute(root,expected):
                     for snapshot,dd,chosen in [('best',best_d,best_step),('last',d.detach(),300)]:
                         pp=decode(b['inputs'],f,dd);vals,heat=evaluate(pp,one,processor,renderer,target,regions,edge,npred)
                         all_rows.append(dict(window=key,split=split,horizon=h,method='D0-'+loss_name,initialization=initialization,snapshot=snapshot,selected_step=chosen,**vals))
-                        arrays[name+'_'+snapshot]=processor.denormalize_xyz(pp['xyz'])[0,0,keep].detach().cpu().numpy();arrays[name+'_'+snapshot+'_heat']=heat[keep].cpu().numpy()
+                        arrays[name+'_'+snapshot]=processor.denormalize_xyz(pp['xyz'],b['inputs']['gs_mask'][:,None])[0,0,keep].detach().cpu().numpy();arrays[name+'_'+snapshot+'_heat']=heat[keep].cpu().numpy()
                         with torch.no_grad():images_save(root,key,name+'_'+snapshot,renderer(pp,one,processor))
                     print(json.dumps(dict(event='fit_completed',window=key,loss=loss_name,initialization=initialization,best_step=best_step,initial=fit_curve[0]['objective'],best=best,last=fit_curve[-1]['objective'])),flush=True)
             np.savez_compressed(root/'arrays'/f'{key}.npz',**arrays)
