@@ -35,7 +35,8 @@ def figures(root,records,fdrows):
     for i,r in enumerate(g0):
         for loss,offset in [('cd',-.24),('rgb',0),('alpha_weighted',.24)]:
             row=next(x for x in r['loss_gradients'] if x['scope']=='direct_single_horizon' and x['region']=='all' and x['horizon']==10 and x['loss']==loss)
-            axes[0].bar(i+offset,row['l2'],width=.23,label=loss if i==0 else None)
+            color={'cd':'#267da7','rgb':'#e99a39','alpha_weighted':'#42a578'}[loss]
+            axes[0].bar(i+offset,row['l2'],width=.23,color=color,label=loss if i==0 else None)
         row=next(x for x in r['loss_gradients'] if x['scope']=='direct_single_horizon' and x['region']=='all' and x['horizon']==10)
         axes[1].bar(i,row['cd__rgb'],color='#278797')
     axes[0].set_yscale('log');axes[0].set_title('H10 direct position gradient L2');axes[0].legend()
@@ -69,17 +70,18 @@ def figures(root,records,fdrows):
     axes[0].tick_params(axis='x',rotation=20);axes[1].set_xlabel('Freeze Action output change H10 / mm');axes[1].set_ylabel('Zero explicit tool motion output change H10 / mm')
     fig.savefig(root/'figures/parameters_and_ablation.png',dpi=150);plt.close(fig)
     fig,axes=plt.subplots(2,2,figsize=(13,8),constrained_layout=True)
-    for r in g0:
+    for ri,r in enumerate(g0):
         name=f"ep{r['episode']}/{r['start']}"
+        color=plt.get_cmap('tab10')(ri)
         for region,style in [('near','-'),('far','--')]:
             ss=[s for s in r['attention_signal'] if s['region']==region]
-            axes[0,0].plot(range(1,11),[np.mean(s['controller_mass_by_head']) for s in ss],style,label=name+' '+region)
-            axes[0,1].plot(range(1,11),[np.mean(s['tool_motion_head_vector_rms_mm']) for s in ss],style)
+            axes[0,0].plot(range(1,11),[np.mean(s['controller_mass_by_head']) for s in ss],style,color=color,label=name+' '+region)
+            axes[0,1].plot(range(1,11),[np.mean(s['tool_motion_head_vector_rms_mm']) for s in ss],style,color=color)
         aa=[next(a for a in r['angle_distributions'] if a['region']=='all' and a['pair']=='cd__rgb' and a['horizon']==h) for h in [1,5,10]]
         axes[1,0].plot([1,5,10],[a['negative_fraction'] for a in aa],marker='o',label=name)
         for scope,style in [('direct_Hmean','-'),('future_AR_Hmean','--')]:
             rr=[s for s in r['loss_gradients'] if s['loss']=='joint' and s['region']=='all' and s['scope']==scope]
-            axes[1,1].plot(range(1,11),[s['l2'] for s in rr],style,label=name+' '+scope)
+            axes[1,1].plot(range(1,11),[s['l2'] for s in rr],style,color=color,label=name+' '+scope)
     axes[0,0].set_title('Near / Far controller mass; fixed initial regions');axes[0,0].legend(fontsize=6,ncol=2)
     axes[0,1].set_title('Near / Far mean head motion RMS / mm')
     axes[1,0].set_title('Pointwise CD/RGB negative cosine fraction');axes[1,0].legend(fontsize=6)
