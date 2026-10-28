@@ -65,3 +65,5 @@ provenance; it does not pretend that Linux checkpoint paths exist on Windows.
 Both GPU execution and final postprocessing source snapshots are included.
 The final package gate requires successful preflight/pilot/full and recovered
 report, and accepts EXIT=1 only for the recorded missing-matplotlib failure.
+All generated text/JSON is UTF-8, including Windows postprocessing. Use a fresh
+attempt label for a failed report/package retry; original failure receipts remain.

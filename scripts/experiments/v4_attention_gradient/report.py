@@ -127,18 +127,18 @@ def evidence(records,fdrows):
 
 
 def build_report(root):
-    if not json.loads((root/'status/full.json').read_text())['passed']:raise RuntimeError('Full diagnosis incomplete')
+    if not json.loads((root/'status/full.json').read_text(encoding='utf8'))['passed']:raise RuntimeError('Full diagnosis incomplete')
     records=[]
     for f in sorted((root/'results').glob('G*_ep*_start*.json')):
-        records.append(json.loads(f.read_text()))
+        records.append(json.loads(f.read_text(encoding='utf8')))
     if len(records)!=12:raise ValueError('Expected 6 G0 and 3 each G2/G3')
-    checkpoints=json.loads((root/'provenance/checkpoint_provenance.json').read_text())
+    checkpoints=json.loads((root/'provenance/checkpoint_provenance.json').read_text(encoding='utf8'))
     if all(Path(v['path']).is_file() for v in checkpoints.values()):
         integrity={tag:dict(path=v['path'],expected=v['sha256'],actual=sha(v['path'])) for tag,v in checkpoints.items()}
     else:
         # Offline Windows reporting cannot read Linux checkpoint paths. Require the
         # completed server-side verification, never substitute an invented hash.
-        integrity=json.loads((root/'provenance/final_checkpoint_integrity.json').read_text())
+        integrity=json.loads((root/'provenance/final_checkpoint_integrity.json').read_text(encoding='utf8'))
         if set(integrity)!=set(checkpoints) or any(integrity[k]['path']!=v['path'] or integrity[k]['expected']!=v['sha256'] for k,v in checkpoints.items()):
             raise RuntimeError('Server integrity receipt does not match frozen provenance')
     if any(v['expected']!=v['actual'] for v in integrity.values()):raise RuntimeError('Historical checkpoint changed')
@@ -154,7 +154,7 @@ def build_report(root):
         for group,v in r['parameter_gradients'].items():
             for loss,g in v['losses'].items():parameters.append(dict(**key,module=group,loss=loss,parameter_count=v['parameter_count'],**g,**v['cosines']))
     for ep,start in [(2,73),(2,141)]:
-        d=json.loads((root/'results'/f'finite_difference_ep{ep}_start{start}.json').read_text())
+        d=json.loads((root/'results'/f'finite_difference_ep{ep}_start{start}.json').read_text(encoding='utf8'))
         fdrows.extend(dict(episode=ep,start=start,**r) for r in d['rows'])
     for name,rows in [('loss_gradients',position),('parameter_gradients',parameters),('intermediate_gradients',intermediate),('finite_difference',fdrows)]:
         csv_file(root/'results'/f'{name}.csv',rows)
@@ -272,17 +272,17 @@ def build_report(root):
 
 def package(root):
     from .run import env
-    reports=[p for p in (root/'status').glob('report*.json') if json.loads(p.read_text()).get('passed') is True]
+    reports=[p for p in (root/'status').glob('report*.json') if json.loads(p.read_text(encoding='utf8')).get('passed') is True]
     if not reports:raise RuntimeError('Report not completed')
     report_status=max(reports,key=lambda p:p.stat().st_mtime)
-    if not json.loads(report_status.read_text())['passed']:raise RuntimeError('Report not completed')
+    if not json.loads(report_status.read_text(encoding='utf8'))['passed']:raise RuntimeError('Report not completed')
     execution_exit=root/'provenance/execution_exit.txt'
     for stage in ('preflight','pilot','full'):
-        if not json.loads((root/f'status/{stage}.json').read_text())['passed']:raise RuntimeError('GPU/data diagnosis incomplete')
+        if not json.loads((root/f'status/{stage}.json').read_text(encoding='utf8'))['passed']:raise RuntimeError('GPU/data diagnosis incomplete')
     if not execution_exit.exists():raise RuntimeError('GPU pipeline has not ended')
-    if execution_exit.read_text().strip()!='EXIT=0':
-        initial=json.loads((root/'status/report.json').read_text())
-        if not (execution_exit.read_text().strip()=='EXIT=1' and report_status.name.startswith('report_local_recovery')
+    if execution_exit.read_text(encoding='utf8').strip()!='EXIT=0':
+        initial=json.loads((root/'status/report.json').read_text(encoding='utf8'))
+        if not (execution_exit.read_text(encoding='utf8').strip()=='EXIT=1' and report_status.name.startswith('report_local_recovery')
                 and not initial['passed'] and "No module named 'matplotlib'" in initial['error']):
             raise RuntimeError('Unresolved pipeline failure')
     source=Path.cwd();target=root/'source';target.mkdir(exist_ok=True)
@@ -292,7 +292,7 @@ def package(root):
     shutil.copy2(source/'scripts/tests/training/test_v4_attention_gradient.py',target/'tests/test_v4_attention_gradient.py')
     snapshot=target/'frozen_repository_scripts.zip'
     subprocess.run(['git','archive','--format=zip','--output',str(snapshot),'HEAD','scripts','AGENTS.md'],check=True)
-    execution_sha=json.loads((root/'status/full.json').read_text())['execution']['source_sha']
+    execution_sha=json.loads((root/'status/full.json').read_text(encoding='utf8'))['execution']['source_sha']
     subprocess.run(['git','archive','--format=zip','--output',str(target/'gpu_execution_scripts.zip'),execution_sha,'scripts','AGENTS.md'],check=True)
     write(target/'source_manifest.json',dict(**env(),dependency_snapshot='frozen_repository_scripts.zip',
         gpu_execution_sha=execution_sha,gpu_dependency_snapshot='gpu_execution_scripts.zip',
@@ -307,7 +307,7 @@ def package(root):
         if f.suffix=='.csv':
             with f.open(encoding='utf8',newline='') as stream:list(csv.DictReader(stream))
         rows.append(dict(path=rel,bytes=f.stat().st_size,sha256=sha(f)))
-    for match in re.findall(r'(?:href|src)="([^"]+)"',(root/'report.html').read_text()):
+    for match in re.findall(r'(?:href|src)="([^"]+)"',(root/'report.html').read_text(encoding='utf8')):
         if not (root/match).is_file():raise FileNotFoundError(match)
     write(root/'package_manifest.json',dict(files=rows,weights_included=False,dataset_included=False))
     dest=root.parent/(root.name+'-review.zip')

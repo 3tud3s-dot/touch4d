@@ -59,7 +59,7 @@ def model_for(tag):
 
 
 def checked_model(tag,device='cpu'):
-    refs=json.loads((HISTORY/'comparison/checkpoint_provenance.json').read_text())
+    refs=json.loads((HISTORY/'comparison/checkpoint_provenance.json').read_text(encoding='utf8'))
     ref=refs[tag]['best_joint'];path=Path(ref['path'])
     if not path.is_relative_to(HISTORY) or sha(path)!=ref['sha256']:
         raise ValueError('Checkpoint path/hash mismatch')
@@ -67,7 +67,7 @@ def checked_model(tag,device='cpu'):
     from scripts.data_process import DataProcessor
     processor=DataProcessor('001-rope')
     state=load_checkpoint(path,m,processor_state=processor.state_dict())
-    arch=json.loads((HISTORY/'architecture_configs'/f'{tag}.json').read_text())['model']
+    arch=json.loads((HISTORY/'architecture_configs'/f'{tag}.json').read_text(encoding='utf8'))['model']
     if (state['source_sha']!=TRAIN_SHA or state['source_sha']!=ref['source_sha'] or
         state['successful_steps']!=ref['updates'] or state['config']!=arch or
         state['successful_steps']!={'G0':1400,'G2':1400,'G3':1600}[tag]):
@@ -121,7 +121,7 @@ def preflight(root):
 
 
 def require_preflight(root):
-    if not json.loads((root/'status/preflight.json').read_text())['passed']:raise RuntimeError('Preflight failed')
+    if not json.loads((root/'status/preflight.json').read_text(encoding='utf8'))['passed']:raise RuntimeError('Preflight failed')
     if not os.environ.get('SLURM_JOB_ID'):raise RuntimeError('GPU stages require a Slurm allocation')
     if not torch.cuda.is_available():raise RuntimeError('CUDA unavailable')
     torch.set_num_threads(4);torch.backends.cuda.matmul.allow_tf32=False;torch.backends.cudnn.allow_tf32=False
@@ -131,7 +131,7 @@ def require_preflight(root):
 def run_window(root,data,tag,key,full_components):
     torch.cuda.reset_peak_memory_stats();start=time.monotonic();model,ref=checked_model(tag,'cuda')
     before=digest(model.state_dict());raw,b=data.batch(key,model)
-    fp=json.loads((root/'provenance/frozen_protocol.json').read_text())
+    fp=json.loads((root/'provenance/frozen_protocol.json').read_text(encoding='utf8'))
     frozen=next(w for w in fp['windows'] if (w['episode'],w['start'])==key)
     if digest(raw)!=frozen['raw_data_sha256'] or digest(b)!=frozen['normalized_data_sha256']:
         raise ValueError('Window data drifted from CPU preflight')
@@ -178,13 +178,13 @@ def pilot(root):
 
 def full(root):
     require_preflight(root)
-    if not json.loads((root/'status/pilot.json').read_text())['passed']:raise RuntimeError('Pilot gate not passed')
+    if not json.loads((root/'status/pilot.json').read_text(encoding='utf8'))['passed']:raise RuntimeError('Pilot gate not passed')
     data=Data();completed=[]
     for tag,keys in [('G0',WINDOWS),('G2',AUX),('G3',AUX)]:
         for key in keys:
             name=f'{tag}_ep{key[0]}_start{key[1]}'
             if tag=='G0' and key==(2,73):
-                old=json.loads((root/'results'/f'{name}.json').read_text())
+                old=json.loads((root/'results'/f'{name}.json').read_text(encoding='utf8'))
                 if not old['equivalence']['passed']:raise RuntimeError('Pilot artifact invalid')
                 model,_=checked_model(tag,'cuda');_,b=data.batch(key,model)
                 with torch.no_grad():pred=model(b['inputs'])
