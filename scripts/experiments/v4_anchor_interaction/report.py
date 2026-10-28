@@ -1,6 +1,8 @@
 """Read-only final checkpoint evaluation, fixed-window exports, offline HTML."""
 import csv
 import json
+import argparse
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 import numpy as np
@@ -85,6 +87,7 @@ def final(root):
 
 
 def build_report(root,results,copy,histories,refs):
+    previous=json.loads((root/'acceptance.json').read_text()) if (root/'acceptance.json').exists() else {}
     protocol=json.loads((root/'provenance/frozen_protocol.json').read_text())
     base=results['G0']['best_joint']['equal']['mean_cd_mm']
     winner=min(MODES,key=lambda tag:results[tag]['best_joint']['equal']['mean_cd_mm'])
@@ -125,6 +128,34 @@ def build_report(root,results,copy,histories,refs):
         '', '## 工程与复现','',f'训练/评估源码 `{refs["G0"]["best_joint"]["source_sha"]}`；基准 `{protocol["base_sha"]}`。四组共享初始同名权重哈希和统一1600样本顺序已冻结。G0与原V4非零头逐位等价、Mask/因果/四头运动/梯度/跨架构checkpoint单测及真实gsplat Smoke证据见tests/和provenance/。',
         '六个窗口在训练前固定：Train ep2/141、ep7/107；Val ep3/140、ep6/115、ep3/230、ep6/160。未按结果选窗。所有图像是GS重建渲染，GT不是原始照片。原11D属性继承初态；GT独立重建，不代表有固定材料粒子ID。',
         '本轮停止于4×1600；未追加架构、seed、Loss、长训练，未修改main或历史结果。浏览器真实交互验收另见provenance/browser_acceptance.json（缺少该文件时表示尚未验证）；静态/图像检查不能代替浏览器验收。']
+    analysis={}
+    for tag in MODES:
+        model={}
+        for ep in (3,6):
+            rr=[r for r in results[tag]['best_joint']['windows'] if r['episode']==ep]
+            model[str(ep)]={
+                'h10_attention':{key:np.mean([r['attention'][9][key] for r in rr],axis=0).tolist() for key in ('controller_mass_by_head','anchor_mass_by_head','null_mass_by_head')},
+                'conditions':{mode:dict(delta_cd_mm=float(np.mean([r['conditions'][mode]['delta_cd_mm'] for r in rr])),output_rms_mm=float(np.mean([r['conditions'][mode]['output_change_rms_mm'] for r in rr]))) for mode in ('freeze_action','zero_tactile')},
+                'near_far':{region:{key:float(np.mean([r['spatial'][region][key] for r in rr])) for key in ('motion_rms_mm','pred_to_gt_mean_mm','copy_to_gt_mean_mm','local_improvement_mm')} for region in ('near','far')}}
+        analysis[tag]=model
+    dump(root/'comparison/research_analysis.json',analysis)
+    lines+=['','## 研究判断与Attention证据','',
+        '本轮三个新增交互均未超过同预算G0，不能选择Pre、Post或Hybrid作为已验证更优的结构。差距小于1%，仅支持该seed/预算的负面结果，不证明长期训练必然无效。G1/G2的Near位移更小而Far位移没有明显增加；Near→GT误差没有同步改善，因此比值变小不能作为协调改善证据。',
+        '', '| 模型 | H10 Controller Mass | H10 Anchor Mass | H10 Null Mass | H10位移RMS/mm |','|---|---:|---:|---:|---:|']
+    for tag in MODES:
+        values=[np.mean([analysis[tag][ep]['h10_attention'][key] for ep in ('3','6')]) for key in ('controller_mass_by_head','anchor_mass_by_head','null_mass_by_head')]
+        lines.append(f'| {tag} | {values[0]:.5f} | {values[1]:.5f} | {values[2]:.5f} | {results[tag]["best_joint"]["equal"]["motion_rms_mm"][9]:.5f} |')
+    lines+=['','上表先Episode等权、再四头平均，仅用于概览；每个Head的原始质量见research_analysis.json与固定窗口attention.npz。G3的内部Anchor分支获得大量质量，Controller质量低于G0；这与竞争假设相符，但不是降低条件收益的独立因果证明。所有模型H10运动仍小，不能把微小CD差异当作成功学习了真实柔性传播。',
+        '实现细节：G1/G2的A2A除排除自身的Anchor keys外，复用了固定零logit/零Value的数值Null，正常有效Anchor情况下也参与Softmax，并非只在全无效时启用；两组完全一致。这是相对“仅128个Anchor候选”字面定义的实现差异，不能将本轮结果等同于无Null的A2A消融。未追加无Null实验。G3按照指定共同Softmax保留Null。',
+        '下一步结论仅为保留G0作为本轮对照；不自动采用新结构，不追加训练、层数或Loss搜索。更强的长期结论仍未验证。']
+    tests=[]
+    for label,name in [('local','local-cpu.txt'),('server','server-cpu.txt')]:
+        path=root/'tests'/name
+        if path.exists():
+            import re
+            text=path.read_text(errors='replace');n=re.search(r'Ran (\d+) tests',text);skip=re.search(r'OK \(skipped=(\d+)\)',text)
+            tests.append(dict(location=label,total=int(n[1]) if n else None,skipped=int(skip[1]) if skip else 0,passed='\nOK' in text))
+    lines+=['','## 实际验收记录','',f'CPU测试：{tests}。实际CUDA/gsplat每组两次更新、完整H10梯度及checkpoint恢复均通过；见provenance/cuda_gate.json。所有训练与评估使用Slurm30994中的用户授权tmux单GPU，四组顺序运行；未创建四个额外作业，未中断30995。']
     (root/'final_report.md').write_text('\n'.join(lines),encoding='utf8')
     with (root/'comparison/summary.csv').open('w',newline='') as f:
         w=csv.DictWriter(f,fieldnames=list(rows[0]));w.writeheader();w.writerows(rows)
@@ -133,12 +164,16 @@ def build_report(root,results,copy,histories,refs):
     tables.append('</table>')
     charts=curve({tag:[(r['update'],r['equal']['mean_cd_mm']) for r in histories[tag]['evaluations']] for tag in MODES},'Full val CD/mm vs successful updates')
     charts+=curve({tag:list(enumerate(results[tag]['best_joint']['equal']['cd_mm'],1)) for tag in MODES},'H1-H10 best_joint CD/mm')
+    charts+=curve({tag:[(float(np.mean([r['update'] for r in histories[tag]['updates'][i:i+20]])),float(np.mean([r['loss'] for r in histories[tag]['updates'][i:i+20]]))) for i in range(0,1600,20)] for tag in MODES},'Training joint loss: contiguous 20-update means')
     page=HTML.replace('__TABLE__',''.join(tables)+charts).replace('__WINNER__',winner)
     (root/'report.html').write_text(page,encoding='utf8')
-    dump(root/'acceptance.json',dict(status='COMPLETED',engineering=True,source=provenance(),successful_updates={tag:histories[tag]['successful_updates'] for tag in MODES},
+    label_path=__import__(__package__+'.run',fromlist=['FROZEN']).FROZEN/'contact_boundaries.json'
+    annotation_ok=protocol['annotation_sha256']==sha(label_path) if label_path.exists() else previous.get('annotation_unchanged')
+    dump(root/'acceptance.json',dict(status='COMPLETED',engineering=True,source=previous.get('source') or provenance(),summary_source_sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),successful_updates={tag:histories[tag]['successful_updates'] for tag in MODES},
         winner_by_full_validation_CD=winner,scientific_claim='single-seed short-budget descriptive ablation only; inspect per-episode/local/render/conditional tradeoffs',
-        checkpoint_provenance=refs,annotation_unchanged=protocol['annotation_sha256']==sha(__import__(__package__+'.run',fromlist=['FROZEN']).FROZEN/'contact_boundaries.json'),
-        browser_interaction='not yet independently verified; consult browser_acceptance.json'))
+        checkpoint_provenance=refs,annotation_unchanged=annotation_ok,tests=tests,
+        implementation_warning='G1/G2 retain an always-available fixed-zero numerical null in A2A, beyond the literal anchor-only key set; disclosed in report, no extra experiment',
+        browser_interaction='consult provenance/browser_acceptance.json'))
 
 
 HTML='''<!doctype html><meta charset="utf-8"><title>V4 Anchor Interaction</title>
@@ -159,3 +194,14 @@ function update(){const d=VIS[+w.value],h=+f.value;document.querySelector('#labe
 document.querySelector('#canvases').innerHTML=tags.map(t=>'<div><b>'+t+'</b><canvas></canvas></div>').join('');document.querySelectorAll('canvas').forEach(c=>{let down=false,old;c.onpointerdown=e=>{down=true;old=[e.clientX,e.clientY];c.setPointerCapture(e.pointerId)};c.onpointerup=()=>down=false;c.onpointermove=e=>{if(down){yaw+=(e.clientX-old[0])*.01;pitch+=(e.clientY-old[1])*.01;old=[e.clientX,e.clientY];draw()}};c.onwheel=e=>{e.preventDefault();zoom*=e.deltaY>0?.9:1.1;draw()}});
 [w,f,cam,mode].forEach(x=>x.oninput=update);document.querySelector('#next').onclick=()=>{f.value=Math.min(10,+f.value+1);update()};document.querySelector('#back').onclick=()=>{f.value=Math.max(0,+f.value-1);update()};document.querySelector('#play').onclick=()=>{if(timer){clearInterval(timer);timer=null;document.querySelector('#play').textContent='播放'}else{timer=setInterval(()=>{f.value=(+f.value+1)%11;update()},600);document.querySelector('#play').textContent='暂停'}};document.onkeydown=e=>{if(e.key==='ArrowRight')document.querySelector('#next').click();if(e.key==='ArrowLeft')document.querySelector('#back').click()};update();
 </script>'''
+
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description='CPU-only rebuild from completed raw results, no inference or training')
+    parser.add_argument('--root',required=True);parser.add_argument('--summarize',action='store_true',required=True)
+    args=parser.parse_args();root=Path(args.root)
+    if not (root/'acceptance.json').is_file():raise ValueError('Requires a completed GPU report receipt')
+    histories={tag:json.loads((root/'runs'/tag/'metrics.json').read_text()) for tag in MODES}
+    if any(v['successful_updates']!=1600 for v in histories.values()):raise ValueError('Incomplete training')
+    results={tag:{name:json.loads((root/'comparison'/f'{tag}_{name}.json').read_text()) for name in ('best_joint','lowest_cd','last')} for tag in MODES}
+    build_report(root,results,json.loads((root/'comparison/copy_initial.json').read_text()),histories,json.loads((root/'comparison/checkpoint_provenance.json').read_text()))
