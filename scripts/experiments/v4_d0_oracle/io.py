@@ -49,7 +49,7 @@ def metadata():
     return dict(source_sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
         command=[sys.executable,*sys.argv],python=sys.version,torch=torch.__version__,cuda=torch.version.cuda,
         job=os.environ.get('SLURM_JOB_ID'),gpu=torch.cuda.get_device_name() if torch.cuda.is_initialized() else None,
-        cwd=str(Path.cwd()),no_optimizer=True,no_backward=True)
+        cwd=str(Path.cwd()),optimizer_scope='oracle_anchor_displacements_only',no_network_optimizer=True,no_network_backward=True)
 
 def checked_model():
     provenance=json.loads((AUDIT_ROOT/'checkpoint_provenance.json').read_text(encoding='utf8'))

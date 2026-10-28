@@ -9,6 +9,7 @@ from scripts.training.losses import objective,chamfer_samples
 from scripts.training.rendering import GaussianRenderer
 from scripts.experiments.fixed_window.fixed_fit import digest
 from scripts.experiments.v4_d0_oracle.core import decode,one_horizon,loss_parts,edges,structure
+from scripts.experiments.v4_d0_oracle.io import metadata
 
 
 class OracleTests(unittest.TestCase):
@@ -37,6 +38,10 @@ class OracleTests(unittest.TestCase):
         b=one_horizon(self.b,10)
         self.assertTrue(torch.equal(b['targets']['target_xyz'][0],self.b['targets']['target_xyz'][9]))
         self.assertTrue(torch.equal(b['targets']['target_depth'],self.b['targets']['target_depth'][:,9:10]))
+
+    def test_metadata_distinguishes_oracle_and_network(self):
+        m=metadata();self.assertNotIn('no_optimizer',m);self.assertNotIn('no_backward',m)
+        self.assertTrue(m['no_network_optimizer']);self.assertEqual(m['optimizer_scope'],'oracle_anchor_displacements_only')
 
     def test_world_export_mask(self):
         p=decode(self.x,self.f,torch.zeros_like(self.t['steps'][0]['cumulative_d']))
