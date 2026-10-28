@@ -205,7 +205,12 @@ def main():
     parser.add_argument('--root',type=Path,required=True)
     parser.add_argument('--stage',choices=['preflight','pilot','full','report','package'],required=True)
     parser.add_argument('--expected-sha',required=True)
+    parser.add_argument('--postprocess-attempt',default='initial',choices=['initial','local_recovery'],
+                        help='CPU report/package recovery only; preserves the original failed status')
     args=parser.parse_args();actual=env()['source_sha']
+    if args.postprocess_attempt!='initial' and args.stage not in ('report','package'):
+        raise ValueError('GPU/data stages cannot be retried through postprocessing')
+    status_name=args.stage if args.postprocess_attempt=='initial' else args.stage+'_'+args.postprocess_attempt
     if actual!=args.expected_sha:raise ValueError('Execution source SHA changed')
     if subprocess.check_output(['git','status','--porcelain'],text=True).strip():raise ValueError('Execution worktree dirty')
     if args.stage=='preflight':
@@ -214,18 +219,18 @@ def main():
             if args.root.exists():write(args.root/'status/preflight.json',dict(passed=False,error=traceback.format_exc(),source=env()))
             raise
     else:
-        if (args.root/'status'/f'{args.stage}.json').exists():raise FileExistsError('Stage already attempted; preserve evidence')
+        if (args.root/'status'/f'{status_name}.json').exists():raise FileExistsError('Stage already attempted; preserve evidence')
         try:
-            write(args.root/'status'/f'{args.stage}_running.json',env())
+            write(args.root/'status'/f'{status_name}_running.json',env())
             if args.stage=='pilot':result=pilot(args.root)
             elif args.stage=='full':result=full(args.root)
             else:
                 from .report import build_report, package
                 result=build_report(args.root) if args.stage=='report' else package(args.root)
         except Exception:
-            write(args.root/'status'/f'{args.stage}.json',dict(passed=False,error=traceback.format_exc(),source=env()))
+            write(args.root/'status'/f'{status_name}.json',dict(passed=False,error=traceback.format_exc(),source=env()))
             raise
-    write(args.root/'status'/f'{args.stage}.json',dict(**result,execution=env()))
+    write(args.root/'status'/f'{status_name}.json',dict(**result,execution=env()))
     print(json.dumps(dict(stage=args.stage,**result),ensure_ascii=False),flush=True)
 
 

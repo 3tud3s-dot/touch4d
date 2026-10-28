@@ -51,3 +51,18 @@ must match. Original G2 always-active A2A Null is intentionally preserved.
 Read final_report.md, results/conclusion.json and all CSV/JSON together.
 Source archive includes all tracked scripts/ and AGENTS for import reproduction;
 weights, datasets, environment caches and repeated render images are excluded.
+CPU-only offline report recovery
+-------------------------------
+The actual CUDA preflight/pilot/full ran at 6d9eb12. All 12 records passed.
+The server report stage failed only because its environment has no matplotlib.
+Keep status/report.json, logs/report.txt and provenance/execution_exit.txt as-is.
+On a local copy with matplotlib, run from this committed repository:
+  python -B -m scripts.experiments.v4_attention_gradient.run --root <LOCAL_RESULT_ROOT> --expected-sha <FINAL_SHA> --stage report --postprocess-attempt local_recovery
+  python -B -m scripts.experiments.v4_attention_gradient.run --root <LOCAL_RESULT_ROOT> --expected-sha <FINAL_SHA> --stage package --postprocess-attempt local_recovery
+The recovery has its own status files. It cannot repeat a GPU/data stage.
+The offline report checks the server checkpoint-integrity receipt against frozen
+provenance; it does not pretend that Linux checkpoint paths exist on Windows.
+Both GPU execution and final postprocessing source snapshots are included.
+The final package gate requires successful preflight/pilot/full and recovered
+report, and accepts EXIT=1 only for the recorded missing-matplotlib failure.
+
