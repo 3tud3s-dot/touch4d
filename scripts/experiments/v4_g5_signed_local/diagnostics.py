@@ -9,6 +9,9 @@ import dataclasses
 import hashlib
 import math
 from pathlib import Path
+import struct
+import zlib
+import numpy as np
 import torch
 from scripts.experiments.v4_g4_global_motion.evaluate import fixed_regions
 from scripts.training.gs_decoder import interpolate_anchor_displacements
@@ -16,6 +19,20 @@ from .motion import geometry_weights
 
 SELECTED = (1, 5, 10, 15)
 REGION_NOTE = 'G4 fixed_regions: initial valid GS distance rank, bottom/top floor(N/4); Anchor inherits its initial GS region; no new distance threshold'
+
+
+def write_png(path, rgb):
+    """Lossless RGB PNG using stdlib; no Pillow/matplotlib server dependency."""
+    rgb=np.asarray(rgb)
+    if rgb.dtype!=np.uint8 or rgb.ndim!=3 or rgb.shape[-1]!=3 or min(rgb.shape[:2])<1:
+        raise ValueError('PNG expects nonempty uint8 H,W,3')
+    def chunk(name,payload):
+        return struct.pack('>I',len(payload))+name+payload+struct.pack('>I',zlib.crc32(name+payload)&0xffffffff)
+    height,width=rgb.shape[:2]
+    scan=b''.join(b'\x00'+np.ascontiguousarray(row).tobytes() for row in rgb)
+    encoded=(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',width,height,8,2,0,0,0))
+             +chunk(b'IDAT',zlib.compress(scan,6))+chunk(b'IEND',b''))
+    Path(path).write_bytes(encoded)
 
 
 def sha256(path):

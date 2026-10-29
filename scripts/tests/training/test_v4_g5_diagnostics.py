@@ -1,10 +1,13 @@
 """CPU checks of analysis tools, not substitutes for real CUDA acceptance."""
 import tempfile
+import struct
+import zlib
 from pathlib import Path
 import unittest
 from unittest.mock import patch
 from types import SimpleNamespace
 import torch
+import numpy as np
 from scripts.data_process import DataProcessor
 from scripts.experiments.v4_stage1.fixtures import synthetic_batch
 from scripts.experiments.v4_stage1.fixtures import analytic_rasterizer
@@ -15,9 +18,9 @@ from scripts.experiments.v4_g5_signed_local.model import G5PropagatePredictor
 from scripts.experiments.v4_g5_signed_local.motion import geometry_weights
 from scripts.experiments.v4_g5_signed_local.propagation import SignedAnchorPropagation,build_anchor_graph
 from scripts.experiments.v4_g5_signed_local.diagnostics import (stats,finite_tree,cpu_tree,mapping_context,
-    anchor_regions,collect,graph_diagnostics,uniform_propagation,controlled_neighbor_probe,parameter_evidence)
+    anchor_regions,collect,graph_diagnostics,uniform_propagation,controlled_neighbor_probe,parameter_evidence,write_png)
 from scripts.experiments.v4_g5_signed_local.smoke import snapshot,metric_numbers
-from scripts.experiments.v4_g5_signed_local.smoke import run_variant
+from scripts.experiments.v4_g5_signed_local.smoke import run_variant,AuditedRenderer
 
 
 class G5DiagnosticsTests(unittest.TestCase):
@@ -25,6 +28,36 @@ class G5DiagnosticsTests(unittest.TestCase):
     def setUpClass(cls):cls.threads=torch.get_num_threads();torch.set_num_threads(1)
     @classmethod
     def tearDownClass(cls):torch.set_num_threads(cls.threads)
+
+    def test_dependency_free_png_roundtrip_and_chunk_crc(self):
+        pixels=np.arange(5*7*3,dtype=np.uint8).reshape(5,7,3)
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'image.png';write_png(path,pixels);blob=path.read_bytes()
+        self.assertEqual(blob[:8],b'\x89PNG\r\n\x1a\n');offset=8;compressed=b''
+        while offset<len(blob):
+            length=struct.unpack('>I',blob[offset:offset+4])[0];name=blob[offset+4:offset+8]
+            value=blob[offset+8:offset+8+length];crc=struct.unpack('>I',blob[offset+8+length:offset+12+length])[0]
+            self.assertEqual(crc,zlib.crc32(name+value)&0xffffffff)
+            if name==b'IHDR':self.assertEqual(struct.unpack('>II',value[:8]),(7,5))
+            if name==b'IDAT':compressed+=value
+            offset+=length+12
+        decoded=np.frombuffer(zlib.decompress(compressed),dtype=np.uint8).reshape(5,1+7*3)
+        self.assertTrue(np.all(decoded[:,0]==0));np.testing.assert_array_equal(decoded[:,1:].reshape(5,7,3),pixels)
+
+    def test_renderer_observer_needs_no_pillow_and_preserves_original_tensors(self):
+        images=dict(rgb=torch.rand(1,15,3,4,6,3),alpha=torch.rand(1,15,3,4,6),depth=torch.ones(1,15,3,4,6))
+        class Fake:
+            def render_targets(self,*args):return images
+            def __call__(self,*args):return images
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('scripts.experiments.v4_g5_signed_local.smoke.make_renderer',return_value=Fake()):
+                observer=AuditedRenderer(Path(directory))
+            self.assertIs(observer.render_targets(None,None),images)
+            self.assertIs(observer(None,None,None),images)
+            observer.label='synthetic_observer_only'
+            self.assertIs(observer.render_targets(None,None),images)
+            self.assertIs(observer(None,None,None),images)
+            self.assertEqual(len(list(Path(directory).glob('*.png'))),12)
 
     def test_quantiles_ignore_invalid_nan_and_empty_is_not_zero_observation(self):
         v=torch.tensor([1.,3.,float('nan')]);mask=torch.tensor([True,True,False])

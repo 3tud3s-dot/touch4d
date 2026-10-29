@@ -27,5 +27,5 @@ echo "Server CPU regression (CUDA hidden); no real GPU updates yet"
 CUDA_VISIBLE_DEVICES='' "$SHARED/.venv/bin/python" -B -m unittest discover -s scripts/tests -t . -v > "${RUN_OUTPUT}.cpu-tests.log" 2>&1
 echo "Server CPU regression passed; begin real GPU smoke"
 exec "$SHARED/.venv/bin/python" -B -m scripts.experiments.v4_g5_signed_local.smoke \
- --variant all --expected-sha "$EXPECTED_SHA" --g4-checkpoint "$G4_CHECKPOINT" \
+ --variant all --defer-plots --expected-sha "$EXPECTED_SHA" --g4-checkpoint "$G4_CHECKPOINT" \
  --root "$SHARED/datasets/touch4d-v1" --depth-root "$SHARED/datasets/touch4d-depth-v1" --output "$RUN_OUTPUT"

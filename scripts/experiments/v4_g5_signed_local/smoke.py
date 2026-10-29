@@ -18,7 +18,7 @@ from scripts.experiments.v4_g4_global_motion.checkpoint import load_for_evaluati
 from scripts.experiments.v4_g4_global_motion.smoke import same_tree
 from .checkpoint import build_model, save_checkpoint, load_checkpoint
 from .diagnostics import (SELECTED, REGION_NOTE, sha256, state_hash, finite_tree, cpu_tree,
-    mapping_context, collect, graph_diagnostics, controlled_neighbor_probe, parameter_evidence, write_csv)
+    mapping_context, collect, graph_diagnostics, controlled_neighbor_probe, parameter_evidence, write_csv, write_png)
 
 BASE = 'cb242284eb6fd151c5a5f7d90ed6bc582993c087'
 G4_HASH = '240045e3ccb0a37bfcc954feabb2b61f4a1f828d63566eb856619ebe6335b92d'
@@ -82,7 +82,6 @@ class AuditedRenderer:
         self.out=out;self.label=None;self.target_previews={};self.finite_calls=0
 
     def previews(self,images):
-        from PIL import Image
         finite_tree(images);self.finite_calls+=1
         if self.label is None:return {}
         saved={}
@@ -91,7 +90,7 @@ class AuditedRenderer:
                 for key in ('rgb','alpha'):
                     v=images[key][0,h-1,view].detach().clamp(0,1).cpu().numpy()
                     if key=='alpha':v=np.repeat(v[...,None],3,-1)
-                    saved[h,view,key]=Image.fromarray((v*255).round().astype('uint8')).resize((640,360))
+                    saved[h,view,key]=(v[::2,::2]*255).round().astype('uint8')
         return saved
 
     def render_targets(self,batch,processor):
@@ -99,18 +98,13 @@ class AuditedRenderer:
         return value
 
     def __call__(self,prediction,batch,processor):
-        from PIL import Image,ImageDraw
         value=self.inner(prediction,batch,processor);preview=self.previews(value)
         if self.label is not None:
             for h in SELECTED:
                 for view in range(3):
-                    canvas=Image.new('RGB',(2560,400),'white');draw=ImageDraw.Draw(canvas)
-                    panels=[(self.target_previews,'rgb','GT GS RGB'),(preview,'rgb','G5 RGB'),
-                            (self.target_previews,'alpha','GT Alpha'),(preview,'alpha','G5 Alpha')]
-                    for i,(source,key,title) in enumerate(panels):
-                        canvas.paste(source[h,view,key],(i*640,40));draw.text((i*640+8,8),title,fill='black')
-                    draw.text((1100,8),f'{self.label} H{h} camera{view}; rendered 1280x720, preview 640x360',fill='black')
-                    canvas.save(self.out/f'{self.label}_h{h}_camera{view}.jpg',quality=90)
+                    canvas=np.concatenate((self.target_previews[h,view,'rgb'],preview[h,view,'rgb'],
+                        self.target_previews[h,view,'alpha'],preview[h,view,'alpha']),axis=1)
+                    write_png(self.out/f'{self.label}_h{h}_camera{view}.png',canvas)
             self.target_previews={}
         return value
 
@@ -291,9 +285,9 @@ def write_report(out,results,env,source,compat,tables):
             score=u['groups'].get('propagation_score',{})
             rows.append(f"|{variant}|{u['successful_update']}|{u['joint']:.7g}|{u['cd_mm']:.6g}|{u['rgb']:.6g}|{u['alpha']:.6g}|{score.get('raw_gradient_norm','—')}|{score.get('actual_update_norm','—')}|")
     far=[r for r in tables['geometry'] if r['region']=='far']
-    max_ratio=max(r['pair_distance_over_bandwidth_max'] for r in far)
-    max_weight=max(r['softmax_max_weight_max'] for r in far)
-    max_geometry=max(r['geometry_abs_max'] for r in far)
+    max_ratio=max(float(r['pair_distance_over_bandwidth_max']) for r in far)
+    max_weight=max(float(r['softmax_max_weight_max']) for r in far)
+    max_geometry=max(float(r['geometry_abs_max']) for r in far)
     text=f'''# G5-v1 真实 CUDA/gsplat Smoke 与专项数值诊断
 
 源码：{source}；Slurm Job：{env['job_id']}；GPU：{env['gpu']}。
@@ -305,7 +299,7 @@ def write_report(out,results,env,source,compat,tables):
 
 '''+'\n'.join(rows)+f'''
 
-两组公共G4参数及Direct Mapping初始哈希一致。训练指标表为每次更新前的同一Loss；诊断快照after_0/1/2分别为初始、第一次和第二次更新后的权重。图像为原始gsplat输出的缩略预览，不是真实RGB照片。
+两组公共G4参数及Direct Mapping初始哈希一致。训练指标表为每次更新前的同一Loss；诊断快照after_0/1/2分别为初始、第一次和第二次更新后的权重。图像为原始gsplat输出的缩略预览，不是真实RGB照片。每张三相机对照PNG从左至右为GT RGB、预测RGB、GT Alpha、预测Alpha；原始渲染1280×720，每格缩略图640×360。
 
 ## 三项问题的证据
 
@@ -321,6 +315,8 @@ def write_report(out,results,env,source,compat,tables):
 
 工程检查通过，第二步Score已实际参与优化。没有观察到必须修改模型才能继续的非有限值、掩码或等价性阻塞。Far归一化、距离尺度、固定空间图和平滑倾向仍须后续受控训练验证。图边不是材料拓扑，局部分支不保证纯形变或有符号奇对称；局部与G4全局修正可抵消且均值不强制为零。本轮没有正式八轮训练、没有性能提升或跨Episode泛化结论。
 
+`update_minus_adamw_decay_norm`减去的是理想未舍入的lr×weight_decay×原参数；Float32舍入可能留下残差，不能单凭这个残差判定学习。实际更新与原始梯度分别作为证据。
+
 ## 产物
 
 - results.json：梯度、裁剪、AdamW实际更新及扣除纯衰减后的更新、Checkpoint哈希与环境。
@@ -334,11 +330,26 @@ def write_report(out,results,env,source,compat,tables):
     (out/'report.html').write_text('<!doctype html><meta charset="utf-8"><title>G5 Smoke</title><style>body{max-width:1300px;margin:30px auto;font:16px sans-serif;background:#fafafa}pre{white-space:pre-wrap;line-height:1.6}img{width:100%;height:auto}figure{margin:25px 0}</style><pre>'+html.escape(text)+'</pre>'+gallery,encoding='utf-8')
 
 
+def finalize_local(directory):
+    """CPU plotting/report completion from frozen GPU outputs; no Forward/step."""
+    import csv,json
+    out=Path(directory);result=json.loads((out/'results.json').read_text(encoding='utf-8'))
+    if not result.get('passed'):raise ValueError('Cannot finalize an unsuccessful GPU run')
+    if subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()!=result['source_sha']:
+        raise ValueError('CPU visualization must use the executed source commit')
+    with (out/'geometry_diagnostics.csv').open(encoding='utf-8',newline='') as f:geometry=list(csv.DictReader(f))
+    build_plots(out)
+    write_report(out,result['variants'],result['environment'],result['source_sha'],result['equivalence'],dict(geometry=geometry))
+    atomic_json(out/'provenance'/'cpu_visualization.json',dict(completed=True,device='cpu',source_sha=result['source_sha'],
+        scope='Only saved arrays and numbers; no model Forward, optimizer or oracle',
+        figures={p.name:sha256(p) for p in (out/'figures').glob('*.png')}))
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--variant',choices=('direct','propagate','all'),required=True)
     for k in ('root','depth-root','output','expected-sha'):p.add_argument('--'+k,required=True)
-    p.add_argument('--g4-checkpoint');args=p.parse_args()
+    p.add_argument('--g4-checkpoint');p.add_argument('--defer-plots',action='store_true');args=p.parse_args()
     if not os.environ.get('SLURM_JOB_ID') or not torch.cuda.is_available():raise RuntimeError('Requires authorized Slurm CUDA allocation')
     if args.variant=='all' and not args.g4_checkpoint:raise ValueError('all requires frozen G4 checkpoint')
     source,hashes=source_preflight(args.expected_sha)
@@ -366,11 +377,15 @@ def main():
             write_csv(out/'geometry_diagnostics.csv',tables['geometry']);write_csv(out/'propagation_diagnostics.csv',tables['propagation'])
         if args.variant=='all':
             if results['direct']['initial_g4_shared_hash']!=results['propagate']['initial_g4_shared_hash'] or results['direct']['initial_direct_hash']!=results['propagate']['initial_direct_hash']:raise AssertionError('Fresh paired initialization mismatch')
-            compat=equivalence(args,processor,batches,out);build_plots(out);write_report(out,results,env,source,compat,tables)
+            compat=equivalence(args,processor,batches,out)
+            if not args.defer_plots:build_plots(out)
+            write_report(out,results,env,source,compat,tables)
         else:compat=None
         _,final_hashes=source_preflight(args.expected_sha)
         if final_hashes!=hashes:raise AssertionError('Frozen source graph changed')
-        atomic_json(out/'results.json',dict(passed=True,source_sha=source,environment=env,variants=results,equivalence=compat,renderer_finite_calls=renderer.finite_calls,scope='Engineering and numerical diagnostics only; not training performance'))
+        atomic_json(out/'results.json',dict(passed=True,source_sha=source,environment=env,variants=results,equivalence=compat,
+            plots_deferred_to_local_cpu=args.defer_plots,renderer_finite_calls=renderer.finite_calls,
+            scope='Engineering and numerical diagnostics only; not training performance'))
         print('G5 CUDA/gsplat smoke completed successfully',flush=True)
     except BaseException:
         write_csv(out/'geometry_diagnostics.csv',tables['geometry']);write_csv(out/'propagation_diagnostics.csv',tables['propagation'])
