@@ -1,0 +1,62 @@
+G5 Frozen Motion Attribution V1 -- frozen before GPU execution
+
+Training base: f978e0a29b6f0f0b6097c40684b949797a2f5d7b
+Direct Epoch8 Best, 12112 updates.
+Checkpoint:
+/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-v1-training/run-001/best.pt
+SHA256:
+067984c4c286306094efeff2f28ed57e3dcdd0c333972ecc6feb4b982ee3a40c
+
+The internal base_d was jointly trained with G4/G5. It is NOT a historical G0.
+Original model.py, motion.py, propagation.py, V4/G4, Dataset, Loss and Renderer
+are unchanged. No optimizer, backward, training or parameter search is allowed.
+
+Full AR modes:
+Normal, NoBase-All, NoBase-H2+, NoGlobal, NoLocal, BaseOnly; Copy reference.
+Normal has the original operation order: masked(base+global), then +local.
+Output hooks remove only the relevant displacement, not upstream computation.
+NoGlobal deliberately preserves raw hand_contribution used as Local context.
+All later AR state, previous_d, and actual FPS-anchor history evolve naturally.
+
+Same-history intervention:
+H1/H5/H10/H15 recomposition from Normal trace with all upstream values fixed.
+Verify independently with only_step hooks on the seven diagnostic cases.
+Check full prefix and current output bit-exact. Do not equate full AR changes
+to this direct effect. Render one-frame views with original camera/mask/Loss;
+never give those sliced views to the model.
+
+Coverage: full Val100 ep3=55 / ep6=45, original stride/split/no contact filter,
+episode-equal summary, all 15 horizons. Exactly one additional Train window
+ep7/start105; all weights frozen. No test split. Diagnostic Val cases:
+ep3/start135,245,25; ep6/start110,20,200.
+
+Branch fields: all H1-H15 on Normal history, both Anchor controls and actual
+GS displacements via the same fixed initial RBF; padding always excluded.
+Initial-distance quartiles match G4 fixed_regions: nearest/farthest floor(N/4),
+middle remainder. No new contact threshold and no model gating.
+Near-zero direction: vector norm <= 1e-6 mm is undefined, with explicit counts.
+Cosine<0 defines opposite direction (descriptive, not failure by itself).
+RMS cancellation index = 1 - RMS(final)/(RMS(base)+RMS(global+local)).
+Strong-cancellation descriptive fraction: |final| < .1*(|base|+|correction|).
+No mechanical-energy/material-strain interpretation is permitted.
+16NN structure is an initial-neighbor proxy, not GT material correspondence.
+
+Checks: Normal hooks identical to unmodified model; exact Anchor sum and XYZ;
+mapped field-sum roundoff <= .001 mm; H1 G4/G5 zero; immutable parameters
+and file hash before/after; all finite; Normal reproduces stored Val100 within
+1e-4 mm CD and 1e-6 RGB/Alpha/Joint.
+
+One new single-GPU Slurm job. Other interactive/training allocations untouched.
+Fresh output only, no automatic requeue or overwriting. Incremental per-window
+JSON shards preserve completed evidence on failure. No truncated Val protocol.
+
+Server shared environment has no matplotlib; do NOT install or replace it.
+GPU inference/rendering runs on the existing server environment.
+Synchronize light results/NPZ/PNG to the isolated local Run, then CPU command:
+python -B -m scripts.experiments.v4_g5_motion_attribution.report --output ABS_RUN
+Copy report/figures back without overwriting any historical result.
+
+All outputs/new source use the independent branch/worktree/result root.
+Report both signs of effects, all Val100 metrics, positive/negative examples.
+Frozen deletion changes state distribution: neither improvement nor regression
+settles the value of a retrained unified signed decoder. No G5-GEO/G6 follow-up.
