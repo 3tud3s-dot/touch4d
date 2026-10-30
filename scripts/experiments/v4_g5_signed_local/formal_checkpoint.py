@@ -7,7 +7,7 @@ from .protocol import validate_configuration,full_validation_score
 from scripts.experiments.v4_g4_global_motion.protocol import digest
 from .diagnostics import state_hash
 
-VERSIONS={v:f'touch4d-g5-{v}-formal-h15-epochs-v1' for v in ('direct','propagate')}
+VERSIONS={v:f'touch4d-g5-{v}-formal-h15-delta4-epochs-v1' for v in ('direct','propagate')}
 
 
 def empty_ledger():
@@ -22,7 +22,7 @@ def validate_state(state,identity):
     validate_configuration(identity['training'])
     if identity['source_sha']!=identity['training']['source_sha'] or variant!=identity['training']['variant']:
         raise ValueError('Identity source/variant disagrees')
-    if identity['model']['architecture']!=f'v4_g5_signed_local_{variant}_v1' or identity['model']['horizon']!=15 or identity['model']['prediction_interval']!=1:
+    if identity['model']['architecture']!=f'v4_g5_signed_local_{variant}_v1' or identity['model']['horizon']!=15 or identity['model']['prediction_interval']!=4:
         raise ValueError('Not the frozen G5 H15 architecture')
     ledger=state['ledger'];done=ledger['completed_epochs'];history=ledger['history']
     if type(done) is not int or not 0<=done<=8 or len(history)!=done or [r['epoch'] for r in history]!=list(range(1,done+1)):

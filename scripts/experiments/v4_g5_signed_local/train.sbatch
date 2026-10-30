@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=g5-h15-e8
+#SBATCH --job-name=g5-h15-d4-e8
 #SBATCH --partition=5090
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -8,7 +8,7 @@
 #SBATCH --no-requeue
 set -euo pipefail
 : "${SOURCE:?}" "${EXPECTED_SHA:?}" "${VARIANT:?}" "${RUN_OUTPUT:?}" "${G0_REFERENCE:?}" "${SLURM_JOB_ID:?}"
-case "$VARIANT" in direct|propagate) ;; *) exit 2;; esac
+case "$VARIANT" in direct) ;; *) exit 2;; esac
 cd "$SOURCE"
 test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 test -z "$(git status --porcelain)"

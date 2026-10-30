@@ -10,20 +10,21 @@ import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from scripts.data_process import DataProcessor
 from scripts.experiments.v4_g4_global_motion import protocol as g4
-from scripts.experiments.full_training.v4_epochs import loader
+from scripts.experiments.full_training.v4_epochs import data_manifest
+from scripts.dataloader.loader import make_dataloader
 from scripts.experiments.v4_g4_global_motion.model import G4GlobalMotionPredictor
 from .checkpoint import build_model
 from .diagnostics import state_hash
 
 BASE='51ab5c455929128c66941d3d3f75c1d4421c9507'
-BUCKETS={v:f'v4-g5-{v}-v1-training' for v in ('direct','propagate')}
+BUCKETS={v:f'v4-g5-{v}-h15-delta4-v1-training' for v in ('direct','propagate')}
 GRAPH_FILES=tuple('scripts/experiments/v4_g5_signed_local/'+v for v in ('model.py','motion.py','propagation.py'))
 
 
 def configuration(root,depth_root,sha,variant):
     if variant not in BUCKETS:raise ValueError('Expected direct or propagate')
     c=g4.configuration(root,depth_root,sha)
-    return dict(c,architecture=f'v4_g5_signed_local_{variant}_v1',variant=variant,gradient_clip_norm=1.)
+    return dict(c,architecture=f'v4_g5_signed_local_{variant}_v1',variant=variant,gradient_clip_norm=1.,prediction_interval=4)
 
 
 def validate_configuration(c):
@@ -46,30 +47,43 @@ def probe_order(raw):
     return [int(batch[0]) for batch in proxy]
 
 
+def loader(c,split,epoch=0):
+    if split not in ('train','val'):raise ValueError('No test split')
+    return make_dataloader(c['scene'],split,root=c['root'],stage='all',batch_size=1,
+        num_workers=0,seed=c['seed']+epoch,with_depth=True,depth_root=c['depth_root'],
+        depth_cameras=c['depth_cameras'],horizon=15,prediction_interval=4,
+        operation_hand_policy=c['operation_hand_policy'])
+
+
 def preflight(c,reference):
     validate_configuration(c)
-    raw,data=g4.preflight(g4.configuration(c['root'],c['depth_root'],c['source_sha']),reference)
-    manifest=data['manifest']
-    if manifest['train']['windows']!=1514 or manifest['val']['windows']!=100:
-        raise ValueError('Requires frozen 1514 Train / 100 Val')
+    # Verify unchanged historical protocol/data first, then build new sparse windows.
+    _,old=g4.preflight(g4.configuration(c['root'],c['depth_root'],c['source_sha']),reference)
+    raw={s:loader(c,s) for s in ('train','val')}
+    manifest=json.loads(json.dumps(data_manifest(raw)))
+    if manifest['train']['episodes']!={'1':131,'2':232,'4':304,'5':247,'7':165,'8':165} or manifest['val']['episodes']!={'3':46,'6':36}:
+        raise ValueError('Frozen delta4 counts differ from inspected dataset')
     if set(manifest['train']['episodes'])!={'1','2','4','5','7','8'} or set(manifest['val']['episodes'])!={'3','6'}:
         raise ValueError('Wrong split')
-    observed=[]
-    for epoch in range(8):
-        candidate=raw['train'] if epoch==0 else loader(c,'train',epoch)
-        order=probe_order(candidate)
-        if order!=data['epoch_orders'][epoch]:raise ValueError('Actual loader differs from G4 epoch order')
-        observed.append(order)
-    if probe_order(raw['val'])!=list(range(100)):raise ValueError('Validation order drift')
-    data=dict(data,observed_epoch_order_hashes=[g4.digest(v) for v in observed],
-              actual_loader_probe='Index-only proxy cloned real loader generator; original generator not consumed')
-    return raw,data
+    for split in raw:
+        if not set(map(tuple,manifest[split]['window_keys'])) <= set(map(tuple,old['manifest'][split]['window_keys'])):
+            raise ValueError('Sparse windows must be a subset of original starts')
+    orders=[probe_order(raw['train'] if e==0 else loader(c,'train',e)) for e in range(8)]
+    if orders!=[g4.epoch_order(len(raw['train'].dataset),e) for e in range(8)]:raise ValueError('Shuffle drift')
+    if probe_order(raw['val'])!=list(range(len(raw['val'].dataset))):raise ValueError('Val order drift')
+    return raw,dict(manifest=manifest,manifest_hash=g4.digest(manifest),epoch_orders=orders,
+        epoch_order_hashes=[g4.digest(o) for o in orders],observed_epoch_order_hashes=[g4.digest(o) for o in orders],
+        reference_sha=g4.G0_SHA,reference_hashes=g4.REFERENCES,
+        original_delta1_manifest_hash=old['manifest_hash'],
+        split_policy='unchanged full episodes, no contact filter; train stride1, val stride5; no test',
+        time_policy='H15 delta4: conditions t+4*k, targets t+4*(k+1); original frame span60',
+        order_policy='same DataLoader mechanism seed42+epoch; counts differ from delta1')
 
 
 def paired_initialization(verify_outputs=True):
-    torch.manual_seed(42);base=G4GlobalMotionPredictor(horizon=15,prediction_interval=1)
-    torch.manual_seed(42);direct=build_model('direct')
-    torch.manual_seed(42);propagate=build_model('propagate')
+    torch.manual_seed(42);base=G4GlobalMotionPredictor(horizon=15,prediction_interval=4)
+    torch.manual_seed(42);direct=build_model('direct',prediction_interval=4)
+    torch.manual_seed(42);propagate=build_model('propagate',prediction_interval=4)
     shared=base.state_dict()
     for name,value in shared.items():
         if not torch.equal(value,direct.state_dict()[name]) or not torch.equal(value,propagate.state_dict()[name]):
@@ -82,7 +96,7 @@ def paired_initialization(verify_outputs=True):
     if verify_outputs:
         from scripts.experiments.v4_stage1.fixtures import synthetic_batch
         from scripts.training.v4_runtime import prepare_batch
-        x=prepare_batch(synthetic_batch(60,15,1),DataProcessor('001-rope'),base)['inputs']
+        x=prepare_batch(synthetic_batch(60,15,4),DataProcessor('001-rope'),base)['inputs']
         with torch.no_grad():
             baseline=base(x)
             exact={}
@@ -100,7 +114,7 @@ def paired_initialization(verify_outputs=True):
 
 def fresh_model(variant):
     random.seed(42);np.random.seed(42);torch.manual_seed(42)
-    model=build_model(variant)
+    model=build_model(variant,prediction_interval=4)
     if any(p.count_nonzero() for p in model.direct_motion.mapping[-1].parameters()):raise AssertionError('Not fresh')
     return model
 

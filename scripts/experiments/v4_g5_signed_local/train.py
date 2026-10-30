@@ -8,7 +8,7 @@ import traceback
 import torch
 from scripts.data_process import DataProcessor
 from scripts.training.train import make_renderer,atomic_json
-from scripts.experiments.full_training.v4_epochs import loader
+from .protocol import loader
 from scripts.experiments.v4_g4_global_motion.train import perform_epoch as g4_perform_epoch
 from .protocol import configuration,preflight,paired_initialization,fresh_model,output_check
 from .formal_checkpoint import empty_ledger,save_boundary,restore,commit_epoch
@@ -49,7 +49,7 @@ def write_new_json(path,value):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--variant',choices=('direct','propagate'),required=True)
+    parser.add_argument('--variant',choices=('direct',),required=True)
     for name in ('root','depth-root','g0-reference','output','expected-sha'):parser.add_argument('--'+name,required=True)
     parser.add_argument('--preflight-only',action='store_true');parser.add_argument('--preflight-report')
     parser.add_argument('--resume',action='store_true')
@@ -64,7 +64,7 @@ def main():
     if args.preflight_only:
         write_new_json(args.preflight_report,dict(passed=True,config=c,data=data,initialization=initialization,
             storage=storage,graph_files_sha256=graphs,processor=processor.state_dict(),training_started=False,optimizer_updates=0))
-        print('PREFLIGHT ONLY',args.variant,1514,100);return
+        print('PREFLIGHT ONLY',args.variant,{k:v['windows'] for k,v in data['manifest'].items()});return
     if not os.environ.get('SLURM_JOB_ID') or not torch.cuda.is_available():raise RuntimeError('Requires explicitly approved Slurm GPU training')
     import gsplat
     environment=dict(torch=torch.__version__,cuda=torch.version.cuda,gsplat=gsplat.__version__,gpu=torch.cuda.get_device_name(),tf32=False)
