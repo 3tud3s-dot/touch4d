@@ -1,0 +1,58 @@
+Frozen Cross-Attention Necessity Audit V1 -- no training, no architecture adoption.
+
+Training source f978e0a29b6f0f0b6097c40684b949797a2f5d7b.
+Reuse verified inference/render/statistical utilities from diagnostic 18704f4.
+G5-Direct Epoch8 Best, 12112 updates; checkpoint sha256
+067984c4c286306094efeff2f28ed57e3dcdd0c333972ecc6feb4b982ee3a40c.
+Source model/production paths must have zero diff against training source.
+
+Exactly six modes: Normal, NoCrossValue, NoToolMotion12, NoHeadMass4,
+NoValue+NoTool12, NoCrossInfo. Copy Initial is an additional static reference.
+NoBase deletion, factorial exploration, acceptance threshold or next-stage gate.
+NoCrossValue zeros ONLY block.projection output (both layers). Scores, K/V,
+normalization, Query residual, FFN and FFN residual still execute.
+Tool12 only changes original Motion input[128:140]. Mass4 only changes[146:150].
+Neither changes observation, valid masks or the G5 independent 18D basis.
+Later AR states and derived conditions may change as consequences, not direct
+interventions. NoCrossInfo closes all three paths, not Action or all Attention.
+In current G5, T3 pressure features reach prediction through the Cross routes;
+NoCrossInfo therefore also closes that output route although encoding still
+executes. Independent Global/Direct inputs retain Hand State and signed motion,
+not a separate tactile feed. Do not assume a future Unified retains T3 by magic.
+
+Normal capture retains first Cross Query, actual Anchor geometry, original
+Controller history, previous cumulative d and Anchor history on the same device.
+Single-step H1/5/10/15 recomputes both Cross blocks, weighted motion, history
+mass, Base, Global and Local. Never subtract old Normal branch outputs.
+Validate against independent original-model only-step hook rollout with exact
+prefix/current output matching. No intervened state enters later steps in A.
+B runs each entire H15 independently, including evolving predicted history.
+
+Val exactly 100 windows, ep3=55/ep6=45, original Manifest and ordering, equal
+within Episode and then equal across Episodes. H15/interval1, original CD,
+three-camera1280x720 gsplat RGB+0.1Alpha, original masks/normalization.
+All H1-H15 retained. No test Episodes or contact filtering.
+Additional read-only Train only ep7/start105. Seven retained cases: Val ep3
+135/245/25, ep6 110/20/200; Train ep7 105. Four key cases get all three camera
+RGB/Alpha at H1/5/10/15. No new training, optimizer, backward or checkpoint save.
+
+Normal mechanism trace: both layers, all four Heads, all/Near/Middle/Far;
+Query and post-projection Value RMS in dimensionless feature units; total
+Controller mass, Null mass, entropy of 61-way softmax and conditional Controller
+entropy (undefined when Controller mass zero); final-layer adjacent-valid mass
+and weighted observed Controller adjacent motion in mm. HeadMass is NOT contact.
+Spatial grouping is original initial-distance quartiles; no new hard threshold.
+GT is independently reconstructed. Regional error is one-way PredRegion->GT,
+not fabricated GT region labels. 16NN is a structural proxy, not material strain.
+
+Pilot runs all six H15 modes, finite/mask/unchanged-attribute checks, exact
+Normal equivalence and selected-step replay, real renderer/loss, NoCrossInfo
+K/V and Score isolation. In isolation diagnostic only hook Cross K/V outputs
+and pairwise score, verify weights change but every predicted attribute stays
+bit exact. This deliberately leaves G4/G5 direct observations unchanged.
+Full Normal must reproduce checkpoint CD within1e-4 mm and RGB/Alpha/Joint
+within1e-6. Source and model/checkpoint hashes checked before and after.
+
+Independent Worktree, one new 5090 Slurm inference job, unique output directory.
+No GitHub push, PR, main merge, new decoder, G5-GEO/G6 or automatic next stage.
+Observed effect sizes are reported, not statistical significance across seeds.
