@@ -28,6 +28,11 @@ class GeometryAdapter(nn.Module):
         self.backbone.eval()
         return self
 
+    @property
+    def global_motion(self):
+        """Read-only original runner diagnostic interface; no duplicated module."""
+        return self.backbone.global_motion
+
     def motion_forward(self, inputs):
         """Read-only hook observes final Cross output; original AR loop is untouched."""
         queries = []

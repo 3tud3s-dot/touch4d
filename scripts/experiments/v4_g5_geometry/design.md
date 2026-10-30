@@ -35,3 +35,13 @@
 ## 用户追加授权与后续边界
 
 用户随后明确授权自主修复、提交、GitHub 推送、服务器同步、GPU 申请，并将最终目标延伸到达到可训练状态后完成八轮 Head-only 训练及验收。仍冻结原 G5；八轮正式入口应单独实现、测试、提交和冻结来源，不把 Smoke 的四次更新冒充正式轮次。不得通过放宽等价/隔离标准掩盖工程问题，失败记录必须保留。Smoke 不会自行触发八轮作业。
+
+## 正式八轮协议（追加授权）
+
+正式训练重新使用 Seed42 创建 Geometry Head；G5 E8 骨干严格加载并冻结，不加载四次 Smoke 头权重。复用原 G4 `perform_epoch` 及原 `train_epoch/evaluate_loader`，仅提供头参数给 AdamW。H15/Δ1、B1、8 Epoch、lr=1e-4、weight_decay=1e-4、clip norm1，原 Joint，无 scheduler。原 Train1514/Val100、原 seed42+epoch DataLoader Shuffle 和全部窗口顺序经既有 preflight 校验。Val Episode 等权 Joint 最低选择 Best；初态单独保留，不按个别窗口选模。
+
+正式格式为 `touch4d-g5-geometry-head-only-formal-epochs-v1`，与 Smoke/G5/G4 格式隔离。保存不可变 initial/epoch_01…08 和可恢复 best/last 别名；只恢复完整 Epoch 边界、RNG 和优化器，未提交 Epoch 的访问不计入累计更新。每轮记录访问/成功更新标志、梯度、参数变化、属性范围、冻结骨干哈希。CUDA 逐位续训可复现性不作未经验证的承诺。
+
+正式作业先严格审查 Smoke 工程门槛及渲染副作用。用户明确追加了自主推进八轮的目标，真实渲染小幅退化不得被伪称为非退化通过；应保留并分析证据，可在完整验证选模与可关闭输出适配的范围内推进 Head-only 研究。任何 XYZ、Mask、等价性或非有限值问题必须先修复，不得带入正式训练。
+
+正式结果独立位于 `v4-g5-geometry-decoder-v1-training/run-001`。训练完成后同一作业调用只读 `evaluate.py`，评估 Original/Best/Last 完整 Val100、逐 Horizon/相机、四个代表窗口和几何统计。仅优化 25,542 个头参数；620,511 个 G5 参数保持冻结。
