@@ -1,0 +1,92 @@
+Frozen Condition Information Attribution V1 — preregistration
+
+Fixed trained graph: f978e0a29b6f0f0b6097c40684b949797a2f5d7b.
+Diagnostic parent: 2100d95851c041b85343eb4ff5898fccbaf87f46 (capture/replay reuse only).
+G5 Direct Epoch8 Best SHA256:
+067984c4c286306094efeff2f28ed57e3dcdd0c333972ecc6feb4b982ee3a40c.
+No optimizer, backward, weight update, training, GT condition, architecture edit.
+No GitHub push. New independent Worktree and result directory only.
+GPU: user explicitly authorized existing Slurm allocation31735; do not request
+another GPU or interrupt another process. Use a separate named Slurm step only
+after checking the allocation and assigned GPU are idle.
+
+REAL INFORMATION FLOW (original source locations):
+A0 = CP current XYZ3, initial-relative delta3, endpoint-valid1.
+  v4_conditions.V4ConditionEncoder.features -> controller Linear13/128/GELU/Linear.
+  Positions/masks returned separately to Cross score and Motion paths: bypass YES.
+T3 = local mean/max, coverage, normalized age, mean-valid, max-valid.
+  Same Controller MLP; mean Gaussian10mm, Max local Voronoi partition.
+  valid_mask & spatial_mask & ROI & finite & age0..75000us & operating hand.
+  Valid zero pressure retained. Pressure raw stored value/100, not Newton.
+  No direct T3 input to G4/G5: bypass NO. It affects shared Query via Cross.
+Hand = action13 -> independent Hand Encoder + hand identity + condition time.
+  hand_projection(no bias) added to per-controller identity/time encoded token;
+  fusion LayerNorm then final Controller mask. No finger fallback tokens.
+  Unprojected encoded Hand Token also directly enters G4/G5 Mapping: bypass YES.
+  Both Hand-Fusion-Off and Direct-Hand-Token-Off suppress the encoded Hand
+  context INCLUDING its hand identity/time embedding, not only raw13D state.
+  Controller identity/time is retained; do not claim isolated grip/pose causality.
+Cross = tools -> memory_norm -> separate K/V linear, Query -> q_norm/q_linear;
+  score = QK/sqrt32 + learned geometry4 + pairwise([Q,K,geometry]); Null logit/value0;
+  Value aggregate -> original W_O -> residual -> FFN -> updated Anchor Query.
+  Two layers, four heads. Alpha additionally supplies Base tool12/head-mass4.
+G4 = pooled Query128 + Hand128 + hand-basis12 -> Mapping ->3x12 @basis12.
+  Basis: root cumulative3/adjacent3, CP mean cumulative3/adjacent3.
+G5 = Query128 + Hand128 + geometry4 + basis18 + history3 + previous_d3
+  + recomputed G4 hand contribution3 -> Mapping287 ->3x18 @basis18.
+  Basis18: hand12 + anchor-weighted CP cumulative3/adjacent3.
+  Geometry and signed data bypass Cross; Query supplies its indirect dependency.
+Final: (Base_d + Global_delta) + Local_d, exact original addition/masks,
+  fixed initial RBF -> initial GS XYZ + cumulative field. Other11D inherited.
+
+A full-AR modes: Normal, T3PressureZero(only7:9), T3All6Off(7:13),
+CrossA0GeometryOff(0:7), CrossHandFusionOff(only projection add),
+CrossA0T3Off(0:13; MLP biases, hand fusion, identity/time remain).
+B full-AR modes: DirectHandTokenOff(only G4/G5 direct Hand context),
+LocalController6Off(basis18[12:18] in context AND matrix product),
+SignedHand12Off(G4 basis and context0, recompute contribution, pass effective
+basis12/contribution to G5). No mode is complete No-Action.
+
+C: four A modes PressureZero,All6Off,A0GeometryOff,HandFusionOff; only same
+Normal history at H1/5/10/15. EndToEnd changes both K/V via original tokens.
+FixedRoutingChangedValue: original Normal Key, changed projected Value, original
+Normal current-step layer-specific Alpha for aggregation AND final12D/4D
+readouts. This closes hidden Key-to-readout leakage. Original score still runs;
+layer2 Query can change but cannot change the frozen route. FFN remains active.
+ChangedKeyNormalValue: changed original Key projection (including pairwise Key
+score), original Normal Value, same physical geometry. Layer2 Query evolves.
+Nonlinear effects cannot be added or converted to independent percentage shares.
+Additional B and all13-off same-history EndToEnd are recorded for comparison.
+
+Coverage: complete original Val100, ep3=55/ep6=45, Episode equal; H15/delta1,
+original three-camera1280x720 gsplat and CD+RGB+0.1Alpha, original masks/reduction.
+Train7/start105 is mechanism-only, excluded from Val/model selection.
+Seven numerical cases: ep3/start135,245,25; ep6/start110,20,200; train7/start105.
+Images are fixed BEFORE inference: first four main cases; only H15 all3 cameras
+RGB/Alpha. Geometry arrays preserve full15 frames for all7 cases.
+
+ACTIVITY preregistered BEFORE any predictor forward or rendered loss:
+per window, positive effective valid taxels / all effective valid taxels across
+15 sampled condition frames and all operating fingers. Positivity is descriptive,
+NOT a contact threshold. Within each Val Episode freeze Q25/Q75 (NumPy linear).
+LOW<=Q25, HIGH>=Q75, MIDDLE otherwise. If equal: INDETERMINATE; no observations:
+NO_OBSERVATION. Keep ties and sample counts. No error/GT-dependent grouping.
+All-frame/finger input distributions record mean/max, coverage/age/valid flags,
+valid and nonzero counts, hand identity and frame/horizon. Overlapping windows
+and time-correlated frames are NOT independent replications.
+
+Regions: existing initial CP-distance quartiles Near25/Middle50/Far25; no new
+contact mask. Motion world mm via fixed DataProcessor scale0.157037090510.
+One-way region Pred->entire GT is not local CD or material correspondence.
+16NN distortion is a structure proxy; future GT independently reconstructed.
+
+Engineering gates: original Normal all attributes bit exact in CPU/GPU pilot;
+Normal Val100 reproduces CD within1e-4mm and RGB/Alpha/Joint within1e-6;
+separate K/V linear checks, two-layer fixed route, preserved masks/positions and
+raw input hashes; same-history replay equals only-step full AR at each case;
+all modes finite, original state/checkpoint hashes unchanged, zero updates.
+Report improved/degraded paired counts using CD1e-4mm/Joint1e-6 numerical guards,
+not significance thresholds. Keep counterexamples and unequal Episode response.
+
+Stop on an engineering failure; no silent formula changes/retries. Save evidence.
+After complete report/hash verification stop; no new architecture or training.
