@@ -1,0 +1,92 @@
+Frozen Attention Routing Audit V1 -- no trainable model or training.
+
+Training source f978e0a29b6f0f0b6097c40684b949797a2f5d7b.
+Reuse verified capture/replay/evaluation tools from audit8052a54. All protected
+production/model/renderer/dataset/loss paths must remain identical to f978e0a.
+G5-Direct Epoch8 Best, 12112 updates, checkpoint sha256
+067984c4c286306094efeff2f28ed57e3dcdd0c333972ecc6feb4b982ee3a40c.
+Base here is jointly trained inside G5, not the historical independent G0.
+
+Exactly Normal, UniformRaw, UniformGlobalMass, UniformPerHandMass,
+RBFPerHandMass, LearnedGeometryPerHandMass, PermuteWithinHand.
+Copy is a separate static reference. No new variants, search or training gate.
+
+Intervene only the pre-W_O value aggregate in BOTH original Cross blocks.
+Capture actual executed Q/K/V and Pairwise outputs; reconstruct original scores
+in identical arithmetic order. Every call must exactly reproduce original
+learned aggregation and returned alpha_learned. Original Q/K/V/Score/FFN/Null
+are still calculated. Parameters, tools and Values are never reordered/edited.
+Only W_O input changes. Original returned alpha_learned still provides Motion
+input12/4. Validate those readouts exactly in every full rollout.
+No source/model.forward monkeypatch or production file edits.
+
+UniformRaw: equal weight on each VALID Controller AND Null, independently per
+valid Anchor/head. Null-only for padding or no valid Controllers.
+UniformGlobalMass: keep actual learned Null and total Controller mass; equal
+weight over valid Controllers. This may change the hand split in dual-hand data.
+PerHand modes: keep learned Null and Left/Right masses under the CURRENT Query,
+not masses from Normal's rollout. Hand slots0..29 Left,30..59 Right.
+Uniform hand distribution, fixed Gaussian exp(-0.5*d2/sigma_geo^2), or original
+trained geometry_score dot [relativeXYZ/sigma, squared normalized distance].
+No new bandwidth/search. Learned geometry may prefer far/directional locations.
+Empty hand gets zero Controller mass and no intra-hand Null is added.
+Softmax is log-space and mask-safe. FP32 row/mass absolute tolerance2e-6;
+Null copied bit-exact in every mass-matched mode. Do NOT globally renormalize
+and thereby silently alter learned masses.
+
+Permute: deterministic integer-hash sort of valid ranks, seed/salt fixed in
+source by layer/head/hand. Same map over Anchors, no global RNG use. Identity
+hash permutation at n>1 rotates once; n<=1 is unavoidable identity. Only weight
+assignment is permuted, never Value, CP identity/position, or another hand.
+Verify distribution multisets and actual Value preservation in tests.
+
+Two-layer changes naturally change later Query and original learned scores.
+Full AR also changes GS/history/bases. No claim all other intermediates remain
+identical. MassMatched is NOT a fully learned-score-free computation.
+
+A: same Normal history at H1/5/10/15. Recompute BOTH Cross blocks, learned
+alpha readouts, Base, Global, Local and fixed RBF. Do not subtract old branches.
+Check independent only-step original rollout prefix/current output bit-exact.
+B: separate complete H15 for each mode. Interval1, exact original Val100,
+ep3=55/ep6=45, Episode-equal reduction, original three1280x720 cameras and
+CD+RGB+0.1Alpha. No changed batches, contact filtering or Test ep0/ep9 use.
+Only additional Train case ep7/start105, excluded from Val summaries.
+Preserved seven cases: ep3 135/245/25, ep6 110/20/200, Train ep7 105. Four key
+cases get original RGB/Alpha H1/5/10/15, all3 cameras; all7 retain input/world
+XYZ and selected routing arrays for all modes/layers/heads.
+
+Diagnostics: per layer/head every H globally; Near/Middle/Far at H1/5/10/15
+in full AR and all selected A steps. Initial-distance quartiles from previous
+audit, no hard contact thresholds. Full H1-H15 regional motion/16NN preserved.
+Null/L/R mass, entropy nats, total variation and finite Jensen-Shannon
+divergence, top5 valid Controller set overlap, unconditional and conditional
+weighted distance, Value aggregate change per Head, W_O joint-Head change,
+and G5 Local GS change vs Normal. Query/feature quantities dimensionless;
+positions/motions via DataProcessor scale to world mm. Distances are NOT contact.
+Top-k stable node-ID tie rule; uniform ties do not reveal anatomical preference.
+Zero Controller mass means conditional distance/top-k undefined, not zero.
+W_O and Local changes are joint-Head quantities repeated with per-head stats;
+never interpret them as independent head causal contributions.
+Full-AR Local/route-vs-Normal changes include changed history. A isolates the
+current two-layer intervention under one common Normal history.
+Routing maps: fixed ep3/start135 and Train ep7/start105, H15, both layers/all4
+heads, common alpha scale0..1. Other key cases have geometry/RGB/Alpha and raw
+routing arrays, not selectively chosen maps based on metrics.
+Full-AR Anchor-control and RBF-GS Base/Global/Local/Final magnitudes and changes
+vs Normal are recorded for all H/regions. These are not additive causal shares
+of CD and cannot be compared without noting cancellation and changed history.
+Regional Pred-to-GT error is one-way and computed against the full independent
+GT set, not a fabricated material region or point correspondence.
+H15 three-camera RGB and Alpha contact sheets use GT+seven routes+Copy in3x3;
+each preview is640x360, and all original1280x720 images remain unchanged.
+
+GPU Pilot: both Val ep3/start135 and ep6/start110; all7 modes with real H15
+Forward, original gsplat/full Loss, finite/mask/mass/value/readout checks and
+single-step replay. No optimizer/backward. Fail stops whole audit, no retry.
+Then complete Val100; Normal reproduces checkpoint CD within1e-4 mm and
+RGB/Alpha/Joint within1e-6. Frozen model/checkpoint hashes unchanged.
+
+One new Slurm5090 job after reviewed commit approval and clean fixed source.
+No GitHub push, main merge, architecture implementation, optimizer or weights
+save, new attention training, G5-GEO/G6 or automatic next research stage.
+Frozen changes are not retrained architecture equivalence. Preserve counterexamples.
