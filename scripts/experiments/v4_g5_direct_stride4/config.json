@@ -1,0 +1,24 @@
+{
+  "schema": "g5-direct-stride4-runtime-v1",
+  "epochs": 8,
+  "horizon": 15,
+  "prediction_interval": 1,
+  "batch_size": 1,
+  "seed": 42,
+  "lr": 0.0001,
+  "weight_decay": 0.0001,
+  "gradient_clip_norm": 1.0,
+  "train_window_stride": 4,
+  "phase_by_epoch": [
+    0,
+    1,
+    2,
+    3,
+    0,
+    1,
+    2,
+    3
+  ],
+  "val_window_stride": 5,
+  "val_windows": 100
+}
