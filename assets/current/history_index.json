@@ -209,7 +209,7 @@
       "tag": "archive/20261118/local/main"
     }
   },
-  "adopted_core_source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
+  "adopted_core_source_manifest_sha256": "e3e566629e65cd66913bdee90dd07eaed1428b47ad37796924d6a2d23da2b45e",
   "remote_branches": {
     "amax": {
       "codex-run/condition-identifiability-v1": {
@@ -902,5 +902,7 @@
     "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
     "archive_commit": "ad72946e365cbfe681bab5eac9265b767458c84c",
     "tag": "archive/20261118/server-untracked"
-  }
+  },
+  "validation_source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
+  "git_portability_note": "Only AGENTS.md byte identity changes from pre-commit CRLF to Git canonical LF. Model/data/renderer source math and original metadata remain exact."
 }
