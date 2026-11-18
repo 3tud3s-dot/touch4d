@@ -274,7 +274,7 @@ class Touch4DDataset(Dataset):
 
     def __init__(self, scene: str, split: str, root=DEFAULT_ROOT, *, stage="all", cache_episodes=2,
                  with_depth=False, depth_root=None, depth_cameras=None, horizon=HORIZON,
-                 prediction_interval=1, operation_hand_policy=None):
+                 prediction_interval=1, operation_hand_policy=None, episode_frame_range=None):
         self.horizon = validate_horizon(horizon)
         self.prediction_interval = validate_prediction_interval(prediction_interval)
         if operation_hand_policy not in (None, HAND_POLICY):
@@ -283,6 +283,17 @@ class Touch4DDataset(Dataset):
             raise ValueError("The reviewed operation hand policy is limited to 001-rope")
         self.operation_hand_policy = operation_hand_policy
         selected = episode_ids(scene, split, stage)
+        if episode_frame_range is not None:
+            if (not isinstance(episode_frame_range, tuple) or len(episode_frame_range) != 3
+                    or any(type(value) is not int for value in episode_frame_range)
+                    or stage != "all" or operation_hand_policy is not None):
+                raise ValueError("Expected (episode, start, stop) and unrestricted episode loading")
+            episode, start, stop = episode_frame_range
+            if episode not in set().union(*(episode_ids(scene, name) for name in ("train", "val", "test"))):
+                raise ValueError("Episode does not belong to this scene")
+            if start < 0 or stop - start <= self.horizon * self.prediction_interval:
+                raise ValueError("Explicit frame range requires a complete prediction window")
+            selected = (episode,)
         if type(cache_episodes) is not int or cache_episodes < 1:
             raise ValueError("cache_episodes must be a positive integer")
         if type(with_depth) is not bool:
@@ -311,8 +322,14 @@ class Touch4DDataset(Dataset):
             if stage == "single" and sum(s is not None for s in info.slots) != 1:
                 raise DataFormatError(f"{info.path}: reviewed single-hand curriculum conflicts with metadata")
             self.episodes[episode] = info
-            self.windows.extend((episode, start) for start in window_starts(
-                info.frames, split, self.horizon, self.prediction_interval))
+            if episode_frame_range is None:
+                starts = window_starts(info.frames, split, self.horizon, self.prediction_interval)
+            else:
+                _, start, stop = episode_frame_range
+                if stop > info.frames:
+                    raise ValueError("Explicit frame range exceeds the episode timeline")
+                starts = range(start, stop - self.horizon * self.prediction_interval)
+            self.windows.extend((episode, start) for start in starts)
             if with_depth:
                 self.depth_episodes[episode] = _depth_info(
                     self.depth_root / scene / f"episode_{episode}", info, scene)
