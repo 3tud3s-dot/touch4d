@@ -900,8 +900,10 @@
     "file": "how -s --format=-H 753aaac",
     "bytes": 0,
     "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
-    "archive_commit": "ad72946e365cbfe681bab5eac9265b767458c84c",
-    "tag": "archive/20261118/server-untracked"
+    "archive_commit": "7be37f8c8ec9eef9278d552563f4cb6af3fd615d",
+    "tag": "archive/20261118/server-untracked-exact",
+    "previous_archive_commit": "ad72946e365cbfe681bab5eac9265b767458c84c",
+    "filename_exact": true
   },
   "validation_source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
   "git_portability_note": "Only AGENTS.md byte identity changes from pre-commit CRLF to Git canonical LF. Model/data/renderer source math and original metadata remain exact."
