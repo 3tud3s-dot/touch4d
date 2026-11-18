@@ -3,8 +3,7 @@
   "newline": "LF",
   "files_sha256": {
     ".gitattributes": "a4a8f68d5615bce12a72e0028ffbfea5131c5d9ae39be182057e946869e1696b",
-    ".gitignore": "c25bf6a2dea40f4e3ac5c81b28ce0104d8010179cd993cf0830997eb24714dc5",
-    "AGENTS.md": "ac33704496ecd7c3c8ba8da8ebc61a1fcebed5e95822dc7e2d43460df14d59ab",
+    ".gitignore": "ad13d473f220ab8901074811fdc190bab77c9f27bbf83b4c8d834c10c7192f7a",
     "configs/evaluation.json": "af06975df562f6ab5e8d78d43789b83c34a5564e66cb4672bec74483519ed8c4",
     "configs/verify_cpu.sbatch": "9c59e984b6caf8b17a868c7eb4ff3863d240382c76b55ce359082ad4fe5ed690",
     "configs/workflow.json": "2d665925b02fb9a8747b63c2c25471f0d0a4199d29b7fdfb0e98e83a8cfaba80",
@@ -219,6 +218,11 @@
     "third_party/soma/mmgs/utils/transformation_utils.py": "51e9fc7f234af0db0d4f365ce26795e1df6a725f41da2b3b7a5eba6367d76946",
     "third_party/soma/mmgs/utils/visualization.py": "1ed201c8ae647058a8f76013715ba0e52c34529e41025899dd438d1502ca0b39",
     "third_party/soma/mmgs/version.py": "6f6e34c0e49990ba1df445123927559c8bb302c3bb26fce12eaa84d413dd9369",
-    "third_party/soma/requirements.txt": "a9c06da48fdc9ed7009b07bcf351b1a42542fcbbfa9e098d68bac0a79c86928a"
+    "third_party/soma/requirements.txt": "a9c06da48fdc9ed7009b07bcf351b1a42542fcbbfa9e098d68bac0a79c86928a",
+    "README.md": "158e117933e886fbf4171df8e337cce0933198e7d8eb110c0bde53ad8e092d9c",
+    "docs/assets/generalization-h15.png": "0a4551df239877648842eb7033985bf91a0e4f1df3d1c998c938545e71ba6584",
+    "docs/assets/generalization-rollout.gif": "c8148b3717c87587e198470308dfb33e9e937522ad6c1441bd8aa1caa20d3c48",
+    "docs/assets/resimulation-h15.png": "bd8f07b50917b515ed88fb43626bfd55d309fd3e1304d78bbad1260aef1656bf",
+    "docs/assets/resimulation-rollout.gif": "c9650e4235394cdef21f15fcdc64f0314fe814cccab26592c8f240fb7cb64d79"
   }
 }

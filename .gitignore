@@ -40,3 +40,6 @@ Thumbs.db
 
 # Verification logs stay outside the source commit.
 /assets/current/verification/
+
+# Machine-local collaboration instructions.
+/AGENTS.md
