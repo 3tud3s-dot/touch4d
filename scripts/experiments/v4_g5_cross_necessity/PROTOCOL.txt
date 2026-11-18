@@ -1,0 +1,102 @@
+G5 Motion Head / Cross-Attention necessity -- frozen protocol before execution
+
+Stage 1 only. No optimizer, backward, model edit, architecture refactor, training,
+checkpoint write, or automatic Stage 2 launch exists in this package.
+Detached independent Worktree is based exactly on training source:
+f978e0a29b6f0f0b6097c40684b949797a2f5d7b
+Checkpoint Epoch8 Best, 12112 successful updates:
+/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-v1-training/run-001/best.pt
+SHA256 067984c4c286306094efeff2f28ed57e3dcdd0c333972ecc6feb4b982ee3a40c
+Normal reference CD=2.4026261481544693 mm Joint=0.10069386053548167.
+The Base inside G5 is jointly trained, NOT the historical G0 checkpoint.
+
+Independent output roots (Run must not exist):
+Server /data1/userdata/tcweng/experiments/touch4d/v4-g5-cross-necessity-v1/
+Local D:/Amax/Projects/touch4d-experiments/v4-g5-cross-necessity-v1/
+Proposed Run run-20261030-001, recheck collision immediately before deployment.
+No modification/reuse of active 31848 attribution source, training or allocation.
+Job31735 is inspected, not assumed available, entered or reused.
+
+Factorial B/C/T: Base final3D / two Cross Value updates / G0 12D ToolMotion.
+Normal                                 1 1 1
+NoBase-All                             0 1 1
+NoCrossValue                           1 0 1
+NoToolMotion12                         1 1 0
+NoBase+NoCrossValue                     0 0 1
+NoBase+NoToolMotion12                   0 1 0
+NoCrossValue+NoToolMotion12             1 0 0 (4D head_mass remains)
+NoBase+NoAttentionPaths                 0 0 0 (also closes 4D mass)
+Additional strict NoAttentionPaths     1 0 0 (also closes 4D mass)
+Additional NoBase-H2+                  H1 normal, subsequent Base output zero.
+Copy Initial is a separate static reference, not a trained model.
+
+NoCrossValue hooks only each block.projection output; original FFN, scores,
+geometry, masks and null remain. Both layers naturally recompute their scores.
+NoToolMotion12 changes only Motion input[128:140]. head_mass[146:150] remains
+unless explicit strict path closure. Base intervention zeros only final3D.
+Query flows also into G4 and G5, so those mappings MUST be recomputed.
+NoBase makes ToolMotion and head_mass inactive; this is an exact tested
+structural identity, not evidence the path is never useful in Normal.
+Joint NoBase+NoAttentionPaths has NO remaining T3 output route. State this
+limitation; a future Unified must explicitly retain Controller/T3 access.
+
+Coverage exactly Val100 ep3=55/ep6=45, unfiltered original H15 stride/split,
+episode-equal metrics, all H1-H15. Exactly one Train diagnostic ep7/start105.
+No Test read, contact filtering, window selection by results or budget search.
+Seven preserved cases: Val ep3/start135,245,25; ep6/start110,20,200;
+Train ep7/start105. All cases save frames/H1,5,10,15, all three RGB+Alpha.
+World arrays and original normalized inputs are saved for all seven cases.
+
+Same-history H1,5,10,15: use Normal first Cross input/geometry/history, recompute
+Cross/G0/G4/G5, RBF. Validate Normal replay bit-exact and case replay against
+only-step full original rollout (prefix and current output exact). Never simply
+subtract old Normal branch vectors to represent a Cross intervention.
+Full H15 AR is separate; previous_d, actual Anchor history, GS state evolve.
+Branch Normal-history fields: Anchor controls and RBF-mapped actual GS;
+XYZ mean, RMS, P95, defined cosine, signed projection mm and fraction on Final,
+opposite vectors and cancellation index. Zero-final projection is undefined.
+Threshold for numerical undefined angles is 1e-6 mm, not a contact threshold.
+Same-history CD improvement/worsening within +/-1e-6 mm is numerical equality;
+report ratios by episode and region, not independent point-sample significance.
+16NN is only an initial-center structural proxy, never material strain.
+
+Action response on all seven fixed cases, Normal and joint ablation:
+FreezeAction uses initial13D Action and Controllers with endpoint validity.
+HalfRootTranslation halves only root translation with corresponding same-hand
+rigid Controller/sensor-XYZ translation, preserving rotation/opening. Masks
+never resurrect missing nodes; coverage loss is explicitly recorded. Pressure,
+pressure validity/spatial mask, Age and temporal indices stay observationally
+fixed. Ancillary tactile_xyz is world geometry but not consumed by V4 T3.
+H1 must stay identical. If missing initial Root/Controller support makes an
+intervention change H1 validity, record NOT_APPLICABLE with no invented output
+and no zero-response claim; numerical/gate evidence then remains incomplete.
+Repeat same input to measure numeric noise floor;
+measurable if change > max(1e-6 mm,10*repeat floor). This is sensitivity only,
+not counterfactual GT accuracy or proof of causal dynamics. With all valid
+Action/Controllers frozen, the joint corner has zero signed bases and therefore
+mechanically predicts Copy; that identity alone is not learned causal evidence. Direction need not
+match Controller direction. Valid coverage changes are not pure motion effects.
+
+Gate after complete results, fixed BEFORE GPU run:
+USER HARD RULE: full Val Joint <= 1.02*Normal AND CD <= 1.03*Normal.
+ADDITIONAL CONSERVATIVE AUTOMATIC-PROGRESSION SUFFICIENT CONDITIONS:
+ep3 and ep6 separately satisfy the same2%/3%; each H10-H15 satisfies same2%/3%
+both episode-equal and per episode. These are extra safeguards, NOT new claims
+about the user's verbal catastrophic threshold, and must not be relaxed after
+seeing results. If hard rules pass but safeguards fail: INCONCLUSIVE, NO AUTO
+Stage2. Hard failure: FAIL_STAGE1, stop. Missing coverage/nonfinite: error.
+Even all numerical checks pass, require explicit evidence review flags:
+no new severe visual failure, no new severe structure failure, semantically
+valid/measurable action response, and valid causal prefix, with evidence paths.
+No review defaults to pending; a generated template must remain null.
+These are engineering screening rules, not proof modules are theoretically
+useless. No current checkpoint diagnoses a retrained Unified model's ability.
+
+Normal must reproduce frozen fullVal CD within1e-4 mm and RGB/Alpha/Joint
+within1e-6. All predictions/metrics finite. Parameter state hash and checkpoint
+file SHA256 unchanged before/after. Production paths locked against BASE.
+All logs and per-window JSON shards retained on failure; no automatic requeue.
+New 1-GPU sbatch only after reviewed diff commit/sync and clean fixed SHA.
+Slurm script NEVER submits training or chains Stage2. CPU report generates
+frozen_attribution_report.md, JSON/CSV/figures and references real raw pictures.
+No guessed results, no new HTML/ZIP, no G5-GEO/G6.
