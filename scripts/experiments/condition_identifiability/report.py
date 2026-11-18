@@ -44,8 +44,12 @@ def main(root):
                     with np.load(folder/'geometry.npz') as a:
                         sample=lambda p:(p[np.linspace(0,len(p)-1,min(600,len(p)),dtype=int)]*1000).tolist()
                         geo=dict(initial=sample(a['initial_xyz_m']),pred=[sample(p) for p in a['prediction_xyz_m']],gt=[sample(a[f'gt_h{h}_xyz_m']) for h in range(1,6)])
-                    visuals.append(dict(name=f'{mode} case{case} update{step}',folder=f'{mode}/{info["folder"]}',frames=info['frames'],metrics=c['normal'],geometry=geo))
-    result=dict(audit=read('audit.json'),runs=runs,visuals=visuals,conclusion=read('conclusion.json') if (root/'conclusion.json').exists() else None)
+                    window=r['config']['window_manifest']['windows'][case] if mode=='real' else r['config']['window_manifest']['synthetic_base']
+                    label=f'ep{window["episode"]}/start{window["start"]}'
+                    if mode=='synthetic':label+=' / constructed '+('-Z' if case==0 else '+Z')
+                    visuals.append(dict(name=f'{mode} {label} / checkpoint_{step}.pt',folder=f'{mode}/{info["folder"]}',frames=info['frames'],metrics=c['normal'],geometry=geo))
+    result=dict(audit=read('audit.json'),runs=runs,visuals=visuals,conclusion=read('conclusion.json') if (root/'conclusion.json').exists() else None,
+                real_pair_quality=read('real_pair_quality.json'),condition_input_stats=read('condition_input_stats.json'))
     for name in ('report.html','results.json','metrics.csv'):
         if (root/name).exists():raise FileExistsError(root/name)
     (root/'report.html').write_text(PAGE.replace('__DATA__',json.dumps(result,ensure_ascii=False,allow_nan=False).replace('</','<\\/')),encoding='utf-8')
