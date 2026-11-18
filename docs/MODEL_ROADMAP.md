@@ -208,7 +208,7 @@ Oracle 成功不证明 Encoder 已具备泛化能力。本轮先运行 Oracle-La
 | P1b（按需） | 扩展 `gs_decoder.py` 与 `model.py` 的协方差输出，修改 `rendering.py` 适配 covars／稳定分解，适配 `losses.py` 的既有尺度约束语义，以及训练、评估、可视化、checkpoint 和测试 |
 | Oracle／P2 | 新增 `scripts/training/oracle.py`、`oracle_fit.py`、`gs_structure.py` 及相关测试；适配 `model.py`、`train.py`、`fixed_fit.py`、`visualize.py`；不新增另一个层级 Encoder |
 | H 扩展 | 泛化现有 dataloader／collate／processor 检查、时间 embedding、rollout、loss、render、train／evaluate／visualize；新增 `scripts/training/test_horizon.py`，保留旧 H=5 与 checkpoint 语义 |
-| P3（后续） | dynamics 与必要的历史数据接口，具体文件在进入该阶段时确定；首轮不创建 |
+| P3-v0（已验收） | 独立 `p3_model.py`、`gs_temporal.py`、`gs_template_refiner.py`、`p3_fit.py`、`p3_acceptance.py`、`p3_report.py`；`temporal_pair.py` 与可选双帧数据接口，保持旧 P2 默认行为。实际结果见第12节 |
 
 各阶段先测试再推进，代码本地提交后推送 GitHub 与服务器并由服务器 fast-forward。本轮使用独立 `codex/structural-gs-h15` 分支，未经确认不合并 main。重数据、checkpoint、审计图片及 HTML 留在忽略目录；创建前告知完整路径。十五帧明确为逐步获得未来动作／触觉的在线条件预测，不宣称初态已知未来触觉的开放环预测。
 
@@ -287,6 +287,83 @@ H 在 Dataset、collate、processor 检查、时间 embedding、AR、loss、rend
 服务器 checkpoint 位于 `/data1/userdata/tcweng/projects/touch4d/runs/{001-rope,051-cube}/structural-gs-h15-v1-{oracle-latent,oracle-anchor,p2-h5,p1a-h15,p2-h15}/`，本地仅保留报告和导出数据。原 P1a/P0/P1a.5 及 P2 H5 共 14 个已冻结 checkpoint 哈希通过保留检查。工程闭环与 H15 可视化交付分别核验，质量阈值仍未自行确定。
 
 **下一步最值得研究的瓶颈：** 当前表示已能更连贯地表达 rope 的大幅局部牵拉，但运动较少区域的漂移与长时程末端误差仍存在；需要围绕准确的局部运动分配与优化检查，不能只追求更平滑。现有 Oracle 证据未证明固定 RBF 是明确容量上限；也不能仅凭近初始化弱跨步梯度单独认定根因。本轮到此停止，不自动进入 P1b/P3 或新的研究方向。
+
+## 12. P3-v0：Two-Frame Temporal Dynamics + Template Refinement
+
+### 12.1 冻结协议、实现与工程验收
+
+从 `fdd4013` 建立独立分支 `codex/p3-two-frame-h10`；实现、CUDA 与全部正式训练源码为 `e22936f0a9dcc0e049b272fc1aabb8a9b1d3ff9a`。没有合并 main、覆盖旧模型或根据结果调参。设计见 [P3 冻结提案](proposals/P3_TWO_FRAME_H10.md)。按数据冻结→接口测试→模型测试→CUDA→八组实验→报告顺序完成。
+
+| Scene/episode | 真实历史 t−1,t | 十个目标帧（连续整数） |
+| --- | --- | --- |
+| 001-rope ep1 | 84,85 | 86–95 |
+| 001-rope ep2 | 72,73 | 74–83 |
+| 051-cube ep0 | 108,109 | 110–119 |
+| 051-cube ep0 | 131,132 | 133–142 |
+
+四个原窗口均满足同 episode、时间戳、独立点数、三相机 RGB/mask/depth 与归一化契约，无替换窗口。沿用既有遮挡、独立重建和 cube cam012 底边裁切的质量限制；没有把 padding 或 opacity 作为可见性真值。完整帧号、源文件/样本哈希、历史相机审计及24个旧 checkpoint 哈希见 [Stage0](../audit/p3-two-frame-h10-v0/stage0_audit.json)。
+
+- **M0：** 原 P2 H10，单帧、相对初态的累计位移、固定属性，重新训练作为配对基准；未冒用旧 H15 checkpoint。
+- **M1：** 共享 One-Step AR，单帧，`x_next=x_current+W_t*anchor_delta_step`。
+- **M2：** M1 + 双帧共享 P2 编码和 Temporal Anchor Cross-Attention；当前锚点 Q、历史锚点 K/V、相对 XYZ、独立 mask、零初始化输出残差。
+- **M3：** M2 + 有界模板分支；相对观测 t 的累计 `log-scale ±log(1.3)`、`opacity logit ±0.5`，反馈下一步 Encoder。Quaternion/SH DC 继承 t，点数不变。
+
+真实 t−1/t 各自编码与 FPS；预测期间沿用 t 的 FPS、邻域和固定各向同性 RBF。全部 P3 用同一组单步权重和因果条件前缀；保留原时间 embedding，不创建逐 horizon Dynamics。预测状态滚动进入双帧窗口，不读取未来 GT、teacher forcing 或 detach。十步为未来条件逐步到达的在线预测。
+
+每场景/模型400次更新、两窗口各200次、seed42、batch1、AdamW lr=1e−4、weight decay=1e−4、clip=1。目标仍为 `Chamfer + RGB + 0.1*Alpha + 0.01*ScaleRegularization`。每20次评估与保存；每次 optimizer update 原子保存 `last.pt`，恢复拒绝模式/H/数据/源码配置冲突，且保护更好的最低CD记录。最低CD是描述性选模，不冒称物理质量验收；`last_400.pt`独立保留。
+
+新增11个 Python 文件（上述7个实现/运行文件和4个测试）；修改原 `dataset.py`、`collate.py`、`processor.py`、`gs_structure.py`。后者仅提取可复用锚点编码接口，原 forward 算子顺序保持；未修改旧 `PositionPredictor` 默认路径、loss 或 renderer。历史双帧使用独立 padding 和同一场景归一化；history=1 保持原样本。
+
+**工程结果：** 本地227项测试通过、26项环境相关跳过；服务器227项全部通过、零跳过。真实 RTX5090 验收16个窗口/模型组合，M0/M1/M2/M3共享参数初始化一致、零初始化输出一致；十步前向/RGB与Alpha反向、因果性、历史梯度、末步到前序状态的梯度与序列化后的下一次 optimizer update 均通过。4个旧 P2 H5/H15 冻结 checkpoint 对照 `fdd4013` 源码，输出与全部loss项精确相等；其他旧版语义由既有兼容测试覆盖。全部24个旧 checkpoint 哈希保留。
+
+验收作业30485完成（1分23秒）；正式作业30486完成（28分41秒），8组均完整，无OOM/非有限梯度/中断，无 activation checkpointing、缩短H或截断梯度。CUDA验收峰值5.925/6.949 GiB allocated/reserved；正式训练加导出最高6.436/7.512 GiB。梯度连通只证明工程正确，不能当作条件利用或科学假设证据。详见 [CUDA](../audit/p3-two-frame-h10-v0/acceptance.json)、[服务器终检](../audit/p3-two-frame-h10-v0/server_final.json)、[执行记录与实际命令](../audit/p3-two-frame-h10-v0/execution_notes.json)。
+
+### 12.2 八组配对结果
+
+下表为两个窗口等权平均，CD单位mm；RGB/Alpha为原有有效区域MAE。最低CD每20次选取，另列第400次，不能据最低点声称末次稳定。
+
+| Scene/模型 | 最低点更新 | h1 / h3 / h5 / h10 CD | 平均CD | RGB / Alpha | 第400次平均CD |
+| --- | --- | --- | --- | --- | --- |
+| 001/M0 | 340 | 1.6309 / 1.7654 / 1.8689 / 2.0392 | 1.8555 | .038736 / .030757 | 1.9167 |
+| 001/M1 | 400 | 1.6073 / 1.7961 / 1.9614 / 2.0887 | 1.9136 | .040867 / .033277 | 1.9136 |
+| 001/M2 | 380 | 1.6063 / 1.7812 / 1.8898 / 2.1730 | 1.9039 | .041046 / .032637 | 1.9111 |
+| 001/M3 | 400 | 1.6169 / 1.8195 / 1.9018 / 2.2404 | 1.9254 | .043237 / .034114 | 1.9254 |
+| 051/M0 | 380 | 1.5760 / 1.5688 / 1.7120 / 1.8802 | 1.7024 | .014697 / .008401 | 1.7033 |
+| 051/M1 | 260 | 1.5747 / 1.5763 / 1.7240 / 1.9465 | 1.7290 | .015251 / .009712 | 1.7441 |
+| 051/M2 | 320 | 1.5782 / 1.5742 / 1.7244 / 1.9144 | 1.7229 | .015557 / .009880 | 1.7473 |
+| 051/M3 | 360 | 1.5762 / 1.5694 / 1.7177 / 1.9006 | 1.7120 | .014990 / .009533 | 1.7522 |
+
+复制当前初态平均CD为001 **5.2095**、051 **7.9114** mm。八组都明显改善复制初态，能拟合主体运动；这不等于局部真实形变、末期稳定性或跨episode泛化通过。各窗口、全部h1–h10、最佳/400次分项、尺度/opacity、结构及资源明细见 [results.json](../audit/p3-two-frame-h10-v0/results.json)，实际配置、命令和checkpoint哈希见 [run_manifest.json](../audit/p3-two-frame-h10-v0/run_manifest.json)。
+
+### 12.3 H1：历史融合未获得可靠支持
+
+M1→M2最低CD均值：001改善 **0.51%**、051改善 **0.35%**，均低于预先约定的约5%关注幅度（不是显著性阈值）。rope ep1变差0.36%，ep2改善1.34%；第400次分别变差1.24%/改善1.44%。不能称两个窗口均获益。
+
+最低点h10较少运动端误差，ep1由2.945→2.311mm改善，ep2由2.037→2.365mm变差；ep2第400次为2.037→4.002mm。最低点ep2局部半径增量p95由.586→.739mm，运动端误差虽由3.768→3.318mm下降，整体仍是取舍。没有稳定减少较少运动端漂移或铺展的证据。
+
+rope最低点h1→h10 CD增长：M0 .408、M1 .481、M2 .567mm；M2后期并不更稳。cube M2第400次均值也略差于M1。绝对CD随horizon上升同时受运动幅度和独立GT重建差异影响；本轮未做GT状态重置对照，不能单凭上升曲线证明递推累积的因果来源。结论限于当前双帧融合实现/400预算，不否定历史信息本身可能有用。
+
+### 12.4 H2、051模板差异与局部形态
+
+M2→M3最低平均CD：051改善 **0.63%**，第400次反而变差 **0.28%**；001变差 **1.13%**。两者均不足以支持稳定形态改善。rope ep2最低点h10运动端集合误差3.318→6.360mm；尺度自由度没有解决该端轨迹偏差。
+
+051 frame132/133原始CD **2.4618mm**，去质心CD **1.6476mm**，复现此前模板差异。对共同目标134–142，start132的M2→M3最低点原始CD均值1.8112→1.7974mm，去质心CD1.9819→1.9775mm，后者仅约0.22%；第400次原始CD1.8452→1.8547mm变差。没有在预测133时使用真实133；reference133只用于回顾性模板诊断，未新增start133训练。
+
+M3最低点h10尺度比中位数：cube两窗口约 **1.157/1.099**，rope约 **1.152/1.130**；cube opacity logit中位偏移约 **−.064/+ .065**，rope约 **+.055/+.050**。全部满足初态相对界限，没有超界、非有限值或无限逐步属性累加。尺度正则不再为零，cube h10约.01944/.01042、rope约.02167/.01571（未乘.01）；完整分布和各h值在结果中单列。
+
+同裁剪多相机图像中，M3主要使部分表面更饱满，cube右下方初态与未来GT的局部差异仍存在；不能把尺度增长当作缺失区域恢复。作为独立诊断，用GT确定固定右下角ROI，对134–142的8-bit导出图比较：最低点cam001 Alpha MAE .07286→.07116略降，但cam021 .01619→.01834变差；末次cam012/cam021也变差。该ROI无监督用途、无可见性标签含义，与训练中浮点有效区域MAE分开记录。局部改善不跨视角一致，因此**H2未获可靠支持**。详见 [模板审计](../audit/p3-two-frame-h10-v0/template_audit.json) 与 [配对解释](../audit/p3-two-frame-h10-v0/interpretation.json)。
+
+所有端区均为初态预测模板X分位区域与当帧独立GT分位集合的比较，不是材料ID轨迹。邻域差、平移RMS和局部半径增长不能单独评判形变正确；cube两窗口最低点M2→M3 h10平移RMS为.850→.833、1.137→1.225mm，第二窗口并未保持得更好。Quaternion/SH固定、模板点数固定、GS采样/遮挡/重建变化仍是表示限制，不能承诺修复完全缺失的几何。
+
+### 12.5 交付与停止点
+
+[完整十帧交互报告](../audit/p3-two-frame-h10-v0/report.html)：4个窗口×4模型×最低/400次共32包；展示真实t−1,t和10个独立预测状态，GT/预测/复制当前初态，centers/ellipsoids/预测模板轨迹，三相机RGB/Alpha、帧号滑块/播放、逐horizon指标、结构曲线和400次评估曲线。历史t−1对M0/M1仅作诊断展示，并非其输入。报告离线、不使用CDN；各run还保留原可视化和完整世界GS NPZ。
+
+[离线QA](../audit/p3-two-frame-h10-v0/final_acceptance.json)通过32包数值核验、6,567个图像引用及1,152个交互组合，包含异步切窗、全部十步和播放边界；预测不是GT混入，也不是重复第五帧。原生渲染与同裁剪图板已人工复核，使用真实JS的DOM模拟测试，**未声称完成真实浏览器布局截图验收**。
+
+报告根目录：本地 `D:\Amax\Projects\touch4d\audit\p3-two-frame-h10-v0\`，服务器 `/data1/userdata/tcweng/projects/touch4d/audit/p3-two-frame-h10-v0/`。checkpoint仅服务器 `runs/{001-rope,051-cube}/p3-two-frame-h10-v0-{M0,M1,M2,M3}/`，各20个评估checkpoint以及`last.pt`、`lowest_cd.pt`、`last_400.pt`均保留。训练后SSH中断已重连，不影响已完成作业；实际命令、版本和普通工程修复记录在execution_notes.json。
+
+**结论：工程闭环通过，主体运动的固定窗口拟合成立；精细局部轨迹与末期稳定性尚不充分，H1/H2都未获本轮可靠支持。保留原P2正式基线，不将P3-v0自动推进完整训练。** 下一步应先解释当前局部运动分配与模板差异的限制，不能仅凭新增历史/属性自由度的存在宣称改进。本轮到此停止，不追加训练、调参、P1b或物理loss。
 
 ## 附录：用户补充提示词原文（历史）
 
