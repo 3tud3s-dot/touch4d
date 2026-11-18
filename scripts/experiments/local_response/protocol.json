@@ -1,0 +1,291 @@
+{
+  "status": "candidate_head_prototype_real_graph_not_admitted",
+  "baseline_source": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+  "baseline_checkpoint_sha256": "e8a386d8ac7d155784e45f426317195556f5421ea3da962274c2a095e8324212",
+  "insertion_intent": "Future adapter: correct final cumulative Local anchor proposal immediately before original Base+Global+Local sum, using original fixed RBF W. Never add cumulative corrections as extra frame velocities.",
+  "contract": "Original Local GS mean retained. Only candidate correction is centered using W-induced anchor masses; its interpolated RMS is bounded relative to original demeaned Local RMS. Units are unchanged; masks mandatory. Zero candidate is identity.",
+  "not_implemented": [
+    "admitted material graph for real data",
+    "G5 forward adapter",
+    "training",
+    "physical stability guarantee"
+  ],
+  "graph_policy": "No automatic spatial16NN material edges. Cross-layer admissibility remains unresolved. No future GT or inferred GT point correspondence allowed.",
+  "max_ratio": null,
+  "hyperparameter_policy": "Required API argument; synthetic tests use 0.25 solely to check algebra, not a selected training value. No held-out tuning.",
+  "limitations": [
+    "GS-weighted mean preservation is not physical momentum conservation",
+    "pure-translation Local has zero relative correction budget",
+    "not a bending or SO3 rigidity constraint",
+    "zero correction with positive relative motion must allow learning gradients",
+    "G5 frozen baseline lives outside this main-based prototype; no production integration",
+    "Length-only head cannot distinguish reflection, inversion or interpenetration. It permits bending only to the extent admitted edge lengths permit it.",
+    "Signed learned gains are not guaranteed restoring forces; RMS cap is not a convergence proof.",
+    "GS-mean centering can induce a uniform countershift even at isolated anchors. No pinned-gripper constraint is implemented."
+  ],
+  "next_gate": "Review graph admissibility and candidate-head design before integrating or authorizing any GPU run. Preserve original G5 source and all checkpoint semantics.",
+  "validation": {
+    "dedicated_cpu_tests": 10,
+    "real_cached_cases": 5,
+    "real_cached_horizons_per_case": 15,
+    "zero_correction_exact": true,
+    "random_correction_mean_max_abs_m": 2.734110507440768e-11,
+    "float32_float64_zero_input_gradients_finite": true,
+    "initial_full_suite": {
+      "total": 229,
+      "failures": 2,
+      "skipped": 26
+    },
+    "initial_failure_cause": "Root-level prototype changed frozen P2 inventory. Relocated into independent experimental package; no old expectations or hash constants changed.",
+    "skip_reasons": [
+      "24 optional h5py depth tests: h5py unavailable",
+      "2 explicit CUDA render tests: no GPU run requested"
+    ],
+    "not_claimed": "No real graph admission, GPU, G5 adapter or performance validation",
+    "post_relocation_targeted_regression": {
+      "tests": 16,
+      "failures": 0,
+      "skipped": 0
+    },
+    "production_P2_inventory_restored": true,
+    "head_stage": {
+      "head_tests": 14,
+      "guard_tests": 10,
+      "full_suite_total": 243,
+      "passed": 217,
+      "skipped": 26,
+      "failures": 0,
+      "seconds": 75.906,
+      "command": "python -B -m unittest discover -s scripts/tests -t .",
+      "checkpoint_loaded": false,
+      "optimizer_updates": 0
+    }
+  },
+  "future_provenance_requirement": "Any future runner must explicitly hash all local_response package sources and its G5 adapter; do not use P2 inventory as provenance for this experiment.",
+  "candidate_head": {
+    "file": "head.py",
+    "inputs": "initial reference anchors and total original Base+Global+Local proposal coordinates; fixed externally admitted undirected edges; validity masks",
+    "formula": "strain=(length(proposed_edge)-length(reference_edge))/length(reference_edge); gain=tanh(MLP(strain)); pair_message=gain*(length(proposed_edge)-length(reference_edge))*unit(proposed_edge); antisymmetric scatter / graph maximum degree; then GS-weighted transport guard",
+    "initialization": "last linear layer zero; identical Local at initialization; last layer can learn on nonrigid examples with positive downstream correction budget",
+    "hyperparameters": "hidden_dim and min_length are required, not selected for training. Synthetic tests use hidden_dim=8 and min_length=1e-8 in synthetic coordinate units. max_ratio remains unset.",
+    "gradient": "reference/proposed geometry retain gradients; no SVD",
+    "scope": "experimental edge-length response, not a physical force or a complete ARAP solver"
+  },
+  "graph_admission_contract": {
+    "source": "Initial-frame information only. Spatial proximity alone is insufficient. No GT matching, future frames or predicted-neighbor rebuilding.",
+    "admitted_mask": "Caller must record why each edge is admissible. A boolean is not evidence of material connectivity. No real-data edges approved in this step.",
+    "hard_rejections": [
+      "self edge",
+      "duplicate undirected edge",
+      "out-of-range or padded endpoint",
+      "nonfinite valid positions",
+      "initial or proposed admitted edge at/below min_length"
+    ],
+    "empty_graph": "returns zero; caller must report edge/anchor coverage and cannot call this successful shape correction",
+    "future_records": [
+      "graph hash and initial-frame identity",
+      "valid anchors and admitted edges",
+      "isolated-anchor fraction",
+      "cross-layer rejection/uncertainty counts",
+      "edge-length quantiles and physical units",
+      "admission evidence and fixed graph reuse across horizon"
+    ]
+  },
+  "prototype_source_sha256": {
+    "correction.py": "e6b5f8f01025c33c0563cf28175bce3b6d1ad17f0801a3fcbb4f6bff092d895b",
+    "head.py": "4f5514ade25f82a580c721e55f3410ce529cb26431941ea181597765e4b82a03",
+    "__init__.py": "45f59c186af34fd29f5d04bec4fdaca33233a8908d08b124b27af136b2282f8e"
+  },
+  "real_graph_audit": {
+    "input_sha256": "0dcc0bd36c9c78b7ae44b822d45c98d156922687c4fc2433eb0b34b790f4e3ea",
+    "window": "train Ep2/start159 initial only",
+    "GS": {
+      "points": 10798,
+      "mutual_edges": 69849,
+      "isolated_points": 1,
+      "degree_quantiles": [
+        0,
+        14,
+        16,
+        16
+      ],
+      "length_mm_quantiles": [
+        0.06272443930403884,
+        4.709288328643205,
+        9.61244944309495,
+        20.772902699960998
+      ],
+      "length_over_local_GS_spacing_quantiles": [
+        1.0099870717557973,
+        1.434808896691174,
+        3.087039433775119
+      ],
+      "reliable_endpoint_edges": 6240,
+      "geometric_suspect_edges": 814,
+      "normal_uncertain_edges": 63609,
+      "unflagged_edges_not_approved": 5426,
+      "all_edges_material_status": "UNVERIFIED"
+    },
+    "anchors": {
+      "points": 128,
+      "mutual_edges": 819,
+      "isolated_points": 0,
+      "degree_quantiles": [
+        5,
+        13.5,
+        16,
+        16
+      ],
+      "length_mm_quantiles": [
+        24.774703519051013,
+        41.93388821784404,
+        61.745257703564235,
+        86.48247677994256
+      ],
+      "length_over_local_GS_spacing_quantiles": [
+        6.517636809697374,
+        22.576632537768425,
+        54.32678369479511
+      ],
+      "reliable_endpoint_edges": 77,
+      "geometric_suspect_edges": 61,
+      "normal_uncertain_edges": 742,
+      "unflagged_edges_not_approved": 16,
+      "all_edges_material_status": "UNVERIFIED"
+    },
+    "normal_reliable_fraction": 0.1543804408223745,
+    "units": "world meters; display mm",
+    "flags_only": {
+      "PCA_smallest_over_middle_max": 0.2,
+      "PCA_middle_over_largest_min": 0.1,
+      "normal_angle_deg": 30,
+      "edge_normal_component": 0.35
+    },
+    "note": "Flags are unvalidated geometry heuristics, not true cross-layer labels; no edge is admitted for training.",
+    "normal_estimator": "Eigenvectors of anchor-centered neighbor second moment (x_j-x_i)(x_j-x_i)^T/16; plane constrained through center, not centered-neighbor covariance.",
+    "synthetic_counterexample": {
+      "sheets": 2,
+      "grid_per_sheet": "9x9",
+      "spacing": 1,
+      "separation": 0.2,
+      "mutual_edges": 1167,
+      "true_cross_layer_edges": 567,
+      "unflagged_edges": 1086,
+      "cross_layer_unflagged": 486
+    },
+    "decision": "NOT_ADMITTED: neither GS nor Anchor spatial16NN plus these geometric filters is approved as material topology. Do not integrate/train current edge-length head on this graph.",
+    "next_options": "Inspect availability of initial-frame surface connectivity/UV/independent cloth-component evidence. Without such evidence, reconsider a topology-independent Local response rather than forcing edge-length constraints."
+  },
+  "source_geometry_audit": {
+    "scope": "Read-only server audit of actual 008 Ep2 training source and frame159; no downloads, extraction to disk, model execution or jobs.",
+    "v1_root": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_2",
+    "source_root": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_2",
+    "v1_fields": [
+      "xyz",
+      "log_scales",
+      "quaternions",
+      "opacity_logits",
+      "sh_dc",
+      "sh_rest",
+      "frame_id",
+      "timestamp_us"
+    ],
+    "v1_no_topology_filename_in_scene": true,
+    "frame159": {
+      "points": 10798,
+      "source_ply_member": "splatfacto/splat_159.ply",
+      "source_ply_sha256": "89268b37231e76b74e391f57b3e2f795790e496412e64daa42e746afb454397f",
+      "source_to_v1_xyz_exact": true,
+      "source_normal_nonzero_count": 0,
+      "source_elements": [
+        "vertex"
+      ]
+    },
+    "extra_geometry": {
+      "visual_hull_simple_full.ply": {
+        "vertices": 43048,
+        "elements": [
+          "vertex"
+        ],
+        "fields": [
+          "x",
+          "y",
+          "z",
+          "red",
+          "green",
+          "blue"
+        ],
+        "sha256": "c3534037d1f6be0a6e9f0e5200fbe084c33c1ad7aaf1c618cae8b77ac744a134"
+      },
+      "start_obj_pcd.ply": {
+        "vertices": 9844,
+        "elements": [
+          "vertex"
+        ],
+        "fields": [
+          "x",
+          "y",
+          "z",
+          "red",
+          "green",
+          "blue"
+        ],
+        "sha256": "a2e58552bf047ffbce8fb5779a6a5a9f5e246ded58878f38df5c23cb59923b71"
+      },
+      "pcd_clean.tar": {
+        "members": 323,
+        "sampled_members": [
+          "pcd_clean/000000.npz",
+          "pcd_clean/000159.npz"
+        ],
+        "points_in_both_samples": 9844,
+        "fields": [
+          "pts",
+          "colors",
+          "vels",
+          "camera_indices",
+          "visibility_matrix"
+        ],
+        "visibility_shape": [
+          9844,
+          36
+        ],
+        "visibility_values": [
+          0,
+          1
+        ],
+        "nonzero_velocities_both_samples": 9844,
+        "no_explicit_faces_uv_material_ids_in_sampled_npz": true,
+        "cross_frame_correspondence": "NOT VERIFIED; equal counts alone insufficient",
+        "time_causality": "NOT VERIFIED; velocities/tracking may depend on future observations"
+      }
+    },
+    "cameras": {
+      "members": 400,
+      "files_by_suffix": {
+        ".txt": 36,
+        ".h5": 144,
+        ".mp4": 144,
+        ".png": 72,
+        ".npy": 4
+      },
+      "sample_mask": "brics-odroid-001_cam0/mask_refined.h5/data",
+      "mask_shape": [
+        328,
+        720,
+        1280
+      ],
+      "first_mask_unique": [
+        0,
+        1
+      ],
+      "tracking_products": [
+        "tracking/vel.h5",
+        "tracking/visibility.h5"
+      ],
+      "topology_found": false
+    },
+    "conclusion": "No ready material connectivity/UV found in inspected files. Source GS normals are zero in sampled frame. Additional pointcloud/visibility products warrant provenance and causal-time audit before use; none admitted to model.",
+    "next_gate": "Trace pcd_clean generation, row identity and velocity temporal dependence; do not assume same-index GT GS or use future tracking at inference."
+  }
+}
