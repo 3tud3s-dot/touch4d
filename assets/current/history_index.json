@@ -209,5 +209,698 @@
       "tag": "archive/20261118/local/main"
     }
   },
-  "adopted_core_source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5"
+  "adopted_core_source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
+  "remote_branches": {
+    "amax": {
+      "codex-run/condition-identifiability-v1": {
+        "sha": "265d28a22d25590f9434bd0804dc06745cf93565",
+        "tag": "archive/20261118/amax/codex-run/condition-identifiability-v1"
+      },
+      "codex-run/p3-p4-debug-delivery": {
+        "sha": "065f4ecb2e73a3b9e7a166fcd7f8e2d84eccd9cd",
+        "tag": "archive/20261118/amax/codex-run/p3-p4-debug-delivery"
+      },
+      "codex-run/tool-anchor-b-h15-v1": {
+        "sha": "c177c0d7d85e1347a22ed3a30f282995edd37f24",
+        "tag": "archive/20261118/amax/codex-run/tool-anchor-b-h15-v1"
+      },
+      "codex-run/tool-anchor-b-h15-v2": {
+        "sha": "211ab6981ce9740470a69a584d90f9618f8389d7",
+        "tag": "archive/20261118/amax/codex-run/tool-anchor-b-h15-v2"
+      },
+      "codex-run/tool-anchor-b-h15-v3": {
+        "sha": "61ad87d8aef4a8e25f552216047fa76d3d7ab82d",
+        "tag": "archive/20261118/amax/codex-run/tool-anchor-b-h15-v3"
+      },
+      "codex-run/tool-anchor-b-h15-v4": {
+        "sha": "e35a55397a6ef9d95af4d99e192791af697eaea9",
+        "tag": "archive/20261118/amax/codex-run/tool-anchor-b-h15-v4"
+      },
+      "codex-sync/014b9bd-contact-report": {
+        "sha": "014b9bd927f11d0eed8eb4d69e67e50a8d3d2fd4",
+        "tag": "archive/20261118/amax/codex-sync/014b9bd-contact-report"
+      },
+      "codex-sync/01d3b61": {
+        "sha": "01d3b610180556ed1bf730462d0d711f5d821be6",
+        "tag": "archive/20261118/amax/codex-sync/01d3b61"
+      },
+      "codex-sync/03fce05": {
+        "sha": "03fce059c6d6cf2f547c06cdff8434c8af2ffce6",
+        "tag": "archive/20261118/amax/codex-sync/03fce05"
+      },
+      "codex-sync/0530871": {
+        "sha": "05308714ec0d9891ea76d252d769da23cd82cacc",
+        "tag": "archive/20261118/amax/codex-sync/0530871"
+      },
+      "codex-sync/05b9112": {
+        "sha": "05b91120a240e1b96a2e6536a03beb3a8ff6b24c",
+        "tag": "archive/20261118/amax/codex-sync/05b9112"
+      },
+      "codex-sync/05f90c6": {
+        "sha": "05f90c6ce0aa89d4c3573b6287dead9ed9534f56",
+        "tag": "archive/20261118/amax/codex-sync/05f90c6"
+      },
+      "codex-sync/0934d8c": {
+        "sha": "0934d8c488ce1da86ddc91a95300a3bb36ffd736",
+        "tag": "archive/20261118/amax/codex-sync/0934d8c"
+      },
+      "codex-sync/0ea1780": {
+        "sha": "0ea1780e0e5a154ca2997b73a1547a3ad09cf6f9",
+        "tag": "archive/20261118/amax/codex-sync/0ea1780"
+      },
+      "codex-sync/18704f4": {
+        "sha": "18704f4d54f16ea8a584fcc7ddc4f9a07251fbaf",
+        "tag": "archive/20261118/amax/codex-sync/18704f4"
+      },
+      "codex-sync/2100d95": {
+        "sha": "2100d95851c041b85343eb4ff5898fccbaf87f46",
+        "tag": "archive/20261118/amax/codex-sync/2100d95"
+      },
+      "codex-sync/21bae1e": {
+        "sha": "21bae1ee6e8a4e3a3fd17d8baedd2071ef1589c1",
+        "tag": "archive/20261118/amax/codex-sync/21bae1e"
+      },
+      "codex-sync/25d7de0": {
+        "sha": "25d7de055782725c37ef276544d59e9ebd581b17",
+        "tag": "archive/20261118/amax/codex-sync/25d7de0"
+      },
+      "codex-sync/2d0a299": {
+        "sha": "2d0a299d11a84b75babc56992975462c94674a01",
+        "tag": "archive/20261118/amax/codex-sync/2d0a299"
+      },
+      "codex-sync/2e8afae7a74a": {
+        "sha": "2e8afae7a74a1a4138f45e49dc8add83df6b579e",
+        "tag": "archive/20261118/amax/codex-sync/2e8afae7a74a"
+      },
+      "codex-sync/2f90b645": {
+        "sha": "2f90b6453f4144eb788db2f1f10a225db88307fd",
+        "tag": "archive/20261118/amax/codex-sync/2f90b645"
+      },
+      "codex-sync/3023d97": {
+        "sha": "3023d97c00e00ec7056bed2730118590f8062f07",
+        "tag": "archive/20261118/amax/codex-sync/3023d97"
+      },
+      "codex-sync/3240edf": {
+        "sha": "3240edf742e8bd84e768ea2153fb57fb21072974",
+        "tag": "archive/20261118/amax/codex-sync/3240edf"
+      },
+      "codex-sync/33bf1f2": {
+        "sha": "33bf1f20719bc21cff0306515b8948246d15419f",
+        "tag": "archive/20261118/amax/codex-sync/33bf1f2"
+      },
+      "codex-sync/340f873": {
+        "sha": "340f87335de2ab8c7074f98da9c91eb7de4dc247",
+        "tag": "archive/20261118/amax/codex-sync/340f873"
+      },
+      "codex-sync/36d304c": {
+        "sha": "36d304c5f9c82e752362e768048d5ea4636a5a15",
+        "tag": "archive/20261118/amax/codex-sync/36d304c"
+      },
+      "codex-sync/376d790": {
+        "sha": "376d7908b7c5f7af13cdc398d13b6be54b9e5430",
+        "tag": "archive/20261118/amax/codex-sync/376d790"
+      },
+      "codex-sync/37d5efd": {
+        "sha": "37d5efd3d20964c885f251d2f4410584b8298873",
+        "tag": "archive/20261118/amax/codex-sync/37d5efd"
+      },
+      "codex-sync/391188a": {
+        "sha": "391188acf3ed62dfceb91d3b402012c16929b42b",
+        "tag": "archive/20261118/amax/codex-sync/391188a"
+      },
+      "codex-sync/3937ade": {
+        "sha": "3937aded4892af133983c56a8b8413ec74a7eea5",
+        "tag": "archive/20261118/amax/codex-sync/3937ade"
+      },
+      "codex-sync/3994b71": {
+        "sha": "3994b716215c932a24d5b6f324df8cdd1154809e",
+        "tag": "archive/20261118/amax/codex-sync/3994b71"
+      },
+      "codex-sync/39bdff0": {
+        "sha": "39bdff01846f426c976cb380096c7f65c27dec25",
+        "tag": "archive/20261118/amax/codex-sync/39bdff0"
+      },
+      "codex-sync/495a05c": {
+        "sha": "495a05c22568a6d8c93a726108d8c93ffe235eee",
+        "tag": "archive/20261118/amax/codex-sync/495a05c"
+      },
+      "codex-sync/5098797": {
+        "sha": "5098797c8630b0f648cc02d2f83c113f915ff456",
+        "tag": "archive/20261118/amax/codex-sync/5098797"
+      },
+      "codex-sync/51ab5c4": {
+        "sha": "51ab5c455929128c66941d3d3f75c1d4421c9507",
+        "tag": "archive/20261118/amax/codex-sync/51ab5c4"
+      },
+      "codex-sync/5d0e632": {
+        "sha": "5d0e632c75a3742b2a9c56f298edbb01200788d2",
+        "tag": "archive/20261118/amax/codex-sync/5d0e632"
+      },
+      "codex-sync/60b7e60": {
+        "sha": "60b7e6044a139a92bf7fdad29c262bde437ae2f9",
+        "tag": "archive/20261118/amax/codex-sync/60b7e60"
+      },
+      "codex-sync/6d9eb12": {
+        "sha": "6d9eb12f513af4ceff6190fe9927e1b6444fface",
+        "tag": "archive/20261118/amax/codex-sync/6d9eb12"
+      },
+      "codex-sync/6f29c94b1042": {
+        "sha": "6f29c94b1042131f1ad516bef7fcf347d2e2a39e",
+        "tag": "archive/20261118/amax/codex-sync/6f29c94b1042"
+      },
+      "codex-sync/6fc8ea6": {
+        "sha": "6fc8ea6be90340a4dd8b43d1fedc6e43a311b500",
+        "tag": "archive/20261118/amax/codex-sync/6fc8ea6"
+      },
+      "codex-sync/753aaac": {
+        "sha": "753aaacb545b05e979d9b41b9f82200d5ca52d2f",
+        "tag": "archive/20261118/amax/codex-sync/753aaac"
+      },
+      "codex-sync/786582b": {
+        "sha": "786582ba4d4634875d48f42033a0ed04aced5081",
+        "tag": "archive/20261118/amax/codex-sync/786582b"
+      },
+      "codex-sync/7ab1adc": {
+        "sha": "7ab1adc6b28fb1c6cb68a8f30e1ec776d9db574b",
+        "tag": "archive/20261118/amax/codex-sync/7ab1adc"
+      },
+      "codex-sync/7bc78bb": {
+        "sha": "7bc78bbce69879afb53fee0dc0b6fee540621c5f",
+        "tag": "archive/20261118/amax/codex-sync/7bc78bb"
+      },
+      "codex-sync/8052a54": {
+        "sha": "8052a54c613e3333c0116b45800788ef7394ec71",
+        "tag": "archive/20261118/amax/codex-sync/8052a54"
+      },
+      "codex-sync/880972f": {
+        "sha": "880972fcdcb20768045d09ba7aaaff39542f1de2",
+        "tag": "archive/20261118/amax/codex-sync/880972f"
+      },
+      "codex-sync/893b65d": {
+        "sha": "893b65d82309cacc4ae603743d2eb2e57939919e",
+        "tag": "archive/20261118/amax/codex-sync/893b65d"
+      },
+      "codex-sync/8af4c409": {
+        "sha": "8af4c4093a30f46721c5f434768825b7241a3a89",
+        "tag": "archive/20261118/amax/codex-sync/8af4c409"
+      },
+      "codex-sync/8cba442": {
+        "sha": "8cba442736b81d05e9785a5963345d3fe2c35131",
+        "tag": "archive/20261118/amax/codex-sync/8cba442"
+      },
+      "codex-sync/9142704": {
+        "sha": "9142704df41875895afe61a1a119bbe83e2f7c65",
+        "tag": "archive/20261118/amax/codex-sync/9142704"
+      },
+      "codex-sync/991713649850": {
+        "sha": "991713649850c557caa58c6c7cd62cf4096e6ed6",
+        "tag": "archive/20261118/amax/codex-sync/991713649850"
+      },
+      "codex-sync/ab0dd9d": {
+        "sha": "ab0dd9d3b60a7337c888387cfeaa31af8ebf3b82",
+        "tag": "archive/20261118/amax/codex-sync/ab0dd9d"
+      },
+      "codex-sync/acfe977fd6a7": {
+        "sha": "acfe977fd6a734f1507d6423fd2147983f5e423f",
+        "tag": "archive/20261118/amax/codex-sync/acfe977fd6a7"
+      },
+      "codex-sync/ae2576a": {
+        "sha": "ae2576aacb8fb6423cb10dc5c8ea8d1928232085",
+        "tag": "archive/20261118/amax/codex-sync/ae2576a"
+      },
+      "codex-sync/anchor-ablation-delivery": {
+        "sha": "d81d04544ccfd68f548ed3406342c6bb11e95bf9",
+        "tag": "archive/20261118/amax/codex-sync/anchor-ablation-delivery"
+      },
+      "codex-sync/anchor-ablation-v1": {
+        "sha": "0baaedf5fb62ef8c9b2fb4cc9c3cc7ed7fbe2a26",
+        "tag": "archive/20261118/amax/codex-sync/anchor-ablation-v1"
+      },
+      "codex-sync/b13b7ae": {
+        "sha": "b13b7ae1e0314037ba5b0a750d4a8ac32b2945f2",
+        "tag": "archive/20261118/amax/codex-sync/b13b7ae"
+      },
+      "codex-sync/b15e4d3": {
+        "sha": "b15e4d3d4f6c5e440ba2688f76f2c0686a7b1ae6",
+        "tag": "archive/20261118/amax/codex-sync/b15e4d3"
+      },
+      "codex-sync/b923255": {
+        "sha": "b9232552c7d66ccbd249ea2422bae9e49eabae23",
+        "tag": "archive/20261118/amax/codex-sync/b923255"
+      },
+      "codex-sync/b977178": {
+        "sha": "b9771780956c2182de47a1377baeeaba50c3c5f1",
+        "tag": "archive/20261118/amax/codex-sync/b977178"
+      },
+      "codex-sync/c36ff4d": {
+        "sha": "c36ff4d5e553c6b005047a46a0c4d2f01968ff50",
+        "tag": "archive/20261118/amax/codex-sync/c36ff4d"
+      },
+      "codex-sync/c608815-contact": {
+        "sha": "c608815f52529d30220893d2a31ca881cc0bca3d",
+        "tag": "archive/20261118/amax/codex-sync/c608815-contact"
+      },
+      "codex-sync/c6ecb27": {
+        "sha": "c6ecb27b1b4bc3f83f7c7aa622d4929c6803c4d3",
+        "tag": "archive/20261118/amax/codex-sync/c6ecb27"
+      },
+      "codex-sync/c9a74d2e9a2b": {
+        "sha": "c9a74d2e9a2beae0f4d1b5a9afb76d94a9d74854",
+        "tag": "archive/20261118/amax/codex-sync/c9a74d2e9a2b"
+      },
+      "codex-sync/ca84a6e": {
+        "sha": "ca84a6e12035ddb85d15d1251852ca99d69495bf",
+        "tag": "archive/20261118/amax/codex-sync/ca84a6e"
+      },
+      "codex-sync/cbf05b8": {
+        "sha": "cbf05b8ba2d18178e47c605bf05827d8ac35fcb8",
+        "tag": "archive/20261118/amax/codex-sync/cbf05b8"
+      },
+      "codex-sync/cbf6802": {
+        "sha": "cbf68027674ecf6eaf7de2dac6c3a0189caa5c97",
+        "tag": "archive/20261118/amax/codex-sync/cbf6802"
+      },
+      "codex-sync/condition-identifiability-v1": {
+        "sha": "265d28a22d25590f9434bd0804dc06745cf93565",
+        "tag": "archive/20261118/amax/codex-sync/condition-identifiability-v1"
+      },
+      "codex-sync/contact-audit-ep1-collect": {
+        "sha": "51c929a44f936414eccecc25ed32add89da9425e",
+        "tag": "archive/20261118/amax/codex-sync/contact-audit-ep1-collect"
+      },
+      "codex-sync/contact-audit-ep1-report": {
+        "sha": "55815145ab5762360222d8b57dcbe223c6c390e7",
+        "tag": "archive/20261118/amax/codex-sync/contact-audit-ep1-report"
+      },
+      "codex-sync/contact-delivery-final": {
+        "sha": "5615912c70b5644f1783234975b1112f5e4e0aea",
+        "tag": "archive/20261118/amax/codex-sync/contact-delivery-final"
+      },
+      "codex-sync/contact-manual-001-final": {
+        "sha": "e41fa2f5f39b9bcf980f595ec1df19f59b58272c",
+        "tag": "archive/20261118/amax/codex-sync/contact-manual-001-final"
+      },
+      "codex-sync/contact-manual-001-initial": {
+        "sha": "d23b45deeabcfc60f6ffbf48f95aa484cb710960",
+        "tag": "archive/20261118/amax/codex-sync/contact-manual-001-initial"
+      },
+      "codex-sync/d0db09a": {
+        "sha": "d0db09aeb941a0e4377bfdcc9c81722837f106c0",
+        "tag": "archive/20261118/amax/codex-sync/d0db09a"
+      },
+      "codex-sync/d7e62e4": {
+        "sha": "d7e62e4896507f16c8dd32c8e922a9fd0839337d",
+        "tag": "archive/20261118/amax/codex-sync/d7e62e4"
+      },
+      "codex-sync/dad4ae4": {
+        "sha": "dad4ae4cdf1e6d447995b7bd7d42a9e0176d1b4b",
+        "tag": "archive/20261118/amax/codex-sync/dad4ae4"
+      },
+      "codex-sync/debug-export-fix": {
+        "sha": "6651b791818a65859f3edfed30228ec6bd43b05c",
+        "tag": "archive/20261118/amax/codex-sync/debug-export-fix"
+      },
+      "codex-sync/debug-final": {
+        "sha": "065f4ecb2e73a3b9e7a166fcd7f8e2d84eccd9cd",
+        "tag": "archive/20261118/amax/codex-sync/debug-final"
+      },
+      "codex-sync/debug-seen": {
+        "sha": "7ad9ed7b755b88431c249f806dd97b6c2ee79ff8",
+        "tag": "archive/20261118/amax/codex-sync/debug-seen"
+      },
+      "codex-sync/e22936f": {
+        "sha": "e22936f0a9dcc0e049b272fc1aabb8a9b1d3ff9a",
+        "tag": "archive/20261118/amax/codex-sync/e22936f"
+      },
+      "codex-sync/e32933f73059": {
+        "sha": "e32933f730590c2a0507a64689a43e5853a13576",
+        "tag": "archive/20261118/amax/codex-sync/e32933f73059"
+      },
+      "codex-sync/e3586af": {
+        "sha": "e3586afd91686dc1b5ca5d095ee286d3cd2af9a0",
+        "tag": "archive/20261118/amax/codex-sync/e3586af"
+      },
+      "codex-sync/e412b6f": {
+        "sha": "e412b6f5ec14b4279f3a401b3b07c78c2ae1615a",
+        "tag": "archive/20261118/amax/codex-sync/e412b6f"
+      },
+      "codex-sync/ea0e79c": {
+        "sha": "ea0e79ce2bb2004c87f978adaee9ff1a010119c0",
+        "tag": "archive/20261118/amax/codex-sync/ea0e79c"
+      },
+      "codex-sync/eed58d8": {
+        "sha": "eed58d859bdeb60dfdcf33c268c56bc8410cf653",
+        "tag": "archive/20261118/amax/codex-sync/eed58d8"
+      },
+      "codex-sync/f4198fa": {
+        "sha": "f4198fa373b729d170541dbe6ece54ef66b74eff",
+        "tag": "archive/20261118/amax/codex-sync/f4198fa"
+      },
+      "codex-sync/f5ddd2b": {
+        "sha": "f5ddd2bdb6b40a1c3a506c5043d40b9301e48781",
+        "tag": "archive/20261118/amax/codex-sync/f5ddd2b"
+      },
+      "codex-sync/fdd4013": {
+        "sha": "fdd4013c7f166daae12379f4ee020b4da5724965",
+        "tag": "archive/20261118/amax/codex-sync/fdd4013"
+      },
+      "codex-sync/g5-direct-e16-v1": {
+        "sha": "4734e3e9aa3a920c7cf5a84e6cc045738cc7c5a5",
+        "tag": "archive/20261118/amax/codex-sync/g5-direct-e16-v1"
+      },
+      "codex-sync/g5-runner-smoke-v1": {
+        "sha": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+        "tag": "archive/20261118/amax/codex-sync/g5-runner-smoke-v1"
+      },
+      "codex-sync/initial": {
+        "sha": "1dec91a523bcef2256c8ef461cdd4fb8bd430122",
+        "tag": "archive/20261118/amax/codex-sync/initial"
+      },
+      "codex-sync/oracle-anchor": {
+        "sha": "495a05c22568a6d8c93a726108d8c93ffe235eee",
+        "tag": "archive/20261118/amax/codex-sync/oracle-anchor"
+      },
+      "codex-sync/p3p4-delivery": {
+        "sha": "5c914795a36fa39b03de365d91d624ce26d750b4",
+        "tag": "archive/20261118/amax/codex-sync/p3p4-delivery"
+      },
+      "codex-sync/p3p4-delivery-ui": {
+        "sha": "400b4c389325efe18d4d9a54eb5412e722ab22cc",
+        "tag": "archive/20261118/amax/codex-sync/p3p4-delivery-ui"
+      },
+      "codex-sync/p3p4-final": {
+        "sha": "6d650d469ac30e509bb2a7b9f207604d7a48fb50",
+        "tag": "archive/20261118/amax/codex-sync/p3p4-final"
+      },
+      "codex-sync/p3p4-initial": {
+        "sha": "3556608016e718c926c4a951faed49a0e116b247",
+        "tag": "archive/20261118/amax/codex-sync/p3p4-initial"
+      },
+      "codex-sync/p3p4-report": {
+        "sha": "d01752c5724db24fc15dee39e38dcea58d5dca28",
+        "tag": "archive/20261118/amax/codex-sync/p3p4-report"
+      },
+      "codex-sync/p3p4-visual-v2": {
+        "sha": "9fd89c906d493a2d32e0158edaa10631e288332b",
+        "tag": "archive/20261118/amax/codex-sync/p3p4-visual-v2"
+      },
+      "codex-sync/tool-anchor-b-61ad87d": {
+        "sha": "61ad87d8aef4a8e25f552216047fa76d3d7ab82d",
+        "tag": "archive/20261118/amax/codex-sync/tool-anchor-b-61ad87d"
+      },
+      "codex-sync/tool-anchor-b-c177c0d": {
+        "sha": "c177c0d7d85e1347a22ed3a30f282995edd37f24",
+        "tag": "archive/20261118/amax/codex-sync/tool-anchor-b-c177c0d"
+      },
+      "codex-sync/tool-anchor-b-delivery-90626de": {
+        "sha": "90626de6dd98c5eef9069ccdb69ba97ab98bee86",
+        "tag": "archive/20261118/amax/codex-sync/tool-anchor-b-delivery-90626de"
+      },
+      "codex-sync/tool-anchor-b-e35a553": {
+        "sha": "e35a55397a6ef9d95af4d99e192791af697eaea9",
+        "tag": "archive/20261118/amax/codex-sync/tool-anchor-b-e35a553"
+      },
+      "codex-sync/tool-anchor-b-smoke-fix": {
+        "sha": "211ab6981ce9740470a69a584d90f9618f8389d7",
+        "tag": "archive/20261118/amax/codex-sync/tool-anchor-b-smoke-fix"
+      },
+      "codex-sync/v4-contact-optimization-initial": {
+        "sha": "0178774a4ec6cad5844d6fd8767a772cf61fbbac",
+        "tag": "archive/20261118/amax/codex-sync/v4-contact-optimization-initial"
+      },
+      "codex/p2-001-h15-e8": {
+        "sha": "ca84a6e12035ddb85d15d1251852ca99d69495bf",
+        "tag": "archive/20261118/amax/codex/p2-001-h15-e8"
+      },
+      "codex/p3-two-frame-h10": {
+        "sha": "391188acf3ed62dfceb91d3b402012c16929b42b",
+        "tag": "archive/20261118/amax/codex/p3-two-frame-h10"
+      },
+      "codex/refactor-scripts-p2": {
+        "sha": "e3586afd91686dc1b5ca5d095ee286d3cd2af9a0",
+        "tag": "archive/20261118/amax/codex/refactor-scripts-p2"
+      },
+      "codex/structural-gs-h15": {
+        "sha": "fdd4013c7f166daae12379f4ee020b4da5724965",
+        "tag": "archive/20261118/amax/codex/structural-gs-h15"
+      },
+      "codex/v4-001-h10-e8": {
+        "sha": "2e8afae7a74a1a4138f45e49dc8add83df6b579e",
+        "tag": "archive/20261118/amax/codex/v4-001-h10-e8"
+      },
+      "codex/v4-001-h15-e8": {
+        "sha": "60b7e6044a139a92bf7fdad29c262bde437ae2f9",
+        "tag": "archive/20261118/amax/codex/v4-001-h15-e8"
+      },
+      "codex/v4-action-identifiability-v1": {
+        "sha": "c9a74d2e9a2beae0f4d1b5a9afb76d94a9d74854",
+        "tag": "archive/20261118/amax/codex/v4-action-identifiability-v1"
+      },
+      "codex/v4-action-loss-comparison-v1": {
+        "sha": "e32933f730590c2a0507a64689a43e5853a13576",
+        "tag": "archive/20261118/amax/codex/v4-action-loss-comparison-v1"
+      },
+      "codex/v4-anchor-interaction-ablation-v1": {
+        "sha": "d81d04544ccfd68f548ed3406342c6bb11e95bf9",
+        "tag": "archive/20261118/amax/codex/v4-anchor-interaction-ablation-v1"
+      },
+      "codex/v4-attention-gradient-audit-v1": {
+        "sha": "0934d8c488ce1da86ddc91a95300a3bb36ffd736",
+        "tag": "archive/20261118/amax/codex/v4-attention-gradient-audit-v1"
+      },
+      "codex/v4-contact-audit-ep1": {
+        "sha": "55815145ab5762360222d8b57dcbe223c6c390e7",
+        "tag": "archive/20261118/amax/codex/v4-contact-audit-ep1"
+      },
+      "codex/v4-contact-manual-labeling-001": {
+        "sha": "e41fa2f5f39b9bcf980f595ec1df19f59b58272c",
+        "tag": "archive/20261118/amax/codex/v4-contact-manual-labeling-001"
+      },
+      "codex/v4-contact-optimization-v1": {
+        "sha": "5615912c70b5644f1783234975b1112f5e4e0aea",
+        "tag": "archive/20261118/amax/codex/v4-contact-optimization-v1"
+      },
+      "codex/v4-controller-object-signed-motion-audit-v1": {
+        "sha": "b15e4d3d4f6c5e440ba2688f76f2c0686a7b1ae6",
+        "tag": "archive/20261118/amax/codex/v4-controller-object-signed-motion-audit-v1"
+      },
+      "codex/v4-d0-oracle-capacity-v1": {
+        "sha": "753aaacb545b05e979d9b41b9f82200d5ca52d2f",
+        "tag": "archive/20261118/amax/codex/v4-d0-oracle-capacity-v1"
+      },
+      "codex/v4-g4-frozen-attribution-v1": {
+        "sha": "c6ecb27b1b4bc3f83f7c7aa622d4929c6803c4d3",
+        "tag": "archive/20261118/amax/codex/v4-g4-frozen-attribution-v1"
+      },
+      "codex/v4-g4-global-motion-v1": {
+        "sha": "8cba442736b81d05e9785a5963345d3fe2c35131",
+        "tag": "archive/20261118/amax/codex/v4-g4-global-motion-v1"
+      },
+      "codex/v4-g5-arap-iso-ablation-v1": {
+        "sha": "01d3b610180556ed1bf730462d0d711f5d821be6",
+        "tag": "archive/20261118/amax/codex/v4-g5-arap-iso-ablation-v1"
+      },
+      "codex/v4-g5-direct-e16-continuation-v1": {
+        "sha": "4734e3e9aa3a920c7cf5a84e6cc045738cc7c5a5",
+        "tag": "archive/20261118/amax/codex/v4-g5-direct-e16-continuation-v1"
+      },
+      "codex/v4-g5-direct-h15-delta4-v1": {
+        "sha": "2d0a299d11a84b75babc56992975462c94674a01",
+        "tag": "archive/20261118/amax/codex/v4-g5-direct-h15-delta4-v1"
+      },
+      "codex/v4-g5-direct-stride4-v1": {
+        "sha": "f4198fa373b729d170541dbe6ece54ef66b74eff",
+        "tag": "archive/20261118/amax/codex/v4-g5-direct-stride4-v1"
+      },
+      "codex/v4-g5-frozen-attention-routing-v1": {
+        "sha": "2100d95851c041b85343eb4ff5898fccbaf87f46",
+        "tag": "archive/20261118/amax/codex/v4-g5-frozen-attention-routing-v1"
+      },
+      "codex/v4-g5-frozen-condition-attribution-v1": {
+        "sha": "21bae1ee6e8a4e3a3fd17d8baedd2071ef1589c1",
+        "tag": "archive/20261118/amax/codex/v4-g5-frozen-condition-attribution-v1"
+      },
+      "codex/v4-g5-frozen-cross-attention-audit-v1": {
+        "sha": "8052a54c613e3333c0116b45800788ef7394ec71",
+        "tag": "archive/20261118/amax/codex/v4-g5-frozen-cross-attention-audit-v1"
+      },
+      "codex/v4-g5-frozen-motion-attribution-v1": {
+        "sha": "18704f4d54f16ea8a584fcc7ddc4f9a07251fbaf",
+        "tag": "archive/20261118/amax/codex/v4-g5-frozen-motion-attribution-v1"
+      },
+      "codex/v4-g5-geo-joint-scratch-v1": {
+        "sha": "6f29c94b1042131f1ad516bef7fcf347d2e2a39e",
+        "tag": "archive/20261118/amax/codex/v4-g5-geo-joint-scratch-v1"
+      },
+      "codex/v4-g5-geometry-decoder-v1": {
+        "sha": "5d0e632c75a3742b2a9c56f298edbb01200788d2",
+        "tag": "archive/20261118/amax/codex/v4-g5-geometry-decoder-v1"
+      },
+      "codex/v4-g5-runner-integration-smoke-v1": {
+        "sha": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+        "tag": "archive/20261118/amax/codex/v4-g5-runner-integration-smoke-v1"
+      },
+      "codex/v4-g5-signed-local-v1": {
+        "sha": "03fce059c6d6cf2f547c06cdff8434c8af2ffce6",
+        "tag": "archive/20261118/amax/codex/v4-g5-signed-local-v1"
+      },
+      "codex/v4-g5-struct-state-ablation-v1": {
+        "sha": "25d7de055782725c37ef276544d59e9ebd581b17",
+        "tag": "archive/20261118/amax/codex/v4-g5-struct-state-ablation-v1"
+      },
+      "codex/v4-h15-condition-ablation-v1": {
+        "sha": "3994b716215c932a24d5b6f324df8cdd1154809e",
+        "tag": "archive/20261118/amax/codex/v4-h15-condition-ablation-v1"
+      },
+      "codex/v4-normal-oracle-motion-field-audit-v1": {
+        "sha": "eed58d859bdeb60dfdcf33c268c56bc8410cf653",
+        "tag": "archive/20261118/amax/codex/v4-normal-oracle-motion-field-audit-v1"
+      },
+      "codex/v4-squared-chamfer-v1": {
+        "sha": "acfe977fd6a734f1507d6423fd2147983f5e423f",
+        "tag": "archive/20261118/amax/codex/v4-squared-chamfer-v1"
+      },
+      "codex/v4-stage1-smoke": {
+        "sha": "991713649850c557caa58c6c7cd62cf4096e6ed6",
+        "tag": "archive/20261118/amax/codex/v4-stage1-smoke"
+      },
+      "main": {
+        "sha": "7bc78bbce69879afb53fee0dc0b6fee540621c5f",
+        "tag": "archive/20261118/amax/main"
+      }
+    },
+    "origin": {
+      "codex/p2-001-h15-e8": {
+        "sha": "b9771780956c2182de47a1377baeeaba50c3c5f1",
+        "tag": "archive/20261118/origin/codex/p2-001-h15-e8"
+      },
+      "codex/p2-condition-fusion-v1": {
+        "sha": "9142704df41875895afe61a1a119bbe83e2f7c65",
+        "tag": "archive/20261118/origin/codex/p2-condition-fusion-v1"
+      },
+      "codex/p2-tool-anchor-b-h15-v1": {
+        "sha": "90626de6dd98c5eef9069ccdb69ba97ab98bee86",
+        "tag": "archive/20261118/origin/codex/p2-tool-anchor-b-h15-v1"
+      },
+      "codex/p3-p4-debug-audit-v1": {
+        "sha": "065f4ecb2e73a3b9e7a166fcd7f8e2d84eccd9cd",
+        "tag": "archive/20261118/origin/codex/p3-p4-debug-audit-v1"
+      },
+      "codex/p3-p4-spatial-dynamics-v1": {
+        "sha": "400b4c389325efe18d4d9a54eb5412e722ab22cc",
+        "tag": "archive/20261118/origin/codex/p3-p4-spatial-dynamics-v1"
+      },
+      "codex/p3-two-frame-h10": {
+        "sha": "391188acf3ed62dfceb91d3b402012c16929b42b",
+        "tag": "archive/20261118/origin/codex/p3-two-frame-h10"
+      },
+      "codex/refactor-scripts-p2": {
+        "sha": "678b9be455ca8968f633da97e4d060139a3840fd",
+        "tag": "archive/20261118/origin/codex/refactor-scripts-p2"
+      },
+      "codex/structural-gs-h15": {
+        "sha": "fdd4013c7f166daae12379f4ee020b4da5724965",
+        "tag": "archive/20261118/origin/codex/structural-gs-h15"
+      },
+      "codex/v4-001-h10-e8": {
+        "sha": "2e8afae7a74a1a4138f45e49dc8add83df6b579e",
+        "tag": "archive/20261118/origin/codex/v4-001-h10-e8"
+      },
+      "codex/v4-001-h15-e8": {
+        "sha": "60b7e6044a139a92bf7fdad29c262bde437ae2f9",
+        "tag": "archive/20261118/origin/codex/v4-001-h15-e8"
+      },
+      "codex/v4-action-identifiability-v1": {
+        "sha": "c9a74d2e9a2beae0f4d1b5a9afb76d94a9d74854",
+        "tag": "archive/20261118/origin/codex/v4-action-identifiability-v1"
+      },
+      "codex/v4-action-loss-comparison-v1": {
+        "sha": "e32933f730590c2a0507a64689a43e5853a13576",
+        "tag": "archive/20261118/origin/codex/v4-action-loss-comparison-v1"
+      },
+      "codex/v4-anchor-interaction-ablation-v1": {
+        "sha": "d81d04544ccfd68f548ed3406342c6bb11e95bf9",
+        "tag": "archive/20261118/origin/codex/v4-anchor-interaction-ablation-v1"
+      },
+      "codex/v4-attention-gradient-audit-v1": {
+        "sha": "0934d8c488ce1da86ddc91a95300a3bb36ffd736",
+        "tag": "archive/20261118/origin/codex/v4-attention-gradient-audit-v1"
+      },
+      "codex/v4-contact-audit-ep1": {
+        "sha": "55815145ab5762360222d8b57dcbe223c6c390e7",
+        "tag": "archive/20261118/origin/codex/v4-contact-audit-ep1"
+      },
+      "codex/v4-contact-manual-labeling-001": {
+        "sha": "e41fa2f5f39b9bcf980f595ec1df19f59b58272c",
+        "tag": "archive/20261118/origin/codex/v4-contact-manual-labeling-001"
+      },
+      "codex/v4-contact-optimization-v1": {
+        "sha": "5615912c70b5644f1783234975b1112f5e4e0aea",
+        "tag": "archive/20261118/origin/codex/v4-contact-optimization-v1"
+      },
+      "codex/v4-controller-object-signed-motion-audit-v1": {
+        "sha": "b15e4d3d4f6c5e440ba2688f76f2c0686a7b1ae6",
+        "tag": "archive/20261118/origin/codex/v4-controller-object-signed-motion-audit-v1"
+      },
+      "codex/v4-d0-oracle-capacity-v1": {
+        "sha": "753aaacb545b05e979d9b41b9f82200d5ca52d2f",
+        "tag": "archive/20261118/origin/codex/v4-d0-oracle-capacity-v1"
+      },
+      "codex/v4-g4-global-motion-v1": {
+        "sha": "8cba442736b81d05e9785a5963345d3fe2c35131",
+        "tag": "archive/20261118/origin/codex/v4-g4-global-motion-v1"
+      },
+      "codex/v4-g5-arap-iso-ablation-v1": {
+        "sha": "01d3b610180556ed1bf730462d0d711f5d821be6",
+        "tag": "archive/20261118/origin/codex/v4-g5-arap-iso-ablation-v1"
+      },
+      "codex/v4-g5-geo-joint-scratch-v1": {
+        "sha": "6f29c94b1042131f1ad516bef7fcf347d2e2a39e",
+        "tag": "archive/20261118/origin/codex/v4-g5-geo-joint-scratch-v1"
+      },
+      "codex/v4-g5-geometry-decoder-v1": {
+        "sha": "5d0e632c75a3742b2a9c56f298edbb01200788d2",
+        "tag": "archive/20261118/origin/codex/v4-g5-geometry-decoder-v1"
+      },
+      "codex/v4-g5-runner-integration-smoke-v1": {
+        "sha": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+        "tag": "archive/20261118/origin/codex/v4-g5-runner-integration-smoke-v1"
+      },
+      "codex/v4-g5-signed-local-v1": {
+        "sha": "03fce059c6d6cf2f547c06cdff8434c8af2ffce6",
+        "tag": "archive/20261118/origin/codex/v4-g5-signed-local-v1"
+      },
+      "codex/v4-g5-struct-state-ablation-v1": {
+        "sha": "25d7de055782725c37ef276544d59e9ebd581b17",
+        "tag": "archive/20261118/origin/codex/v4-g5-struct-state-ablation-v1"
+      },
+      "codex/v4-h15-condition-ablation-v1": {
+        "sha": "3994b716215c932a24d5b6f324df8cdd1154809e",
+        "tag": "archive/20261118/origin/codex/v4-h15-condition-ablation-v1"
+      },
+      "codex/v4-normal-oracle-motion-field-audit-v1": {
+        "sha": "eed58d859bdeb60dfdcf33c268c56bc8410cf653",
+        "tag": "archive/20261118/origin/codex/v4-normal-oracle-motion-field-audit-v1"
+      },
+      "codex/v4-squared-chamfer-v1": {
+        "sha": "acfe977fd6a734f1507d6423fd2147983f5e423f",
+        "tag": "archive/20261118/origin/codex/v4-squared-chamfer-v1"
+      },
+      "codex/v4-stage1-smoke": {
+        "sha": "991713649850c557caa58c6c7cd62cf4096e6ed6",
+        "tag": "archive/20261118/origin/codex/v4-stage1-smoke"
+      },
+      "main": {
+        "sha": "64b1320d3718e7d05d590ce854b8aeb05f14236f",
+        "tag": "archive/20261118/origin/main"
+      }
+    }
+  },
+  "server_untracked": {
+    "file": "how -s --format=-H 753aaac",
+    "bytes": 0,
+    "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+    "archive_commit": "ad72946e365cbfe681bab5eac9265b767458c84c",
+    "tag": "archive/20261118/server-untracked"
+  }
 }
