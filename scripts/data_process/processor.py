@@ -84,14 +84,15 @@ class DataProcessor:
     """
 
     scene: str
+    _scene_parameters = _PARAMETERS
 
     def __post_init__(self):
-        if not isinstance(self.scene, str) or self.scene not in _PARAMETERS:
-            raise ValueError(f"Unsupported scene {self.scene!r}; choose {SUPPORTED_SCENES}")
+        if not isinstance(self.scene, str) or self.scene not in self._scene_parameters:
+            raise ValueError(f"Unsupported scene {self.scene!r}; choose {tuple(self._scene_parameters)}")
 
     def state_dict(self):
         """JSON-safe constants to retain with an experiment/checkpoint."""
-        params = _PARAMETERS[self.scene]
+        params = self._scene_parameters[self.scene]
         return {"version": _VERSION, "scene": self.scene, "center": list(params.center),
                 "scale": params.scale, "tactile_scale": _TACTILE_SCALE}
 
@@ -148,7 +149,7 @@ class DataProcessor:
             raise ValueError("coordinates must be float32/float64 vectors with final dimension 3")
         if not isinstance(mask, torch.Tensor) or mask.shape != values.shape[:-1]:
             raise ValueError("coordinate mask must match every point/time dimension explicitly")
-        params = _PARAMETERS[self.scene]
+        params = self._scene_parameters[self.scene]
         center = values.new_tensor(params.center)
         scale = values.new_tensor(params.scale)
         if displacement:
@@ -171,7 +172,7 @@ class DataProcessor:
         self._validate_batch(batch)
         result = _clone_tree(batch)
         inputs, targets = result["inputs"], result["targets"]
-        params = _PARAMETERS[self.scene]
+        params = self._scene_parameters[self.scene]
         for field, mask in (("gs_xyz", "gs_mask"), ("controller_points", "controller_mask"),
                             ("tactile_xyz", "tactile_spatial_mask")):
             inputs[field] = self._xyz(inputs[field], inputs[mask], inverse=inverse)

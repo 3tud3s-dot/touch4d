@@ -18,15 +18,13 @@ import torch
 from scripts.data_process import DataProcessor
 from scripts.tests.data_process.test_data_process import make_batch, add_depth_targets
 from scripts.training.evaluate import load_model
-from scripts.experiments.fixed_window import fixed_fit
 from scripts.training.losses import chamfer_samples, objective, render_samples, depth_samples
 from scripts.training.model import PositionPredictor
 from scripts.training.rendering import GaussianRenderer, DepthRenderer
 from scripts.tests.training.test_training import fake_gaussian_rasterizer, fake_rasterizer
 from scripts.training.train import (checkpoint_state, checkpoint_config, restore_training, resolve_horizon,
                     copy_initial, GaussianMetrics, recover_best_score)
-from scripts.training.visualize import (export_gaussians, geometry_data, geometry_html,
-                        gs_viewer_html)
+from scripts.training.cloth_geometry import world_gaussian_arrays, geometry_data
 
 
 def cast_double(value):
@@ -282,89 +280,7 @@ class HorizonTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             checkpoint_config(forged)
 
-    def test_frozen_h15_manifest_provenance_frames_duplicates_and_resume(self):
-        # Synthetic provenance strings test validation only; they are never
-        # used as experimental evidence or as acceptance thresholds.
-        document = dict(version="structural-h15-windows-v1", horizon=15,
-            basis="synthetic GT-only quality audit", evidence_sha256="synthetic-audit-hash",
-            windows={"001-rope": [dict(episode_id=episode, start_frame=start,
-                frame_ids=list(range(start, start+16)), geometry_sha256="synthetic-geometry-hash")
-                for episode, start in fixed_fit.WINDOWS["001-rope"]]})
-        payload = json.dumps(document).encode()
-        self.assertEqual(fixed_fit.frozen_windows(None, "001-rope", 5), (None, None))
-        with self.assertRaisesRegex(ValueError, "manifest"):
-            fixed_fit.frozen_windows(None, "001-rope", 15)
-        with patch("pathlib.Path.read_bytes", return_value=payload):
-            selected, evidence = fixed_fit.frozen_windows("memory/windows.json", "001-rope", 15)
-        self.assertEqual(selected, [[1, 85], [2, 73]])
-        state = dict(config=dict(window_evidence=evidence, fixed_windows=selected))
-        self.assertEqual(fixed_fit.frozen_windows(None, "001-rope", 15, state), (selected, evidence))
-        with patch("pathlib.Path.read_bytes", return_value=payload):
-            self.assertEqual(fixed_fit.frozen_windows("memory/windows.json", "001-rope", 15, state),
-                             (selected, evidence))
-        changed = copy.deepcopy(document)
-        changed["basis"] = "changed frozen audit"
-        with patch("pathlib.Path.read_bytes", return_value=json.dumps(changed).encode()):
-            with self.assertRaisesRegex(ValueError, "resume"):
-                fixed_fit.frozen_windows("memory/windows.json", "001-rope", 15, state)
-        mutations = (
-            lambda d: d.update(horizon=10),
-            lambda d: d.pop("basis"),
-            lambda d: d.pop("evidence_sha256"),
-            lambda d: d["windows"]["001-rope"][0]["frame_ids"].pop(),
-            lambda d: d["windows"]["001-rope"][0]["frame_ids"].__setitem__(7, 999),
-            lambda d: d["windows"]["001-rope"][0].update(episode_id=True),
-            lambda d: d["windows"]["001-rope"][0].pop("geometry_sha256"),
-            lambda d: d["windows"]["001-rope"].__setitem__(1, copy.deepcopy(d["windows"]["001-rope"][0])),
-            lambda d: d["windows"]["001-rope"].pop(),
-        )
-        for mutate in mutations:
-            changed = copy.deepcopy(document)
-            mutate(changed)
-            with patch("pathlib.Path.read_bytes", return_value=json.dumps(changed).encode()):
-                with self.assertRaises(ValueError):
-                    fixed_fit.frozen_windows("memory/windows.json", "001-rope", 15)
 
-    def test_h15_exact_selection_rejects_actual_frame_and_dataset_mismatches(self):
-        raw, _ = self.batch(15)
-        def sample(value, index):
-            if isinstance(value, torch.Tensor):
-                return value[index:index+1].clone()
-            if isinstance(value, dict):
-                return {key: sample(child, index) for key, child in value.items()}
-            if isinstance(value, list) and value and isinstance(value[0], torch.Tensor):
-                return [sample(child, index) for child in value]
-            return copy.deepcopy(value[index:index+1])
-        rows = [sample(raw, i) for i in range(2)]
-        selected = [(int(r["meta"]["episode_id"][0]), int(r["meta"]["frame_ids"][0, 0])) for r in rows]
-        class Dataset:
-            horizon = 15
-            windows = list(selected)
-            def __getitem__(self, index):
-                return rows[index]
-        dataset = Dataset()
-        with patch.object(fixed_fit, "collate_fn", side_effect=lambda samples: samples[0]):
-            actual = fixed_fit.select_windows(dataset, "001-rope", selected)
-            self.assertEqual([r["meta"]["frame_ids"].shape[1] for r in actual], [16, 16])
-            with self.assertRaises(ValueError):
-                fixed_fit.select_windows(dataset, "001-rope", [selected[0], selected[0]])
-            dataset.windows = [selected[0], selected[0], selected[1]]
-            with self.assertRaises(ValueError):
-                fixed_fit.select_windows(dataset, "001-rope", selected)
-            dataset.windows = list(selected)
-            dataset.horizon = 10
-            with self.assertRaisesRegex(ValueError, "mismatch"):
-                fixed_fit.select_windows(dataset, "001-rope", selected)
-            dataset.horizon = 15
-            rows[0]["meta"]["frame_ids"][0, -1] += 1
-            with self.assertRaisesRegex(ValueError, "mismatch"):
-                fixed_fit.select_windows(dataset, "001-rope", selected)
-            rows[0]["meta"]["frame_ids"][0, -1] -= 1
-            manifest = fixed_fit.manifest(rows, dict(depth_cameras=["cam_a", "cam_b"], horizon=15))
-            self.assertEqual(len(manifest[0]["frame_ids"]), 16)
-            self.assertEqual(len(manifest[0]["positive_pixels"]), 15)
-            with self.assertRaisesRegex(ValueError, "horizon"):
-                fixed_fit.manifest(rows, dict(depth_cameras=["cam_a", "cam_b"], horizon=5))
 
     def test_copy_initial_and_metric_tracker_h15_and_legacy_h5_defaults(self):
         for h, config in ((5, {}), (15, dict(horizon=15))):
@@ -402,70 +318,18 @@ class HorizonTests(unittest.TestCase):
         minimal = dict(gs_xyz=x["gs_xyz"], gs_attr=x["gs_attr"])
         self.assertEqual(copy_initial(minimal, "gs_geometry")["xyz"].shape[1], 5)
 
-    def test_export_retains_all_fifteen_future_frames_and_initial_reference_offline(self):
+    def test_world_arrays_retain_all_fifteen_future_frames_and_initial_reference(self):
         raw, batch = self.batch(15)
-        # Three cameras: select a repeated calibration but keep explicit distinct
-        # camera IDs, so export coverage matches the real experiment's layout.
-        for sample in (raw, batch):
-            for key in ("target_depth", "target_depth_valid"):
-                sample["targets"][key] = sample["targets"][key][:, :, [0, 1, 0]]
-            for key in ("camera_intrinsics", "camera_to_world"):
-                sample["targets"][key] = sample["targets"][key][:, [0, 1, 0]]
-            sample["meta"]["depth_camera_ids"] = [["cam_a", "cam_b", "cam_c"] for _ in range(2)]
-        prediction = {key: value.clone() for key, value in copy_initial(batch["inputs"], "gs_geometry").items()}
-        prediction["xyz"][..., 2] += torch.arange(15)[None, :, None] * .15
-        files, pages, saved = {}, {}, {}
-        args = SimpleNamespace(output="memory/export-h15", checkpoint="memory/last_400.pt",
-                               episode=1, start=85, split="train")
-        def write_bytes(path, value):
-            files[Path(path).name] = value
-            return len(value)
-        def write_text(path, value, **kwargs):
-            pages[Path(path).name] = value
-            return len(value)
-        with patch("scripts.training.visualize.GaussianRenderer", side_effect=lambda **kwargs:
-                   GaussianRenderer(fake_gaussian_rasterizer, **kwargs)), \
-             patch("pathlib.Path.mkdir"), patch("pathlib.Path.write_bytes", autospec=True, side_effect=write_bytes), \
-             patch("pathlib.Path.write_text", autospec=True, side_effect=write_text), \
-             patch("numpy.savez_compressed", side_effect=lambda path, **kw: saved.update(kw)), \
-             torch.no_grad(), redirect_stdout(StringIO()):
-            export_gaussians(args, self.config(self.model(15)), raw, batch, prediction, self.processor)
-        future = {f"frame_{h}_view_{v}_{mode}_{name}.png" for h in range(1, 16)
-                  for v in range(3) for mode in ("rgb", "alpha", "depth")
-                  for name in ("gt", "pred", "copy", "err")}
-        self.assertEqual(len(future), 540)
-        self.assertTrue(future <= set(files))
-        self.assertIn("frame_0_view_0_rgb_pred.png", files)
-        self.assertNotEqual(files["frame_5_view_0_rgb_pred.png"], files["frame_15_view_0_rgb_pred.png"])
-        self.assertEqual(saved["predicted_xyz"].shape[0], 15)
-        self.assertIn("target_xyz_15", saved)
-        self.assertEqual(len(saved["frame_ids"]), 16)
+        prediction = {key: value.clone() for key, value in copy_initial(batch['inputs'], 'gs_geometry').items()}
+        prediction['xyz'][..., 2] += torch.arange(15)[None, :, None] * .15
+        saved = world_gaussian_arrays(raw, batch, prediction, self.processor)
+        self.assertEqual(saved['predicted_xyz'].shape[0], 15)
+        self.assertIn('target_xyz_15', saved)
+        self.assertEqual(len(saved['frame_ids']), 16)
         data = geometry_data(saved)
-        self.assertEqual(len(data["prediction"]), 15)
-        self.assertEqual(len(data["target"]), 15)
-        self.assertNotEqual(data["prediction"][4]["centers"], data["prediction"][14]["centers"])
-        for page in pages.values():
-            self.assertNotIn("https://", page)
-            self.assertNotIn("http://", page)
-            self.assertIn(".max=", page)
-        # Execute slider/playback JavaScript with a minimal DOM when Node is
-        # available. This checks all sixteen displayed times, including h15.
-        node = shutil.which("node")
-        if node:
-            dom = '''const devicePixelRatio=1,window={},elements={};let tick;
-function setInterval(f){tick=f;return 1}function clearInterval(){}
-const context={beginPath(){},stroke(){},fillRect(){},moveTo(){},lineTo(){},arc(){},fill(){}};
-const document={getElementById(id){return elements[id]??={value:id==='view'?'orbit':id==='mode'?'rgb':0,checked:true,append(){},appendChild(){},getBoundingClientRect(){return {width:400,height:250}},getContext(){return context},setPointerCapture(){}}},createElement(){return {}},querySelectorAll(){return ['c0','c1','c2','e0','e1','e2'].map(id=>this.getElementById(id))}};
-'''
-            for filename, page in pages.items():
-                script = re.search(r"<script>(.*?)</script>", page, re.S).group(1)
-                slider = "frame" if filename == "geometry.html" else "time"
-                extra = f'''if(+elements.{slider}.max!==15)throw Error('wrong slider maximum');for(let h=0;h<=15;h++){{elements.{slider}.value=h;elements.{slider}.oninput();if(!elements.label.textContent.includes(String(D.frame_ids[h])))throw Error('frame mismatch')}}
-elements.play.onclick();tick();if(+elements.{slider}.value!==0)throw Error('playback must include all 16 frames');'''
-                if filename == "index.html":
-                    extra += "elements.time.value=15;elements.time.oninput();if(!elements.pred.src.includes('frame_15_view_0_rgb_pred'))throw Error('wrong final image');"
-                result = subprocess.run([node], input=dom+script+extra, text=True, capture_output=True)
-                self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(data['prediction']), 15)
+        self.assertEqual(len(data['target']), 15)
+        self.assertNotEqual(data['prediction'][4]['centers'], data['prediction'][14]['centers'])
 
 
 if __name__ == "__main__":

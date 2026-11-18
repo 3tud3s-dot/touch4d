@@ -1,0 +1,1231 @@
+{
+  "status": "retirement_applied_to_new_core_only",
+  "scope_root": "D:\\Amax\\Projects\\touch4d-worktrees\\core-demo-v1",
+  "tracked_files": 59,
+  "candidate_groups": [
+    {
+      "name": "historical_fixed400_and_oracle",
+      "old_feature": "diagnostic oracle and fixed400 window-fitting runners, not the retained cloth protocol",
+      "files": [
+        {
+          "path": "scripts/experiments/__init__.py",
+          "sha256": "c255b16fe008b953b72b31e54d4913d93351841346e99e6e400145e1f11c62d0",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/fixed_window/__init__.py",
+          "sha256": "f04a6ea927380c331e9b23afa157da8b06e2ddbd00d51ebb22d980b29b648a7e",
+          "inbound_imports": [
+            {
+              "importer": "scripts/training/fixed_fit.py",
+              "line": 4,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "fixed_fit"
+              ],
+              "target": "scripts/experiments/fixed_window/__init__.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_fixed_fit.py",
+              "line": 20,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "fixed_fit"
+              ],
+              "target": "scripts/experiments/fixed_window/__init__.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_horizon.py",
+              "line": 21,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "fixed_fit"
+              ],
+              "target": "scripts/experiments/fixed_window/__init__.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_module_layout.py",
+              "line": 46,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "provenance"
+              ],
+              "target": "scripts/experiments/fixed_window/__init__.py",
+              "context": [
+                "test_source_inventory_includes_moved_implementations"
+              ]
+            },
+            {
+              "importer": "scripts/tests/training/test_module_layout.py",
+              "line": 55,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "provenance"
+              ],
+              "target": "scripts/experiments/fixed_window/__init__.py",
+              "context": [
+                "test_source_migration_is_narrow_and_preserves_config_checks"
+              ]
+            },
+            {
+              "importer": "scripts/tests/training/test_structural_checkpoint.py",
+              "line": 14,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "fixed_fit"
+              ],
+              "target": "scripts/experiments/fixed_window/__init__.py",
+              "context": []
+            }
+          ],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/fixed_window/fixed_fit.py",
+          "sha256": "56fbce9cd8360ddba5286f988d6b58aeaa76325f4fd02fc034a3fd9e1c782423",
+          "inbound_imports": [
+            {
+              "importer": "scripts/training/evaluate.py",
+              "line": 45,
+              "module": "scripts.experiments.fixed_window.fixed_fit",
+              "names": [
+                "fixed_batches",
+                "manifest",
+                "TargetCache",
+                "evaluate_fixed",
+                "candidate"
+              ],
+              "target": "scripts/experiments/fixed_window/fixed_fit.py",
+              "context": [
+                "main"
+              ]
+            },
+            {
+              "importer": "scripts/training/fixed_fit.py",
+              "line": 4,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "fixed_fit"
+              ],
+              "target": "scripts/experiments/fixed_window/fixed_fit.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/training/train.py",
+              "line": 646,
+              "module": "scripts.experiments.fixed_window.fixed_fit",
+              "names": [
+                "run"
+              ],
+              "target": "scripts/experiments/fixed_window/fixed_fit.py",
+              "context": [
+                "main"
+              ]
+            },
+            {
+              "importer": "scripts/tests/training/test_fixed_fit.py",
+              "line": 20,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "fixed_fit"
+              ],
+              "target": "scripts/experiments/fixed_window/fixed_fit.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_horizon.py",
+              "line": 21,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "fixed_fit"
+              ],
+              "target": "scripts/experiments/fixed_window/fixed_fit.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_module_layout.py",
+              "line": 56,
+              "module": "scripts.experiments.fixed_window.fixed_fit",
+              "names": [
+                "digest"
+              ],
+              "target": "scripts/experiments/fixed_window/fixed_fit.py",
+              "context": [
+                "test_source_migration_is_narrow_and_preserves_config_checks"
+              ]
+            },
+            {
+              "importer": "scripts/tests/training/test_structural_checkpoint.py",
+              "line": 14,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "fixed_fit"
+              ],
+              "target": "scripts/experiments/fixed_window/fixed_fit.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/experiments/oracle/oracle_fit.py",
+              "line": 21,
+              "module": "scripts.experiments.fixed_window.fixed_fit",
+              "names": [
+                "WINDOWS",
+                "WEIGHTS",
+                "TargetCache",
+                "fixed_batches",
+                "manifest",
+                "prediction_metrics",
+                "candidate",
+                "better",
+                "digest"
+              ],
+              "target": "scripts/experiments/fixed_window/fixed_fit.py",
+              "context": []
+            }
+          ],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [
+            "scripts/training/train.py main() fixed400 dispatch",
+            "scripts/training/evaluate.py main() fit dispatch",
+            "legacy fixed400 and structural-checkpoint test references"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/fixed_window/provenance.py",
+          "sha256": "bf1d8fc2d6abe30cf8521b17445ac303e350464bbacfe42f782ad3cb6818db80",
+          "inbound_imports": [
+            {
+              "importer": "scripts/tests/training/test_module_layout.py",
+              "line": 46,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "provenance"
+              ],
+              "target": "scripts/experiments/fixed_window/provenance.py",
+              "context": [
+                "test_source_inventory_includes_moved_implementations"
+              ]
+            },
+            {
+              "importer": "scripts/tests/training/test_module_layout.py",
+              "line": 55,
+              "module": "scripts.experiments.fixed_window",
+              "names": [
+                "provenance"
+              ],
+              "target": "scripts/experiments/fixed_window/provenance.py",
+              "context": [
+                "test_source_migration_is_narrow_and_preserves_config_checks"
+              ]
+            },
+            {
+              "importer": "scripts/experiments/fixed_window/fixed_fit.py",
+              "line": 32,
+              "module": "scripts.experiments.fixed_window.provenance",
+              "names": [
+                "source_files",
+                "resume_config_matches"
+              ],
+              "target": "scripts/experiments/fixed_window/provenance.py",
+              "context": []
+            }
+          ],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [
+            "fixed400 resume source inventory bridge",
+            "test_module_layout inventory-digest assertions"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/oracle/__init__.py",
+          "sha256": "17c9ac7827b9c958c6f1b4c9eb5ba8491168de24c7b804d2caef7af2a8be0cf0",
+          "inbound_imports": [
+            {
+              "importer": "scripts/training/oracle.py",
+              "line": 4,
+              "module": "scripts.experiments.oracle",
+              "names": [
+                "oracle"
+              ],
+              "target": "scripts/experiments/oracle/__init__.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/training/oracle_fit.py",
+              "line": 4,
+              "module": "scripts.experiments.oracle",
+              "names": [
+                "oracle_fit"
+              ],
+              "target": "scripts/experiments/oracle/__init__.py",
+              "context": []
+            }
+          ],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/oracle/oracle.py",
+          "sha256": "ad4bdab18be524a3a17bf034b344efd1c406a720dc0f1b1bd1a9ece0adb6722b",
+          "inbound_imports": [
+            {
+              "importer": "scripts/training/oracle.py",
+              "line": 4,
+              "module": "scripts.experiments.oracle",
+              "names": [
+                "oracle"
+              ],
+              "target": "scripts/experiments/oracle/oracle.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_oracle.py",
+              "line": 11,
+              "module": "scripts.experiments.oracle.oracle",
+              "names": [
+                "OracleLatent",
+                "OracleAnchor",
+                "ORACLE_VERSION"
+              ],
+              "target": "scripts/experiments/oracle/oracle.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/experiments/oracle/oracle_fit.py",
+              "line": 25,
+              "module": "scripts.experiments.oracle.oracle",
+              "names": [
+                "OracleLatent",
+                "OracleAnchor"
+              ],
+              "target": "scripts/experiments/oracle/oracle.py",
+              "context": []
+            }
+          ],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [
+            "oracle_fit runner",
+            "legacy shims and test_module_layout OracleLatent/OracleAnchor pickle paths"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/oracle/oracle_fit.py",
+          "sha256": "12ae8c488fc45a08122baa6ee9da570446c1edd9643c644b4b9015c31e701687",
+          "inbound_imports": [
+            {
+              "importer": "scripts/training/oracle_fit.py",
+              "line": 4,
+              "module": "scripts.experiments.oracle",
+              "names": [
+                "oracle_fit"
+              ],
+              "target": "scripts/experiments/oracle/oracle_fit.py",
+              "context": []
+            }
+          ],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [
+            "legacy oracle_fit CLI/shim",
+            "test_module_layout CLI help tests"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/training/fixed_fit.py",
+          "sha256": "482280a566391df864fa8c74dd83f512ba83896bb621fdcc65465b24901fc4c2",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/training/oracle.py",
+          "sha256": "2faeb102c5d55e5342181b697d0b6ee35724721f20bd72f52d0b7e9068a394af",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/training/oracle_fit.py",
+          "sha256": "cc37ad8c22b2ba1858c593d7f52f495becba95f9e7cb07ee3344f6829613a606",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        }
+      ]
+    },
+    {
+      "name": "legacy_evaluation_and_web_viewer_commands",
+      "old_feature": "old PositionPredictor evaluate/visualize CLI, superseded for this demo by cloth_evaluate and scripts/visualization",
+      "files": [
+        {
+          "path": "scripts/training/evaluate.py",
+          "sha256": "fa7aaea3fd9a1be6a42c791f5a706f8350b2d8c47d6d2d3c21f6b2c6deead1dc",
+          "inbound_imports": [
+            {
+              "importer": "scripts/training/visualize.py",
+              "line": 13,
+              "module": "scripts.training.evaluate",
+              "names": [
+                "load_model"
+              ],
+              "target": "scripts/training/evaluate.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_anisotropic.py",
+              "line": 16,
+              "module": "scripts.training.evaluate",
+              "names": [
+                "load_model"
+              ],
+              "target": "scripts/training/evaluate.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_fixed_fit.py",
+              "line": 26,
+              "module": "scripts.training.evaluate",
+              "names": [
+                "main"
+              ],
+              "target": "scripts/training/evaluate.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_fixed_fit.py",
+              "line": 391,
+              "module": "scripts.training",
+              "names": [
+                "evaluate"
+              ],
+              "target": "scripts/training/evaluate.py",
+              "context": [
+                "test_fit_evaluation_cli_reuses_exact_windows_and_rejects_changed_manifest"
+              ]
+            },
+            {
+              "importer": "scripts/tests/training/test_gs_decoder.py",
+              "line": 18,
+              "module": "scripts.training.evaluate",
+              "names": [
+                "load_model"
+              ],
+              "target": "scripts/training/evaluate.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_horizon.py",
+              "line": 20,
+              "module": "scripts.training.evaluate",
+              "names": [
+                "load_model"
+              ],
+              "target": "scripts/training/evaluate.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_structural_checkpoint.py",
+              "line": 13,
+              "module": "scripts.training.evaluate",
+              "names": [
+                "load_model"
+              ],
+              "target": "scripts/training/evaluate.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_training.py",
+              "line": 26,
+              "module": "scripts.training.evaluate",
+              "names": [
+                "load_model"
+              ],
+              "target": "scripts/training/evaluate.py",
+              "context": []
+            }
+          ],
+          "removal_status": "retained_or_narrowed_compatibility/current_documentation; see applied edits",
+          "blockers": [
+            "load_model is used by retained generic PositionPredictor checkpoint/decoder/horizon tests"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": true
+        },
+        {
+          "path": "scripts/training/visualize.py",
+          "sha256": "90f29ae0a202b41509f253279670f41853e5045bba7abf051db2de6dd54492ae",
+          "inbound_imports": [
+            {
+              "importer": "scripts/tests/training/test_fixed_fit.py",
+              "line": 25,
+              "module": "scripts.training.visualize",
+              "names": [
+                "ellipsoid_axes",
+                "geometry_data",
+                "geometry_html"
+              ],
+              "target": "scripts/training/visualize.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_horizon.py",
+              "line": 28,
+              "module": "scripts.training.visualize",
+              "names": [
+                "export_gaussians",
+                "geometry_data",
+                "geometry_html",
+                "gs_viewer_html"
+              ],
+              "target": "scripts/training/visualize.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/tests/training/test_training.py",
+              "line": 33,
+              "module": "scripts.training.visualize",
+              "names": [
+                "png_bytes",
+                "viewer_html",
+                "main"
+              ],
+              "target": "scripts/training/visualize.py",
+              "context": []
+            },
+            {
+              "importer": "scripts/experiments/fixed_window/fixed_fit.py",
+              "line": 595,
+              "module": "scripts.training.visualize",
+              "names": [
+                "export_gaussians"
+              ],
+              "target": "scripts/training/visualize.py",
+              "context": [
+                "run"
+              ]
+            },
+            {
+              "importer": "scripts/experiments/oracle/oracle_fit.py",
+              "line": 184,
+              "module": "scripts.training.visualize",
+              "names": [
+                "export_gaussians"
+              ],
+              "target": "scripts/training/visualize.py",
+              "context": [
+                "main"
+              ]
+            }
+          ],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [
+            "legacy tests use renderer/export helpers; fixed400/oracle export paths still import it"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        }
+      ]
+    },
+    {
+      "name": "historical_indexes",
+      "old_feature": "previous architecture indexes and roadmap",
+      "files": [
+        {
+          "path": "docs/MODEL_ROADMAP.md",
+          "sha256": "83a6c9822b05cd04c8257ee3348d80b1eff63236873578b554bd19d445a45407",
+          "inbound_imports": [],
+          "removal_status": "retained_or_narrowed_compatibility/current_documentation; see applied edits",
+          "blockers": [],
+          "note": "Dependency-clean documentation candidate",
+          "current_exists": true
+        },
+        {
+          "path": "scripts/experiments/README.md",
+          "sha256": "938803a8af39aeb9f4856664f62621f938bdc7772391f5aa7292c8b0bdc18247",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Dependency-clean documentation candidate",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/archive/p0_free_head/README.md",
+          "sha256": "490f690ba948f975c8f04b159aca816310d98b4feb739a117d1def93c7d3df50",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Dependency-clean documentation candidate",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/archive/p1a5_anisotropic/README.md",
+          "sha256": "c994907117c2c428d4cedc1f0f3309cecedef89a16c032208edf664341115281",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Dependency-clean documentation candidate",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/archive/p1a_anchor/README.md",
+          "sha256": "84ac9b18be6e330187113b28ebcc53ec89f5cb281e04540d843410ed654d94fc",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Dependency-clean documentation candidate",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/experiments/archive/p3_two_frame_h10/README.md",
+          "sha256": "23de74f7d1979afc3fa5a33fb7584823d4fdcf74a34f1274242609d5757d6651",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [],
+          "note": "Dependency-clean documentation candidate",
+          "current_exists": false
+        }
+      ]
+    },
+    {
+      "name": "replace_old_entry_documentation",
+      "old_feature": "P2 launch documentation must be replaced by current retained commands, not silently presented as cloth protocol",
+      "files": [
+        {
+          "path": "scripts/README.md",
+          "sha256": "b8bf55d2eec6956ec3cb7ff3790f0217714cb237d82cad3866f15a4241008b14",
+          "inbound_imports": [],
+          "removal_status": "retained_or_narrowed_compatibility/current_documentation; see applied edits",
+          "blockers": [],
+          "note": "Dependency-clean documentation candidate",
+          "current_exists": true
+        }
+      ]
+    },
+    {
+      "name": "legacy_test_file_candidates",
+      "old_feature": "tests exclusively of retired Oracle, or mixed files needing case/helper separation first",
+      "files": [
+        {
+          "path": "scripts/tests/training/test_oracle.py",
+          "sha256": "66cba3369e4152250f4638c32386e05724c7b1c03d7900b87332e4de554d41cb",
+          "inbound_imports": [],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [
+            "remove only after explicit retirement of Oracle models/runner and associated compatibility promises"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/tests/training/test_fixed_fit.py",
+          "sha256": "33d79855d6e13de465008379e2bdf227b409f5141d5f6802abc65be988d562b5",
+          "inbound_imports": [
+            {
+              "importer": "scripts/tests/training/test_structural_checkpoint.py",
+              "line": 16,
+              "module": "scripts.tests.training.test_fixed_fit",
+              "names": [
+                "single_raw"
+              ],
+              "target": "scripts/tests/training/test_fixed_fit.py",
+              "context": []
+            }
+          ],
+          "removal_status": "retired_with_feature_in_new_core",
+          "blockers": [
+            "mixed file: retains helpers single_raw and generic renderer/geometry tests; entire-file deletion is not valid"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": false
+        },
+        {
+          "path": "scripts/tests/training/test_module_layout.py",
+          "sha256": "2d06cecf507f8c91aa4a40c0bd48043785e9c0e2e377b4eb321ce805f032d39c",
+          "inbound_imports": [],
+          "removal_status": "retained_or_narrowed_compatibility/current_documentation; see applied edits",
+          "blockers": [
+            "mixed file: PositionPredictor pickle/import compatibility must remain after retiring Oracle/fixed400 assertions"
+          ],
+          "note": "Retire feature and all inbound callers together; preserve mixed core/compatibility assertions",
+          "current_exists": true
+        }
+      ]
+    }
+  ],
+  "legacy_test_method_candidates": [
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "class_name": "FixedFitTests",
+      "method": "test_400_actual_optimizer_steps_alternate_windows_and_evaluate_both",
+      "line": 207,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "class_name": "FixedFitTests",
+      "method": "test_resume_count_and_empty_supervision_does_not_count_a_step",
+      "line": 224,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "class_name": "FixedFitTests",
+      "method": "test_checkpoint_publish_order_last400_and_no_legacy_best",
+      "line": 250,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "class_name": "FixedFitTests",
+      "method": "test_run_orchestration_publishes_final_evaluates_and_exports_both_checkpoints",
+      "line": 320,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "class_name": "FixedFitTests",
+      "method": "test_diagnostic_run_exports_lowest_cd_and_retains_all_twenty_states",
+      "line": 381,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "class_name": "FixedFitTests",
+      "method": "test_anchor_run_reuses_fixed400_schedule_diagnostics_and_exports",
+      "line": 384,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "class_name": "FixedFitTests",
+      "method": "test_anisotropic_run_reuses_fixed400_schedule_and_exports",
+      "line": 387,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "class_name": "FixedFitTests",
+      "method": "test_fit_evaluation_cli_reuses_exact_windows_and_rejects_changed_manifest",
+      "line": 390,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_structural_checkpoint.py",
+      "class_name": "StructuralCheckpointTests",
+      "method": "test_structural_fixed400_retains_better_lowest_cd_and_rejects_mode_switch",
+      "line": 162,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "class_name": "ModuleLayoutTests",
+      "method": "test_source_inventory_includes_moved_implementations",
+      "line": 45,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "class_name": "ModuleLayoutTests",
+      "method": "test_source_migration_is_narrow_and_preserves_config_checks",
+      "line": 54,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "class_name": "ModuleLayoutTests",
+      "method": "test_fresh_process_import_orders",
+      "line": 69,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "class_name": "ModuleLayoutTests",
+      "method": "test_production_and_old_new_oracle_cli_help",
+      "line": 79,
+      "paired_retired_feature": "fixed400/oracle runner or historical source-layout bridge",
+      "remove_only_with_feature": true,
+      "not_a_test_failure_workaround": true
+    }
+  ],
+  "preserve_always": [
+    "scripts/training/model.py (PositionPredictor, LocalGSBlock, initial_knn and masked)",
+    "scripts/training/gs_decoder.py (active fixed RBF and PositionPredictor decoder compatibility)",
+    "scripts/training/gs_structure.py (imported by preserved PositionPredictor)",
+    "scripts/training/train.py (shared train_epoch/evaluate_loader/renderer/checkpoint helpers used by cloth core)",
+    "scripts/training/losses.py",
+    "scripts/training/rendering.py",
+    "scripts/data_process/",
+    "scripts/dataloader/",
+    "scripts/rebuild_dataset/",
+    "scripts/tests/test_core_model.py",
+    "scripts/tests/test_core_data.py",
+    "scripts/tests/data_process/",
+    "scripts/tests/dataloader/",
+    "scripts/tests/training/test_training.py",
+    "scripts/tests/training/test_gs_decoder.py",
+    "scripts/tests/training/test_horizon.py",
+    "scripts/tests/training/test_anisotropic.py",
+    "scripts/tests/training/test_structural.py",
+    "scripts/tests/training/test_structural_checkpoint.py",
+    "docs/DATA_PROCESS_DESIGN.md",
+    "docs/DATALOADER_DESIGN.md",
+    "docs/DATASET_PROTOCOL.md"
+  ],
+  "compatibility_note": "Anisotropic/P2 structural tests remain while PositionPredictor legacy model modes and checkpoint semantics are preserved. Mixed test files may only be narrowed after isolating retained helpers/assertions. Do not modify old expected source digests to mask an intentionally changed layout.",
+  "source_inventory_bridge": {
+    "path": "scripts/experiments/fixed_window/provenance.py",
+    "note": "The old normalized inventory includes training/dataloader/data_process/experiments *.py. Added cloth_* files and data migration change it, intentionally invalidating the old fixed400 source-equivalence bridge. Keep strict behavior or explicitly retire the feature; never silently broaden acceptance."
+  },
+  "soma_runtime": {
+    "excluded_directories": {
+      "data_preprocess": false,
+      "source": false,
+      "tools": false
+    },
+    "missing_runtime_imports": [],
+    "python_imports_into_excluded_directories_found": false,
+    "gaussian_submodules_present": false,
+    "binary_extension_imports": [
+      {
+        "path": "third_party/soma/mmgs/models/utils/render.py",
+        "line": 4,
+        "module": "diff_gaussian_rasterization"
+      },
+      {
+        "path": "third_party/soma/gaussian-splatting/gaussian_renderer/__init__.py",
+        "line": 14,
+        "module": "diff_gaussian_rasterization"
+      },
+      {
+        "path": "third_party/soma/gaussian-splatting/scene/gaussian_model.py",
+        "line": 21,
+        "module": "simple_knn._C"
+      },
+      {
+        "path": "third_party/soma/gaussian-splatting/scene/gaussian_model.py",
+        "line": 26,
+        "module": "diff_gaussian_rasterization"
+      },
+      {
+        "path": "third_party/soma/gaussian-splatting/utils/loss_utils.py",
+        "line": 17,
+        "module": "diff_gaussian_rasterization._C"
+      }
+    ],
+    "additional_required_environment": [
+      "audited CUDA/PyTorch runtime",
+      "MMCV compiled ops",
+      "DGL",
+      "simple_knn._C",
+      "diff_gaussian_rasterization"
+    ],
+    "setup_readme_present": false,
+    "setup_note": "setup.py readme() opens README.md relative to its working directory; upstream README must be retained before claiming pip install . support.",
+    "conclusion": "Frozen inference does not import omitted source/tools/data_preprocess. It does import installed CUDA extensions whose build submodule sources are absent in this copied tree; retain the audited environment and its exact extension locations, or separately vendor pinned build sources."
+  },
+  "training_protocol": {
+    "scene": "008-pink-cloth",
+    "episode": 0,
+    "horizon": 15,
+    "prediction_interval": 1,
+    "frame_ranges_half_open": {
+      "train": [
+        113,
+        268
+      ],
+      "val": [
+        268,
+        307
+      ]
+    },
+    "train_starts": [
+      113,
+      252
+    ],
+    "train_windows_per_epoch": 140,
+    "holdout_starts": [
+      268,
+      291
+    ],
+    "holdout_windows": 24,
+    "epochs": 8,
+    "seed": 42,
+    "data_order": "DataLoader shuffle=True with generator seed42+epoch, including iterator base-seed consumption; batch1 workers0 drop_lastFalse",
+    "expected_formal_successful_updates": 1120,
+    "expected_supervised_frame_presentations": 16800,
+    "optimizer": {
+      "name": "AdamW",
+      "lr": 0.0001,
+      "weight_decay": 0.0001,
+      "clip_norm": 1.0
+    },
+    "actual_formal_updates_in_this_migration": 0
+  },
+  "checkpoint_modes": {
+    "new_core_resume": "cloth_train.restore_checkpoint requires entire new identity equality: run path, source-bundle digest, config, model, processor, data hashes, epoch orders and software environment; restores strict model, AdamW and RNG only at complete immutable epoch boundaries.",
+    "historical_e8_frozen_evaluation": "cloth_evaluate frozen-demo pins original E8 SHA256, original five-file source manifest, exact model/processor and 8x140 successful-update history; loads model strict for inference and never restores optimizer/RNG.",
+    "migration_does_not_resume_old_e8_implicitly": true,
+    "completed_run_mode": "Being added by core_evaluation: explicit completed-run + completion.json, checkpoint actual SHA and source identity, 8x140 ordered ledger, strict architecture/processor and training-config checks. Default frozen-demo checks remain unchanged."
+  },
+  "no_deletion_performed": false,
+  "no_original_worktree_changes": true,
+  "retirement_authorization": "Root task: user retains only current complete data/model/evaluation/demo pipeline; Oracle/fixed400/P0/P1/P3 CLIs and dedicated tests explicitly retired",
+  "applied_retirements": [
+    {
+      "path": "scripts/training/train.py",
+      "function": "choose_cameras",
+      "feature": "Old generic model/fixed400 command; current command is cloth_train",
+      "source_sha256": "de7d2f5f8761082af26078d4c148a9b8dff9ed09f186fa0ac301a1c31d9084c2"
+    },
+    {
+      "path": "scripts/training/train.py",
+      "function": "build_loader",
+      "feature": "Old generic model/fixed400 command; current command is cloth_train",
+      "source_sha256": "0da9b3f031090295fba114c539226f925dbaa559a31f707337d53e5f7cc109f6"
+    },
+    {
+      "path": "scripts/training/train.py",
+      "function": "parser",
+      "feature": "Old generic model/fixed400 command; current command is cloth_train",
+      "source_sha256": "8ea9060f54debed2bea5f1b95a8e779bc9c42d6f09e537d26d9316546f76df86"
+    },
+    {
+      "path": "scripts/training/train.py",
+      "function": "main",
+      "feature": "Old generic model/fixed400 command; current command is cloth_train",
+      "source_sha256": "d1d6ea072fdb3bda5a31a379d160eabec7e3ecbe03c393203da8f9beebd6cd71"
+    },
+    {
+      "path": "scripts/training/train.py",
+      "function": "__main__",
+      "feature": "Old generic model/fixed400 command; current command is cloth_train",
+      "source_sha256": "34336821e270180f917411b77fe541ae43e60a9670634b7c9655bc9a07ce6531"
+    },
+    {
+      "path": "scripts/tests/training/test_training.py",
+      "method": "test_html_is_offline_and_png_is_valid_container",
+      "feature": "Old generic viewer/CLI wrapper retired; PNG and original world-space numeric assertions retained against pure tools"
+    },
+    {
+      "path": "scripts/tests/training/test_training.py",
+      "method": "test_visualization_export_uses_real_counts_and_world_coordinates",
+      "feature": "Old generic viewer/CLI wrapper retired; PNG and original world-space numeric assertions retained against pure tools"
+    },
+    {
+      "path": "scripts/tests/training/test_training.py",
+      "method": "test_geometry_visualization_exports_properties_and_real_renders",
+      "feature": "Old generic viewer/CLI wrapper retired; PNG and original world-space numeric assertions retained against pure tools"
+    },
+    {
+      "path": "scripts/tests/training/test_horizon.py",
+      "method": "HorizonTests.test_frozen_h15_manifest_provenance_frames_duplicates_and_resume",
+      "source_sha256": "fbce7c0b42a11d8170274ce137e86fde5bed08df1776fc63c96e20c7390b9dc5",
+      "feature": "Retired fixed400 selection/provenance runner"
+    },
+    {
+      "path": "scripts/tests/training/test_horizon.py",
+      "method": "HorizonTests.test_h15_exact_selection_rejects_actual_frame_and_dataset_mismatches",
+      "source_sha256": "d82d40ebcfadde1d317ba9127043d726e8dd8b518f3ea78330f258db66d81540",
+      "feature": "Retired fixed400 selection/provenance runner"
+    },
+    {
+      "path": "scripts/tests/training/test_horizon.py",
+      "method": "test_export_retains_all_fifteen_future_frames_and_initial_reference_offline",
+      "source_sha256": "b83c1539318d509669c7433a6ea0c783b6a9bc8b4180b86b7bbe843cede5ecf0",
+      "feature": "Old visualizer HTML/PNG/JS export; corresponding H15 world geometry assertions retained in renamed pure-data test"
+    },
+    {
+      "path": "scripts/tests/training/test_structural_checkpoint.py",
+      "method": "StructuralCheckpointTests.test_structural_fixed400_retains_better_lowest_cd_and_rejects_mode_switch",
+      "source_sha256": "08c3ee6cd5d0374457ac51153e349433ac6361b981b3af690c3d3fdb8ff3a6b4",
+      "feature": "Retired fixed400 structural fitting runner; other PositionPredictor checkpoint tests unchanged"
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "method": "test_legacy_aliases_share_globals_and_patch_targets",
+      "feature": "Historical Oracle/fixed400 alias and source-layout bridge retired; PositionPredictor import/pickle identity retained explicitly"
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "method": "test_old_pickle_class_paths_resolve",
+      "feature": "Historical Oracle/fixed400 alias and source-layout bridge retired; PositionPredictor import/pickle identity retained explicitly"
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "method": "test_source_inventory_includes_moved_implementations",
+      "feature": "Historical Oracle/fixed400 alias and source-layout bridge retired; PositionPredictor import/pickle identity retained explicitly"
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "method": "test_source_migration_is_narrow_and_preserves_config_checks",
+      "feature": "Historical Oracle/fixed400 alias and source-layout bridge retired; PositionPredictor import/pickle identity retained explicitly"
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "method": "test_fresh_process_import_orders",
+      "feature": "Historical Oracle/fixed400 alias and source-layout bridge retired; PositionPredictor import/pickle identity retained explicitly"
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "method": "test_production_and_old_new_oracle_cli_help",
+      "feature": "Historical Oracle/fixed400 alias and source-layout bridge retired; PositionPredictor import/pickle identity retained explicitly"
+    },
+    {
+      "path": "scripts/experiments/README.md",
+      "sha256": "938803a8af39aeb9f4856664f62621f938bdc7772391f5aa7292c8b0bdc18247",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/__init__.py",
+      "sha256": "c255b16fe008b953b72b31e54d4913d93351841346e99e6e400145e1f11c62d0",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/fixed_window/fixed_fit.py",
+      "sha256": "56fbce9cd8360ddba5286f988d6b58aeaa76325f4fd02fc034a3fd9e1c782423",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/fixed_window/provenance.py",
+      "sha256": "bf1d8fc2d6abe30cf8521b17445ac303e350464bbacfe42f782ad3cb6818db80",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/fixed_window/__init__.py",
+      "sha256": "f04a6ea927380c331e9b23afa157da8b06e2ddbd00d51ebb22d980b29b648a7e",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/oracle/oracle.py",
+      "sha256": "ad4bdab18be524a3a17bf034b344efd1c406a720dc0f1b1bd1a9ece0adb6722b",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/oracle/oracle_fit.py",
+      "sha256": "12ae8c488fc45a08122baa6ee9da570446c1edd9643c644b4b9015c31e701687",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/oracle/__init__.py",
+      "sha256": "17c9ac7827b9c958c6f1b4c9eb5ba8491168de24c7b804d2caef7af2a8be0cf0",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/archive/p0_free_head/README.md",
+      "sha256": "490f690ba948f975c8f04b159aca816310d98b4feb739a117d1def93c7d3df50",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/archive/p1a5_anisotropic/README.md",
+      "sha256": "c994907117c2c428d4cedc1f0f3309cecedef89a16c032208edf664341115281",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/archive/p1a_anchor/README.md",
+      "sha256": "84ac9b18be6e330187113b28ebcc53ec89f5cb281e04540d843410ed654d94fc",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/experiments/archive/p3_two_frame_h10/README.md",
+      "sha256": "23de74f7d1979afc3fa5a33fb7584823d4fdcf74a34f1274242609d5757d6651",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/training/fixed_fit.py",
+      "sha256": "482280a566391df864fa8c74dd83f512ba83896bb621fdcc65465b24901fc4c2",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/training/oracle.py",
+      "sha256": "2faeb102c5d55e5342181b697d0b6ee35724721f20bd72f52d0b7e9068a394af",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/training/oracle_fit.py",
+      "sha256": "cc37ad8c22b2ba1858c593d7f52f495becba95f9e7cb07ee3344f6829613a606",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/training/visualize.py",
+      "sha256": "90f29ae0a202b41509f253279670f41853e5045bba7abf051db2de6dd54492ae",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/tests/training/test_fixed_fit.py",
+      "sha256": "33d79855d6e13de465008379e2bdf227b409f5141d5f6802abc65be988d562b5",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    },
+    {
+      "path": "scripts/tests/training/test_oracle.py",
+      "sha256": "66cba3369e4152250f4638c32386e05724c7b1c03d7900b87332e4de554d41cb",
+      "feature": "Old fixed400/Oracle/alternate HTML viewer functionality and exclusive tests retired together",
+      "operation": "delete_file_in_new_core_only"
+    }
+  ],
+  "edited_files": [
+    {
+      "path": "scripts/training/train.py",
+      "before_sha256": "a6cf4db423f008470dce3e728b0377dd2bc6e93b023a31477b7ad308c425fa72",
+      "after_sha256": "eedc9497259462d4643f4607c63b02a50334878c8398adc860731b997c62dcbd",
+      "reason": "Retire generic training CLI/fixed400 dispatch, preserve shared numerical bodies and legacy checkpoint helpers exactly"
+    },
+    {
+      "path": "scripts/training/evaluate.py",
+      "before_sha256": "17277233e96a145f87d9fb5692c29d143cc72cf23d7823015252d36848764222",
+      "after_sha256": "25ebdf78e88f494736240e303407aec958c320d69ec854d78afad314fa09dad0",
+      "reason": "Retire legacy val/test/fit CLI; retain exact load_model compatibility body"
+    },
+    {
+      "path": "scripts/tests/training/test_training.py",
+      "before_sha256": "a3a3bc08661f97c45d8b936ba471a5f5166cd2cbb4f7d9c8b9dbe990f7756541",
+      "after_sha256": "7ebb5a7675eee0ce00e04b8e17dfee6facebefe7da64602f86812c95ff84a375",
+      "reason": "Retire parser/UI portions only; preserve default resolver, model/gradient/restore/mask/render assertions and world-array exports"
+    },
+    {
+      "path": "scripts/tests/training/test_horizon.py",
+      "before_sha256": "690ba93e0fd9ab0bbaec7b861b5a87e9c0e0d9388340e2114e568b91f356505e",
+      "after_sha256": "223f7a6eee8f5f0938125f202d7fdf6d1c483db809ceaf04adab3fe3e677e374",
+      "reason": "Retired fixed400 selection/provenance runner"
+    },
+    {
+      "path": "scripts/tests/training/test_horizon.py",
+      "before_sha256": "223f7a6eee8f5f0938125f202d7fdf6d1c483db809ceaf04adab3fe3e677e374",
+      "after_sha256": "857bcc7d0bd8dbbe90753c15f4fcef880814936a8c1bb3608c6edb8652817f20",
+      "reason": "Retire old HTML/PNG export page integration only; preserve H15 world-array counts, target presence, frame IDs and changing geometry assertions"
+    },
+    {
+      "path": "scripts/tests/training/test_structural_checkpoint.py",
+      "before_sha256": "0bc9a3076b612f96867a39a29824ef362367732341c37bfe83697e19658e88c5",
+      "after_sha256": "91cc9c93525d8146a2e682798667ee36d2cefb5b3a1bb627d29fd93320cceec5",
+      "reason": "Retired fixed400 structural fitting runner; other PositionPredictor checkpoint tests unchanged"
+    },
+    {
+      "path": "scripts/tests/training/test_structural_checkpoint.py",
+      "before_sha256": "91cc9c93525d8146a2e682798667ee36d2cefb5b3a1bb627d29fd93320cceec5",
+      "after_sha256": "57d672b28c50cd6aef3ede9f8080485fd33b05d0d83ee68ffe782e0c87f8ee9a",
+      "reason": "Repoint shared fixture; remove retired fixed400 import"
+    },
+    {
+      "path": "scripts/tests/training/test_module_layout.py",
+      "before_sha256": "dd915cd50caa5b65b9bb94889c015b21dff3f2b1306c3b0855d6e4a245eb6889",
+      "after_sha256": "7146848781e6a86a9cf2fc04fc9b7e200bd34b48fede2c459f7b5efe039ef655",
+      "reason": "Replace retired historical package/CLI checks with current core imports; retain PositionPredictor pickle identity"
+    }
+  ],
+  "moved_shared_tools": [
+    {
+      "source": "scripts/training/visualize.py",
+      "destination": "scripts/training/cloth_geometry.py",
+      "exact_bodies": [
+        "png_bytes",
+        "ellipsoid_axes",
+        "geometry_data"
+      ],
+      "extracted_body": "world_gaussian_arrays: original normalized-to-world arrays block, with no render/filesystem/HTML work"
+    },
+    {
+      "source": "scripts/tests/training/test_fixed_fit.py",
+      "destination": "scripts/tests/test_core_compatibility.py",
+      "retained_methods": [
+        "test_ellipsoid_axes_are_world_wxyz_and_covariance_correct",
+        "test_geometry_exports_distinct_centers_ellipsoids_template_paths"
+      ],
+      "fixture": "single_raw: identical default windows, detached from retired fixed400 runner",
+      "retired_portion": "only old HTML/JS viewer assertions, not covariance/template geometry assertions"
+    }
+  ],
+  "shared_function_bodies_exact": {
+    "gs_render_settings": true,
+    "loss_options": true,
+    "make_renderer": true,
+    "copy_initial": true,
+    "to_device": true,
+    "atomic_json": true,
+    "EpisodeMetrics": true,
+    "GaussianMetrics": true,
+    "metric_tracker": true,
+    "evaluate_loader": true,
+    "train_epoch": true,
+    "checkpoint_config": true,
+    "read_checkpoint": true,
+    "restore_training": true
+  },
+  "retained_math_note": "No PositionPredictor/model equations, shared train_epoch/evaluate_loader/metrics, data processing, renderer or losses were changed. No old expected numeric values or tolerances were relaxed.",
+  "validation": "pending consolidated unittest discover by root",
+  "targeted_validation_before_data_import_fix": {
+    "run": "2026-11-18 local CPU",
+    "passed": 3,
+    "errors": 7,
+    "root_cause": "scripts.rebuild_dataset.validate:31 naked from rebuild import; fails package import before affected tests run",
+    "owner_notified": "cleanup_dependency_audit and root",
+    "no_expectations_relaxed": true
+  },
+  "final_validation": "Root consolidated discover pending; source files stable after retirement edits",
+  "source_line_endings": "LF; current reviewed source identities are in source_manifest.json. Historical producer/source hashes remain unchanged."
+}

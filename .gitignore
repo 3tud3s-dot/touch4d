@@ -32,3 +32,11 @@ __pycache__/
 !.env.example
 .DS_Store
 Thumbs.db
+
+# Current demo presentation data stays outside source control.
+/assets/current/*.zip
+/assets/current/generated/
+/assets/current/reference_sources/
+
+# Verification logs stay outside the source commit.
+/assets/current/verification/

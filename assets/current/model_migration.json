@@ -1,0 +1,281 @@
+{
+  "status": "cpu_model_regression_passed",
+  "source_sha": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+  "model": "Direct",
+  "parameter_budget": 620511,
+  "training_started": false,
+  "source_mapping": [
+    {
+      "destination": "scripts/training/cloth_conditions.py",
+      "sources": [
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\training\\v4_conditions.py",
+          "sha256": "5cdf2588cbeeb3ee70abfc525937163b37a6d7853e1f5d3ac8de810a178fc569"
+        }
+      ],
+      "sha256": "6e2d6c346e1496d948d03eeed1448851c469e16075db1412adc896fc7400884a",
+      "pre_lf_sha256": "5cdf2588cbeeb3ee70abfc525937163b37a6d7853e1f5d3ac8de810a178fc569"
+    },
+    {
+      "destination": "scripts/training/cloth_attention.py",
+      "sources": [
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\training\\v4_attention.py",
+          "sha256": "084bd4f176961475c08c3c26410eda78f6787863897d7b08fc0e5188e6990403"
+        }
+      ],
+      "sha256": "d6d2fa3df4250d6c72473df0e5faf86fc3a7bb10ac30d6c1a228f031a9fb957f",
+      "pre_lf_sha256": "084bd4f176961475c08c3c26410eda78f6787863897d7b08fc0e5188e6990403"
+    },
+    {
+      "destination": "scripts/training/cloth_motion.py",
+      "sources": [
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g4_global_motion\\model.py",
+          "sha256": "7b91ddac01413e6f1bcd03717b197675c916f3c9b8ec859f88e3baf08a55f83a"
+        },
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\motion.py",
+          "sha256": "6b7201142a1ab885b7774d51c60394bd08d58232d44154575541bd0210905e1b"
+        }
+      ],
+      "sha256": "475f8c248d64e6c6750ca410c35f4656baedc6093a3756cfb65cbd66f86819dd",
+      "pre_lf_sha256": "c745e97c620e531da0e117dab320495390368dc56411d91db060449a2fc1c8fd"
+    },
+    {
+      "destination": "scripts/training/cloth_model.py",
+      "sources": [
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\training\\v4_model.py",
+          "sha256": "1a201caaf21ba350e80f67b028bd5de41498258eafba03a65cb8c0f59dd9c9ff"
+        },
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g4_global_motion\\model.py",
+          "sha256": "7b91ddac01413e6f1bcd03717b197675c916f3c9b8ec859f88e3baf08a55f83a"
+        },
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\model.py",
+          "sha256": "6ee62a2ac238a9c23f45bec4e6921745fd7bf46c33d50ffa9c0862b3c8b544ca"
+        }
+      ],
+      "sha256": "1b4cdf3cab22f3598e3cf1178fd7e0f808faecba5b9334f007048401fecd50c3",
+      "pre_lf_sha256": "f00285a0c982375a11c1179d51c3d4b8d5767630e3fa199ad57f3d8d9c3f6e6e"
+    },
+    {
+      "destination": "scripts/training/cloth_protocol.py",
+      "sources": [
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\protocol.py",
+          "sha256": "13756ac1a09bf5310b311cbbf6614ac9cdbf0aff512b46adfdb434921c53b8fe"
+        },
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\full_training\\v4_epochs.py",
+          "sha256": "7f3ce6584c6442be2c4b7793c8490698188a1479cf757338b1d101657b77c786"
+        },
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g4_global_motion\\protocol.py",
+          "sha256": "8601f9f207837ed25f4cc37d89b2dfabcaf6bf6df7951578337943e8509650a5"
+        }
+      ],
+      "sha256": "8dfdf0a8735573041deb504ea20512cd6f9bf22387879605e3a731e6bf8c268c",
+      "pre_lf_sha256": "11a4855dc7aaa6defecc5264322467715975410d89306dabfc81db66f4dbbb0e"
+    },
+    {
+      "destination": "scripts/training/cloth_checkpoint.py",
+      "sources": [
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g4_global_motion\\checkpoint.py",
+          "sha256": "19cf27d6564edd81801a5e555ee159e7d4a7fa5f56162c9beed4996a6bfdeb03"
+        },
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g4_global_motion\\smoke.py",
+          "sha256": "c27b558ab0529870dd75ff4aef1e06f20a7bd19bff855d89b7da4ae26e8f6d57"
+        },
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\diagnostics.py",
+          "sha256": "3a15be1a57c40e963809961ea03e7c7d6a964d5dcefc9c8848921146fb7a6dc4"
+        }
+      ],
+      "sha256": "55a2bd1168b671480547e1cbe94f8b83e5c5e91cf64d6d6d28855e29e7766b66",
+      "pre_lf_sha256": "910cea35ae57156b586d673856088840af8645c36376a550a5a61eb7293e098f"
+    },
+    {
+      "destination": "scripts/training/cloth_train.py",
+      "sources": [
+        {
+          "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\cloth008_train.py",
+          "sha256": "b8f20dd966d1d09040af34fd8ed5810b3d2feb535f94ca862d2101ddf0a698ae"
+        }
+      ],
+      "sha256": "44b346c9e83afc28e559c4bcec41a4b1f554fee9ac23213216763be615685102",
+      "pre_lf_sha256": "54cc539b036da610fb89c7cc5766ebb77d30e6a7a08766ae08ed4aeebf05f128"
+    }
+  ],
+  "source_identity_manifest": {
+    "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-008-v1\\smoke-001\\source\\source.sha256",
+    "sha256": "0e6dc18d5b527d07147a8592755cc8ef16592096b6441f7ca80ae00e2e07701a",
+    "files": [
+      {
+        "name": "dataset.py",
+        "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\dataset.py",
+        "sha256": "c934b8f2f3a8747e9cc5e081e6b420800274e4d4ca0267aa76fad2a6d14fe2e3",
+        "expected_sha256": "c934b8f2f3a8747e9cc5e081e6b420800274e4d4ca0267aa76fad2a6d14fe2e3",
+        "match": true
+      },
+      {
+        "name": "processor.py",
+        "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\data_process\\processor.py",
+        "sha256": "caeeb56d1e4e996a2a016610344362d2fa3e67f9b4c311397cf5c7bc8783ed37",
+        "expected_sha256": "caeeb56d1e4e996a2a016610344362d2fa3e67f9b4c311397cf5c7bc8783ed37",
+        "match": true
+      },
+      {
+        "name": "cloth008.py",
+        "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\cloth008.py",
+        "sha256": "1ce322053249a1112b2e3afb1ee0c62974ba3a6b601df21b6829bb1aae77747e",
+        "expected_sha256": "1ce322053249a1112b2e3afb1ee0c62974ba3a6b601df21b6829bb1aae77747e",
+        "match": true
+      },
+      {
+        "name": "cloth008_train.py",
+        "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\cloth008_train.py",
+        "sha256": "b8f20dd966d1d09040af34fd8ed5810b3d2feb535f94ca862d2101ddf0a698ae",
+        "expected_sha256": "b8f20dd966d1d09040af34fd8ed5810b3d2feb535f94ca862d2101ddf0a698ae",
+        "match": true
+      },
+      {
+        "name": "cloth008_smoke.sbatch",
+        "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\cloth008_smoke.sbatch",
+        "sha256": "02b06aa12af5e4dde99799f40a776a47584bf30b7fb99701062874af2838eb5b",
+        "expected_sha256": "02b06aa12af5e4dde99799f40a776a47584bf30b7fb99701062874af2838eb5b",
+        "match": true
+      }
+    ]
+  },
+  "cpu_model": {
+    "parameter_count": 620511,
+    "initialization_state_sha256": "e6d5cf2267076aaf45feb00437f4a22afd5cc61384922361a1d5aef26df22253",
+    "config": {
+      "architecture": "v4_g5_signed_local_direct_v1",
+      "horizon": 15,
+      "prediction_interval": 1,
+      "width": 128,
+      "heads": 4,
+      "layers": 2,
+      "local_k": 16,
+      "anchor_count": 128,
+      "pool_k": 16,
+      "anchor_bandwidth": 1.0,
+      "sigma_geo_multiplier": 1.0,
+      "hand_policy": "001-ep0-4-right-ep5-9-both-v1",
+      "controller_features": 13,
+      "tactile_sigma_m": 0.01,
+      "history_flags": "head_mass4_anchor1",
+      "output_mode": "gs_geometry",
+      "displacement_reference": "initial_cumulative",
+      "selection_metric": "joint",
+      "loss_weights": {
+        "cd": 1.0,
+        "rgb": 1.0,
+        "alpha": 0.1,
+        "scale": 0.0,
+        "depth": 0.0
+      },
+      "global_motion": "signed_per_hand_global_translation_v1",
+      "local_motion": "per_anchor_per_hand_18d_v1",
+      "local_zero_mean": false,
+      "local_mapping_width": 128,
+      "local_bandwidth_multiplier": 1.0,
+      "anchor_propagation": false,
+      "anchor_graph_other_neighbors": 0,
+      "anchor_graph_self": false,
+      "propagation_layers": 0,
+      "propagation_lambda": 0.0,
+      "checkpoint_kind": "g5_direct_v1"
+    }
+  },
+  "changes": [
+    "Folded original V4/G4/G5 constructors into one Direct graph in identical parameter-initialization order",
+    "Retained scalar/tensor equations, update ordering, parameter keys and config; removed unreachable Propagate branches",
+    "Moved only necessary global/local mappings, conditioning, attention, checkpoint IO and training helpers into scripts.training",
+    "cloth_train is the frozen b8f20dd... trainer with import relocation only",
+    "scripts.training.model.PositionPredictor and accepted P2 shared modules unchanged"
+  ],
+  "tests": {
+    "command": [
+      "C:\\Users\\qdtrr\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "-X",
+      "utf8",
+      "-B",
+      "-m",
+      "unittest",
+      "scripts.tests.test_core_model",
+      "-v"
+    ],
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 31.379,
+    "oracle_source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1",
+    "oracle_source_override_env": "TOUCH4D_FROZEN_SOURCE_ROOT",
+    "exact_regression": [
+      "config",
+      "parameter key ordering",
+      "seed42 all initialized tensors",
+      "fresh H15 all output attributes",
+      "nonzero-head H15 outputs",
+      "all H15 alpha/cumulative/state/local/global traces",
+      "full H15 nonzero-head backward gradients",
+      "actual DataLoader order including base-seed consumption"
+    ],
+    "functional_checks": [
+      "620511 parameters",
+      "initial Copy behavior and exact attribute inheritance",
+      "finite full H15 backward",
+      "NaN padding and missing hands masked",
+      "future conditions do not alter prior predictions",
+      "interval and empty-state guard",
+      "RNG restore and AdamW configuration",
+      "no archived experiment imports"
+    ],
+    "source_fixture": "Explicit normalized-world synthetic single-hand and bimanual inputs; no real data read"
+  },
+  "formal_optimizer_updates": 0,
+  "gpu_jobs": 0,
+  "real_checkpoint_cpu_validation": "pending parent/root audit",
+  "full_project_test_suite": "pending parent/root aggregate run",
+  "test_file_sha256": "8165b46075a66efb1a1105ab19dce1e8b60373711025883d5805ab733722fa51",
+  "subsequent_scope_retirement": {
+    "report": "assets/current/obsolete_candidates.json",
+    "shared_training_helpers": "Numerical bodies of gs_render_settings/loss_options/make_renderer/copy_initial/to_device/atomic_json/EpisodeMetrics/GaussianMetrics/metric_tracker/evaluate_loader/train_epoch/checkpoint_config/read_checkpoint/restore_training remain exact; only obsolete CLI/experiment dependencies were retired.",
+    "original_position_predictor": "Definition and parameter/config semantics unchanged; pickle/import tests retained",
+    "full_project_tests": "Pending root aggregate run after data import fix"
+  },
+  "source_line_endings": "LF; current reviewed source identities are in source_manifest.json. Historical producer/source hashes remain unchanged.",
+  "current_acceptance": {
+    "local_suite": {
+      "tests_run": 249,
+      "passed": 222,
+      "skipped": 27,
+      "failures": 0,
+      "errors": 0,
+      "reason": "25 h5py-dependent tests unavailable locally; 2 explicit CUDA backward checks not run"
+    },
+    "server_suite": {
+      "job": 35373,
+      "source_snapshot": "source-005",
+      "source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "tests_run": 249,
+      "passed": 247,
+      "skipped": 2,
+      "skipped_reason": "Two explicit real gsplat CUDA backward tests; this cleanup runs CPU only.",
+      "new_training_updates": 0,
+      "gpu_requested": 0,
+      "preflight_proof": "verification/provenance/package-35373/evaluation-preflight/preflight.json"
+    },
+    "full_source_and_real_e8_cpu_regression_job": 35356,
+    "gpu_reinference_performed": false
+  }
+}

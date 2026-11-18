@@ -1,0 +1,621 @@
+{
+  "status": "Core/data/depth code migrated; CPU contracts pass; real source/data validation delegated to server before deletion",
+  "frozen_base_sha": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+  "frozen_overrides_verified": {
+    "scripts/data_process/processor.py": "caeeb56d1e4e996a2a016610344362d2fa3e67f9b4c311397cf5c7bc8783ed37",
+    "scripts/dataloader/dataset.py": "c934b8f2f3a8747e9cc5e081e6b420800274e4d4ca0267aa76fad2a6d14fe2e3",
+    "scripts/experiments/v4_g5_signed_local/cloth008.py": "1ce322053249a1112b2e3afb1ee0c62974ba3a6b601df21b6829bb1aae77747e"
+  },
+  "files": [
+    {
+      "source": "git:36d304c5f9c82e752362e768048d5ea4636a5a15:scripts/rebuild_dataset/rebuild.py",
+      "target": "scripts/rebuild_dataset/rebuild.py",
+      "sha256": "f6567bebab2520df5ca7d454143633bc4f62fdf9fefa7ee9c94cbb9fc64b0cd9",
+      "operation": "Original v1.3 core functions preserved; only package/script namespace imports and thin depth-only CLI forwarding adapted",
+      "source_sha256": "62f8b1cffc3a07acb5fd5576f426f21f5a2de3eb5add29debef151d5b7b7f2b9"
+    },
+    {
+      "source": "git:36d304c5f9c82e752362e768048d5ea4636a5a15:scripts/rebuild_dataset/validate.py",
+      "target": "scripts/rebuild_dataset/validate.py",
+      "sha256": "3b185b290a852c2198e4eb08879e118163038b7c9af0c22fe0d3e26e90942873",
+      "operation": "Original v1.3 core functions preserved; only package/script namespace imports and thin depth-only CLI forwarding adapted",
+      "source_sha256": "934a88b794b751d4af8314c7ca1dea62cc911717472c7efbcfa9c309802a3625"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\__init__.py",
+      "target": "scripts/dataloader/__init__.py",
+      "sha256": "094c0010ab327d25c3bb019d4d8302ace6167c6bbe68a7ee8b0c28012e5cf4b8",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "0bd3c6fa5f4939d76a814ebc142cc5f8d641df5b8691dd3eeeaaf74826a6cdd8"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\check.py",
+      "target": "scripts/dataloader/check.py",
+      "sha256": "df5dbee269a1702a243188bb5eb46851e53f5e3b9abbff528d06e57ebfd12d1b",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "ceff77b83aa0af4946bf9888a6ed3ebc5221f2bfcc977967bcfb6807f5cf779e"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\collate.py",
+      "target": "scripts/dataloader/collate.py",
+      "sha256": "aa734fe8625d24f5c6bec63fdb16a5c9122181e4064f2c434a5fca481b6ab9cd",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "c45c8d4cec58ef321ba7f673dcea7cf2724635a055f41ecc9685d647a3e09380"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\dataset.py",
+      "target": "scripts/dataloader/dataset.py",
+      "sha256": "620c27a8b707691dc42cf77236ce48ebf21eb21fb96e7e1a92d9487d546fb5ff",
+      "operation": "frozen dataset; only depth helper import redirected from rebuild to separate depth module",
+      "source_sha256": "c934b8f2f3a8747e9cc5e081e6b420800274e4d4ca0267aa76fad2a6d14fe2e3",
+      "pre_lf_sha256": "a496eb7e527bc0ae4054b4e72ac4ca5df7b91af2f6da2bbec0e7053dec968f18"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\geometry.py",
+      "target": "scripts/dataloader/geometry.py",
+      "sha256": "52ef30717790dc1fc35d75a8325dfc59ca939f3c91f54d49c1553722a0997211",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "cdc3553376db0310cb6709af3228bb0bb7f952f0f2d414d118410c09a9daa096"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\hand_policy.py",
+      "target": "scripts/dataloader/hand_policy.py",
+      "sha256": "1eed0a613204ff28d0a3b2b1845bd250e713c2ebdfa3b80c445f4938c41858fd",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "aba051feed2dc089375e04e4259766cb2d37869f0ed71f028df687b654aa42c2"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\loader.py",
+      "target": "scripts/dataloader/loader.py",
+      "sha256": "a356fd78e8e77b45a23a7caf8f1cd5c41a7192e8c46c467f9fccffe5cc3d3013",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "3df11ada001483f4c5978b73d9530a70d265ab102108c61bac400c0f3e9c635c"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\dataloader\\splits.py",
+      "target": "scripts/dataloader/splits.py",
+      "sha256": "3e7118f8a015ab71b6a69033cbf05475dffc8065b2f6c9f7e39532a6a5a4efd4",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "fa5b1d1e4d3f53cbb48196a96984cb65a7f4f61035ecef57072dbe4f43566c0b"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\data_process\\__init__.py",
+      "target": "scripts/data_process/__init__.py",
+      "sha256": "d2996e62790bf3db0a3caefbaf39e1ddc9f4b42f6f0e6c4be2a197ce8fea958e",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "b0a38c022d626943aef588123a26204340ac7364e1b04adbcb2cc23103ff291b"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\data_process\\check.py",
+      "target": "scripts/data_process/check.py",
+      "sha256": "48d6eea2adf893e1e23eaf638f69ff0fd900f8aa84b9007875d197e05e7ab963",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "f6fe6ce5c29c643e5c6c5ad246583e068f6957a1aedb9cc019cbf414d9164baa"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\data_process\\processor.py",
+      "target": "scripts/data_process/processor.py",
+      "sha256": "86ee2430edbe74c0d715470ae04ed4bf5de532f90716a806ab15fe4c6ca6388d",
+      "operation": "byte-exact copy",
+      "pre_lf_sha256": "caeeb56d1e4e996a2a016610344362d2fa3e67f9b4c311397cf5c7bc8783ed37"
+    },
+    {
+      "source": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1\\scripts\\experiments\\v4_g5_signed_local\\cloth008.py",
+      "source_sha256": "1ce322053249a1112b2e3afb1ee0c62974ba3a6b601df21b6829bb1aae77747e",
+      "target": "scripts/training/cloth_data.py",
+      "sha256": "c5639e1fbb40e60fa0325b4e94613e8d6b7e4da114fe140035cb4eae72a2f5e7",
+      "operation": "relocate; import .cloth_protocol; docstring only; math and data protocol unchanged",
+      "pre_lf_sha256": "76470bee66487da2d3fb26b920c0ad7aff65bdc790f5a18b659b5fdde801f339"
+    }
+  ],
+  "protocol": {
+    "scene": "008-pink-cloth",
+    "episode": 0,
+    "horizon": 15,
+    "prediction_interval": 1,
+    "train_frame_range_inclusive_exclusive": [
+      113,
+      268
+    ],
+    "train_starts_inclusive": [
+      113,
+      252
+    ],
+    "train_windows": 140,
+    "val_frame_range_inclusive_exclusive": [
+      268,
+      307
+    ],
+    "val_starts_inclusive": [
+      268,
+      291
+    ],
+    "val_windows": 24,
+    "conditions": "t through t+14 predict t+1 through t+15; nearest nonfuture tactile age <=75000 us",
+    "hand_policy": "008-ep0-reviewed-right-v1",
+    "normalization": {
+      "center": [
+        0.21795742779917135,
+        0.010968994921301998,
+        0.14623293373089752
+      ],
+      "scale": 0.20123094573217368,
+      "source": "training-window initial GS only; exact frozen values; not per-window refit"
+    },
+    "episode_0_metadata_sha256": "e7179d622176bf0e41960699c425003c9bd9d6d7d0b66af486b3b7816cd124e1",
+    "cameras": [
+      "brics-odroid-023_cam0",
+      "brics-odroid-021_cam1",
+      "brics-odroid-009_cam1"
+    ]
+  },
+  "input_layout": {
+    "source_root": "datasets/deform360",
+    "processed": [
+      "processed/008-pink-cloth/episode_N/metadata.json",
+      "processed/008-pink-cloth/episode_N/robot/robot.npy",
+      "processed/008-pink-cloth/episode_N/splatfacto.tar (or splatfacto/splat_FRAME.ply)",
+      "processed/008-pink-cloth/episode_N/cameras.tar (or CAMERA/aligned_timestamps.txt; depth additionally needs rendered_depth.h5 and calibration inputs)"
+    ],
+    "raw": [
+      "raw/008-pink-cloth/brics-odroid_STREAM/brics-odroid_STREAM_TIMESTAMP.npy (headerless float32 N x 16 x 32)",
+      "raw/008-pink-cloth/brics-odroid_STREAM/brics-odroid_STREAM_TIMESTAMP.txt",
+      "raw/008-pink-cloth/brics-odroid_STREAM/median_TIMESTAMP.npy"
+    ],
+    "streams": [
+      "tactilel_left",
+      "tactilel_right",
+      "tactiler_left",
+      "tactiler_right"
+    ],
+    "core_output": [
+      "datasets/touch4d-v1/008-pink-cloth/episode_N/metadata.json",
+      "controller.npz",
+      "tactile.npz",
+      "timestamps.npz",
+      "gs/frame_XXXXXX.npz"
+    ],
+    "depth_output": "datasets/touch4d-depth-v1/008-pink-cloth/episode_N"
+  },
+  "reproduction_commands": [
+    "python -B scripts/rebuild_dataset/rebuild.py --scene 008-pink-cloth --episodes 0,1 --source-root datasets/deform360 --output-root datasets/touch4d-v1",
+    "python -B scripts/rebuild_dataset/validate.py --scene 008-pink-cloth --episodes 0,1 --source-root datasets/deform360 --data-root datasets/touch4d-v1",
+    "python -B -m scripts.rebuild_dataset.depth --mode build --scene 008-pink-cloth --episodes 0,1 --source-root datasets/deform360 --core-root datasets/touch4d-v1 --depth-root datasets/touch4d-depth-v1",
+    "python -B -m scripts.rebuild_dataset.depth --mode validate --scene 008-pink-cloth --episodes 0,1 --source-root datasets/deform360 --core-root datasets/touch4d-v1 --depth-root datasets/touch4d-depth-v1",
+    "python -B -m scripts.training.cloth_data --root datasets/touch4d-v1 --depth-root datasets/touch4d-depth-v1"
+  ],
+  "execution_requirements": [
+    "Run reconstruction on Linux/AMAX, not Windows; original raw files read-only.",
+    "Python >=3.10, numpy, torch; plyfile for full GS conversion, h5py for depth.",
+    "Converter does not download. Tactile raw pairs matched by timestamp overlap; ambiguous baselines fail closed, never choose first silently.",
+    "No new source data, model training, optimizer updates or GPU work was run during migration."
+  ],
+  "known_gaps": [
+    "Current 008 complete original Deform360 raw/processed source set is not present locally, so full source->V1 reproduction is not established by local CPU tests.",
+    "Download automation exists in independent t4d/t4dv0 projects; not copied or adopted without exact production-chain evidence.",
+    "Cross-episode viewer consumes Ep1, but original temporal training protocol intentionally remains Ep0 only.",
+    "A new reconstruction writes new creation/provenance metadata; it must never overwrite the retained original metadata solely to satisfy the frozen E8 metadata hash. The original retained V1 remains the checkpoint-reproduction input."
+  ],
+  "cpu_validation": {
+    "status": "passed_with_optional_hdf5_dependency_skip",
+    "suite": [
+      "scripts.tests.dataloader.test_dataloader.DepthCommandTests",
+      "scripts.tests.dataloader.test_dataloader.DepthValidationTests",
+      "scripts.tests.test_core_data",
+      "scripts.tests.test_core_data_depth"
+    ],
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skips": 14,
+    "command": "python -X utf8 -B -m unittest scripts.tests.dataloader.test_dataloader.DepthCommandTests scripts.tests.dataloader.test_dataloader.DepthValidationTests scripts.tests.test_core_data scripts.tests.test_core_data_depth -v",
+    "real_source_conversion_performed": false,
+    "optional_dependencies_missing_locally": [
+      "plyfile",
+      "h5py"
+    ],
+    "cli_smoke": [
+      "python -B scripts/rebuild_dataset/rebuild.py --help",
+      "python -B scripts/rebuild_dataset/validate.py --help",
+      "python -B -m scripts.rebuild_dataset.depth --help",
+      "python -B -m scripts.training.cloth_data --help"
+    ],
+    "passed": 18,
+    "skip_reason": "13 original DepthValidationTests and 1 real HDF5 reader retained, skipped locally because h5py is absent",
+    "depth_storage_shim_scope": "mm-to-metres, zero-validity mask, camera selection and camera_to_world preservation only; not real HDF5 file validation",
+    "namespace_smoke": [
+      "package import scripts.rebuild_dataset.rebuild and validate",
+      "python -B -m scripts.rebuild_dataset.rebuild --help",
+      "python -B -m scripts.rebuild_dataset.validate --help",
+      "python -B scripts/rebuild_dataset/rebuild.py --help",
+      "python -B scripts/rebuild_dataset/validate.py --help"
+    ],
+    "legacy_depth_cli_thin_dispatch": "passed for all original scene selectors; no core preflight/GS/tactile/plyfile call when forwarding depth-only mode"
+  },
+  "production_converter": {
+    "script_version": "1.3.0",
+    "git_commit": "36d304c5f9c82e752362e768048d5ea4636a5a15",
+    "sha256": {
+      "rebuild.py": "62f8b1cffc3a07acb5fd5576f426f21f5a2de3eb5add29debef151d5b7b7f2b9",
+      "validate.py": "934a88b794b751d4af8314c7ca1dea62cc911717472c7efbcfa9c309802a3625"
+    },
+    "matches_both_existing_v1_metadata": false,
+    "depth_extension_builder_included": false,
+    "namespace_adaptation": {
+      "validate.py": {
+        "production_source_sha256": "934a88b794b751d4af8314c7ca1dea62cc911717472c7efbcfa9c309802a3625",
+        "migrated_sha256": "3b185b290a852c2198e4eb08879e118163038b7c9af0c22fe0d3e26e90942873",
+        "only_package_import_adaptation": false,
+        "canonical_ast_equal": false,
+        "canonical_core_ast_sha256": "8f9124fa786ff124bd7a5678ce0bd43e4ea03660170c89f50fb0812605ba1a0c",
+        "core_ast_equal_after_explicit_cli_adapter_exclusion": true,
+        "excluded_cli_functions": [
+          "main",
+          "validate_depth_main"
+        ],
+        "cli_adapters_ast_sha256": {
+          "validate_depth_main": "630aa4ebfa10c2c3c2cd01bbd30fb1d902c0fc3a8a58bca9480a5578c6705664",
+          "main": "0f4fb183b29998ac9318368d3032d4dbbd1f4fef151a98dc2af21750563af5bd"
+        },
+        "allowed_changes": "Namespace-only imports plus explicit CLI argparse/early depth-only forwarding and lazy public wrappers. Core V1 numerical/data functions unchanged.",
+        "pre_lf_migrated_sha256": "3b185b290a852c2198e4eb08879e118163038b7c9af0c22fe0d3e26e90942873",
+        "original_core_ast_sha256": "8f9124fa786ff124bd7a5678ce0bd43e4ea03660170c89f50fb0812605ba1a0c",
+        "ast_serialization": "touch4d-ast-json-v1-empty-type-params-only"
+      },
+      "rebuild.py": {
+        "production_source_sha256": "62f8b1cffc3a07acb5fd5576f426f21f5a2de3eb5add29debef151d5b7b7f2b9",
+        "migrated_sha256": "f6567bebab2520df5ca7d454143633bc4f62fdf9fefa7ee9c94cbb9fc64b0cd9",
+        "only_package_import_adaptation": false,
+        "canonical_ast_equal": false,
+        "canonical_core_ast_sha256": "607d0c5cd08f81491397d3d5966d3b3ef8bd318830c853a10ca191240ead7fd0",
+        "core_ast_equal_after_explicit_cli_adapter_exclusion": true,
+        "excluded_cli_functions": [
+          "main",
+          "run_depth_only",
+          "_validators"
+        ],
+        "cli_adapters_ast_sha256": {
+          "_validators": "8f38d3eb203fa1b4eddd37716ef89ad8ef8c4eef847cf5ec013bf6c817658bb0",
+          "run_depth_only": "f0c0fb6d05908c6e5bb3a39d63e04d137d97a3c80ec3ccc0d83f27f1cfecfa82",
+          "main": "c1b3066e431a66c445d77669b9a067117445ca0c82d1cccd939f4aad3d591df7"
+        },
+        "allowed_changes": "Namespace-only imports plus explicit CLI argparse/early depth-only forwarding and lazy public wrappers. Core V1 numerical/data functions unchanged.",
+        "pre_lf_migrated_sha256": "f6567bebab2520df5ca7d454143633bc4f62fdf9fefa7ee9c94cbb9fc64b0cd9",
+        "original_core_ast_sha256": "607d0c5cd08f81491397d3d5966d3b3ef8bd318830c853a10ca191240ead7fd0",
+        "ast_serialization": "touch4d-ast-json-v1-empty-type-params-only"
+      }
+    },
+    "production_source_hashes_match_both_existing_v1_metadata": true,
+    "migrated_files_byte_identical_to_original": false,
+    "note": "Original v1.3 production source hashes recovered exactly; migrated files intentionally have new code identity for package imports and thin legacy depth-only CLI forwarding. Original dataset metadata remains unchanged."
+  },
+  "production_protocol": {
+    "source_commit": "3240edf742e8bd84e768ea2153fb57fb21072974",
+    "original_path": "docs/DATASET_PROTOCOL.md",
+    "retained_path": "assets/current/dataset_protocol_source.txt",
+    "sha256": "791e8eae4c21374714b9e8ec0ceb594510bbd2ec1da47b667713ae85d74f09c9",
+    "active_project_path": "docs/DATASET_PROTOCOL.md",
+    "active_project_sha256": "791e8eae4c21374714b9e8ec0ceb594510bbd2ec1da47b667713ae85d74f09c9"
+  },
+  "raw_source_dependency_closure": "assets/current/raw_source_paths.json",
+  "retained_real_metadata": {
+    "depth_ep0.json": {
+      "scene": "008-pink-cloth",
+      "episode": 0,
+      "frames": 357,
+      "schema_version": "touch4d-depth-v1",
+      "script_version": "1.0.0",
+      "sha256": "8e4c6d602e31d31515933a514e0f6655860428adc621425fb1f6889f78f5fe89"
+    },
+    "depth_ep1.json": {
+      "scene": "008-pink-cloth",
+      "episode": 1,
+      "frames": 422,
+      "schema_version": "touch4d-depth-v1",
+      "script_version": "1.0.0",
+      "sha256": "17df951015b4fa2714bef1c49de0b9d7fc3188c1c312e3176e7e954d425be8de"
+    },
+    "v1_ep0.json": {
+      "scene": "008-pink-cloth",
+      "episode": 0,
+      "frames": 357,
+      "schema_version": "touch4d-v1",
+      "script_version": "1.3.0",
+      "sha256": "e7179d622176bf0e41960699c425003c9bd9d6d7d0b66af486b3b7816cd124e1"
+    },
+    "v1_ep1.json": {
+      "scene": "008-pink-cloth",
+      "episode": 1,
+      "frames": 422,
+      "schema_version": "touch4d-v1",
+      "script_version": "1.3.0",
+      "sha256": "7c5079d81d7e9202aca87ad0dfea1ba2b04becde14866b7df16102d491199438"
+    }
+  },
+  "depth_extension": {
+    "schema_version": "touch4d-depth-v1",
+    "script_version": "1.0.0",
+    "target": "scripts/rebuild_dataset/depth.py",
+    "sha256": "3b340c833f5e8c38d731db65a9f237a477f97fbe6b5a3a01c9566a549517d44d",
+    "source_helpers": {
+      "rebuild.py": [
+        "require_h5py",
+        "checked_path",
+        "depth_roots",
+        "read_core_depth_binding",
+        "check_camera_arrays",
+        "read_depth_metadata",
+        "DepthSourceReader",
+        "depth_camera_source",
+        "depth_source_layout",
+        "check_depth_h5",
+        "depth_output_paths",
+        "rebuild_depth_episode",
+        "run_depth_only"
+      ],
+      "validate.py": [
+        "equal",
+        "check_source_ref",
+        "check_depth_sources_schema",
+        "validate_depth_episode",
+        "validate_depth_main"
+      ]
+    },
+    "source_files_sha256": {
+      "rebuild.py": "bff97821ad889c69894bf02e84823ccbbea41acf0fbbb45ac1c55f447c643bd4",
+      "validate.py": "9f6d5211e7eec0b912674523159bde217d5b57d823b0818095f0d2dc753d68c3"
+    },
+    "changes": "Depth helper relocation, local validator calls instead of former module qualifications, and historical addon scene/episode domain separated as DEPTH_SCENES (001/008/051, episodes0..9). Core1.3 reconstruction scene domain unchanged.",
+    "function_ast_parity_after_module_reference_relocation": {
+      "require_h5py": false,
+      "checked_path": true,
+      "depth_roots": true,
+      "read_core_depth_binding": true,
+      "check_camera_arrays": true,
+      "read_depth_metadata": true,
+      "DepthSourceReader": true,
+      "depth_camera_source": true,
+      "depth_source_layout": true,
+      "check_depth_h5": true,
+      "depth_output_paths": true,
+      "rebuild_depth_episode": true,
+      "run_depth_only": true,
+      "equal": true,
+      "check_source_ref": true,
+      "check_depth_sources_schema": true,
+      "validate_depth_episode": true,
+      "validate_depth_main": true
+    },
+    "pre_lf_sha256": "63df29e04b83d0a2646a432b0ffa817f1c27223052b36d34127aaaf583df8414",
+    "depth_scenes": {
+      "001-rope": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "008-pink-cloth": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "051-cube": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "function_ast_audit": {
+      "format": "touch4d-ast-json-v1-empty-type-params-only",
+      "functions": {
+        "require_h5py": {
+          "source_ast_sha256": "e2342903b77098451c19de7453fd69cc9dbf494a04e6fa861d89ac46d4aafc56",
+          "relocated_reference_ast_sha256": "e2342903b77098451c19de7453fd69cc9dbf494a04e6fa861d89ac46d4aafc56",
+          "migrated_ast_sha256": "e8aa40093eebc843e764f44a9005240861cf80d3f8a77333b91158a896f73ed3",
+          "equal_after_documented_relocation": false
+        },
+        "checked_path": {
+          "source_ast_sha256": "d36463eaee0f0dfa4808fad2cc97579f29663511d82037e2cffb450cb38a400a",
+          "relocated_reference_ast_sha256": "d36463eaee0f0dfa4808fad2cc97579f29663511d82037e2cffb450cb38a400a",
+          "migrated_ast_sha256": "d36463eaee0f0dfa4808fad2cc97579f29663511d82037e2cffb450cb38a400a",
+          "equal_after_documented_relocation": true
+        },
+        "depth_roots": {
+          "source_ast_sha256": "2b307a02823d9a01b451620ef16c3a68610eadbdf9bda6304cbfae9307bd0c35",
+          "relocated_reference_ast_sha256": "2b307a02823d9a01b451620ef16c3a68610eadbdf9bda6304cbfae9307bd0c35",
+          "migrated_ast_sha256": "2b307a02823d9a01b451620ef16c3a68610eadbdf9bda6304cbfae9307bd0c35",
+          "equal_after_documented_relocation": true
+        },
+        "read_core_depth_binding": {
+          "source_ast_sha256": "3f91dd2e8a09bbac157270422370b3ffe978538d91f1cf4758428a4fc24d4371",
+          "relocated_reference_ast_sha256": "7f04cc3fcd003f07935dddf039d106168fd25f233cb8b01c21cd7fb88c86f59d",
+          "migrated_ast_sha256": "7f04cc3fcd003f07935dddf039d106168fd25f233cb8b01c21cd7fb88c86f59d",
+          "equal_after_documented_relocation": true
+        },
+        "check_camera_arrays": {
+          "source_ast_sha256": "4741bb13ff05259e24d9ead091d7e7dd6787243eb462f4f8452a9df77fdc20d8",
+          "relocated_reference_ast_sha256": "4741bb13ff05259e24d9ead091d7e7dd6787243eb462f4f8452a9df77fdc20d8",
+          "migrated_ast_sha256": "4741bb13ff05259e24d9ead091d7e7dd6787243eb462f4f8452a9df77fdc20d8",
+          "equal_after_documented_relocation": true
+        },
+        "read_depth_metadata": {
+          "source_ast_sha256": "0ea8473da4b1708a4c2646c2a9348448df2f117beeeb53243649d805bf7c01f2",
+          "relocated_reference_ast_sha256": "0ea8473da4b1708a4c2646c2a9348448df2f117beeeb53243649d805bf7c01f2",
+          "migrated_ast_sha256": "0ea8473da4b1708a4c2646c2a9348448df2f117beeeb53243649d805bf7c01f2",
+          "equal_after_documented_relocation": true
+        },
+        "DepthSourceReader": {
+          "source_ast_sha256": "78637c03ac5f4cf51c12a6a90edee409e3aa66999f9c250d39973ef2f31cfa5a",
+          "relocated_reference_ast_sha256": "78637c03ac5f4cf51c12a6a90edee409e3aa66999f9c250d39973ef2f31cfa5a",
+          "migrated_ast_sha256": "78637c03ac5f4cf51c12a6a90edee409e3aa66999f9c250d39973ef2f31cfa5a",
+          "equal_after_documented_relocation": true
+        },
+        "depth_camera_source": {
+          "source_ast_sha256": "e13cd956558bd7873e2bbaa861e1829b671e99192c7d196da5d4dddd7d72eefa",
+          "relocated_reference_ast_sha256": "e13cd956558bd7873e2bbaa861e1829b671e99192c7d196da5d4dddd7d72eefa",
+          "migrated_ast_sha256": "e13cd956558bd7873e2bbaa861e1829b671e99192c7d196da5d4dddd7d72eefa",
+          "equal_after_documented_relocation": true
+        },
+        "depth_source_layout": {
+          "source_ast_sha256": "3f57719a31081c4e41a004770533eed6bc91737089a52fa675d9ece498902400",
+          "relocated_reference_ast_sha256": "3f57719a31081c4e41a004770533eed6bc91737089a52fa675d9ece498902400",
+          "migrated_ast_sha256": "3f57719a31081c4e41a004770533eed6bc91737089a52fa675d9ece498902400",
+          "equal_after_documented_relocation": true
+        },
+        "check_depth_h5": {
+          "source_ast_sha256": "e5a5408036f7e75ea2f32f8e327088cb284eecd8f487cefb5205fdfc3bcfdcd8",
+          "relocated_reference_ast_sha256": "e5a5408036f7e75ea2f32f8e327088cb284eecd8f487cefb5205fdfc3bcfdcd8",
+          "migrated_ast_sha256": "e5a5408036f7e75ea2f32f8e327088cb284eecd8f487cefb5205fdfc3bcfdcd8",
+          "equal_after_documented_relocation": true
+        },
+        "depth_output_paths": {
+          "source_ast_sha256": "197b234033671d4785df3717416892bb96d5b7fad8dfb28087bdb5b0aaca00be",
+          "relocated_reference_ast_sha256": "9d57e9e05f981e377331093ba8b4eff506fb0f2e4d9a9044208bfd5da90edbc8",
+          "migrated_ast_sha256": "9d57e9e05f981e377331093ba8b4eff506fb0f2e4d9a9044208bfd5da90edbc8",
+          "equal_after_documented_relocation": true
+        },
+        "rebuild_depth_episode": {
+          "source_ast_sha256": "498766b1dc229071fcf209382ab45496c6ab663964708223b705f9e2b6c95650",
+          "relocated_reference_ast_sha256": "3911aa5da8953abc6befae6bab8b2e3962becef19ed44496feb84901d922ae88",
+          "migrated_ast_sha256": "3911aa5da8953abc6befae6bab8b2e3962becef19ed44496feb84901d922ae88",
+          "equal_after_documented_relocation": true
+        },
+        "run_depth_only": {
+          "source_ast_sha256": "9a8c1013c251f8707542e0f8d55b041f542b2ba740a68246298313b36961929b",
+          "relocated_reference_ast_sha256": "41b00d837db661623c3f46c0aba02a5707ecc5780a620286ccdded52b0f87ddc",
+          "migrated_ast_sha256": "41b00d837db661623c3f46c0aba02a5707ecc5780a620286ccdded52b0f87ddc",
+          "equal_after_documented_relocation": true
+        },
+        "equal": {
+          "source_ast_sha256": "9699857f3a6bb0311d3d4442e08fbdec62f58aac487700da7b2081b128235329",
+          "relocated_reference_ast_sha256": "9699857f3a6bb0311d3d4442e08fbdec62f58aac487700da7b2081b128235329",
+          "migrated_ast_sha256": "9699857f3a6bb0311d3d4442e08fbdec62f58aac487700da7b2081b128235329",
+          "equal_after_documented_relocation": true
+        },
+        "check_source_ref": {
+          "source_ast_sha256": "3df9b4928ac0c5084d79f426256a1b86b3ebedcf4f93093b4a5b488f52c57b30",
+          "relocated_reference_ast_sha256": "3df9b4928ac0c5084d79f426256a1b86b3ebedcf4f93093b4a5b488f52c57b30",
+          "migrated_ast_sha256": "3df9b4928ac0c5084d79f426256a1b86b3ebedcf4f93093b4a5b488f52c57b30",
+          "equal_after_documented_relocation": true
+        },
+        "check_depth_sources_schema": {
+          "source_ast_sha256": "1edf2246dac46e0c57689dd1099a9d86e0495564a966f34426172a27b044fa15",
+          "relocated_reference_ast_sha256": "1edf2246dac46e0c57689dd1099a9d86e0495564a966f34426172a27b044fa15",
+          "migrated_ast_sha256": "1edf2246dac46e0c57689dd1099a9d86e0495564a966f34426172a27b044fa15",
+          "equal_after_documented_relocation": true
+        },
+        "validate_depth_episode": {
+          "source_ast_sha256": "6ad44047bf68d2219f131b7845c50d4dcbd379c3204f6f17d32118c8764019be",
+          "relocated_reference_ast_sha256": "7dd9ef92c89ac1ddf8f162e1defd8bdd8dc444d8a3d44d8aa8d8dfa0ec1e6668",
+          "migrated_ast_sha256": "7dd9ef92c89ac1ddf8f162e1defd8bdd8dc444d8a3d44d8aa8d8dfa0ec1e6668",
+          "equal_after_documented_relocation": true
+        },
+        "validate_depth_main": {
+          "source_ast_sha256": "f5c9bfc0028930f43d18a68e83d363974e0fa1680cffd715ca10ad98f786c1b6",
+          "relocated_reference_ast_sha256": "bd97d7408862dcc6a5f2031e53088a1bc3dc76cb3d5cdd0499d3372886184546",
+          "migrated_ast_sha256": "bd97d7408862dcc6a5f2031e53088a1bc3dc76cb3d5cdd0499d3372886184546",
+          "equal_after_documented_relocation": true
+        }
+      },
+      "allowed_additional_delta": {
+        "require_h5py": "Missing dependency message now advises making h5py available; no pip install or environment upgrade instruction"
+      }
+    }
+  },
+  "owned_validation_sources": {
+    "scripts/tests/test_core_data.py": "ebc691de462071a62a77ad15fce7c07660447b85b06425da86aa75f276c5faed",
+    "scripts/tests/test_core_data_depth.py": "1c4a4a856c05d20d212c62930cedde7d42d8c669c94d09946c5c67713f2287c2",
+    "scripts/rebuild_dataset/depth.py": "3b340c833f5e8c38d731db65a9f237a477f97fbe6b5a3a01c9566a549517d44d",
+    "scripts/training/cloth_data.py": "c5639e1fbb40e60fa0325b4e94613e8d6b7e4da114fe140035cb4eae72a2f5e7",
+    "scripts/tests/core_ast_audit.py": "c12b0b868c39a3a74d4f14fa565efb6f774b429c98e3cd8030d8d47d4ca188f7",
+    "scripts/tests/dataloader/test_dataloader.py": "cf075872847dc0749d6d14948c7e1cc8ea5361cff1b42037786352f0f7286c59"
+  },
+  "real_window_migration_audit": {
+    "script": "scripts/tests/core_server_audit.py",
+    "sha256": "3d97d85824050b37f147256ee6ec327c973e07785d7081b835ea0aa5e9d6b132",
+    "status": "Server CPU job35356 source003 completed0:0: full source V1/depth validation PASS and strict E8 raw/prepared/14D outputs/traces exact PASS; namespace/AST follow-up suite pending final server snapshot.",
+    "optimizer_created": false,
+    "new_updates": 0,
+    "gpu_devices": 0,
+    "sample": {
+      "scene": "008-pink-cloth",
+      "episode": 0,
+      "start": 225,
+      "horizon": 15,
+      "delta": 1
+    },
+    "arms": [
+      "f978 source plus exact frozen dataset/processor/cloth008 overrides",
+      "new core source"
+    ],
+    "comparison": "Strict E8 load; exact raw/prepared/input/target hashes; 14D prediction and per-step key trace/AnchorField hashes. CPU-to-CPU relocation check, not a GPU numerical parity or performance reevaluation."
+  },
+  "source_line_endings": "LF; current reviewed source identities are in source_manifest.json. Historical producer/source hashes remain unchanged.",
+  "ast_audit_normalization": {
+    "module": "scripts/tests/core_ast_audit.py",
+    "format": "touch4d-ast-json-v1-empty-type-params-only",
+    "only_ignored_field": "type_params when exactly []",
+    "nonempty_type_params": "reject",
+    "source_location_attributes": "never AST semantic fields; excluded uniformly by ast.iter_fields"
+  },
+  "test_namespace_migration": {
+    "file": "scripts/tests/dataloader/test_dataloader.py",
+    "scope": "DepthValidationTests only; DepthCommandTests still exercises legacy --depth-only CLI dispatch",
+    "relocations": {
+      "rebuild.DepthSourceReader/depth_roots/read_core_depth_binding/depth_output_paths/depth_source_layout/check_depth_h5/rebuild_depth_episode": "depth same helper names",
+      "validate.validate_depth_episode": "depth.validate_depth_episode",
+      "rebuild._validators().validate_depth_episode mock": "depth.validate_depth_episode mock, same validator spy and return value",
+      "rebuild.shutil.rmtree": "depth.shutil.rmtree"
+    },
+    "unchanged": "All original numerical, source-integrity, archive safety, publication rollback and cleanup assertions; core pipeline non-entry patches still target core rebuild/validate. No expectation or tolerance changes.",
+    "assertion_calls_unchanged": 234,
+    "assertion_call_ast_sha256": "1d556f57ea1bfd9dfbd8f20650dfaa62f3932c4d9bb78d9937506e2de3f4b726",
+    "assertion_comparison_source": "git HEAD:scripts/tests/dataloader/test_dataloader.py before this refactor"
+  },
+  "current_acceptance": {
+    "local_suite": {
+      "tests_run": 249,
+      "passed": 222,
+      "skipped": 27,
+      "failures": 0,
+      "errors": 0,
+      "reason": "25 h5py-dependent tests unavailable locally; 2 explicit CUDA backward checks not run"
+    },
+    "server_suite": {
+      "job": 35373,
+      "source_snapshot": "source-005",
+      "source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "tests_run": 249,
+      "passed": 247,
+      "skipped": 2,
+      "skipped_reason": "Two explicit real gsplat CUDA backward tests; this cleanup runs CPU only.",
+      "new_training_updates": 0,
+      "gpu_requested": 0,
+      "preflight_proof": "verification/provenance/package-35373/evaluation-preflight/preflight.json"
+    },
+    "full_source_and_real_e8_cpu_regression_job": 35356,
+    "gpu_reinference_performed": false
+  }
+}

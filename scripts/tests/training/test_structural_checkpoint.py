@@ -11,9 +11,8 @@ import torch
 
 from scripts.data_process import DataProcessor
 from scripts.training.evaluate import load_model
-from scripts.experiments.fixed_window import fixed_fit
 from scripts.training.model import PositionPredictor
-from scripts.tests.training.test_fixed_fit import single_raw
+from scripts.tests.test_core_compatibility import single_raw
 from scripts.training.train import (checkpoint_state, checkpoint_config, restore_training,
                     recover_best_score, publish_checkpoints, resolve_structure)
 
@@ -159,27 +158,6 @@ class StructuralCheckpointTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 recover_best_score(latest, "memory")
 
-    def test_structural_fixed400_retains_better_lowest_cd_and_rejects_mode_switch(self):
-        last = self.state(self.model("anchor_attention"))
-        last["config"].update(protocol="fixed400", fit_diagnostic=True, fit_contract=None)
-        recorded = dict(update=20, rank=[.4, .5, .1], eligible=None, diagnostic_only=True)
-        last["fit"] = dict(completed_updates=20, best_candidate=recorded, manifest=["same exact windows"])
-        best = copy.deepcopy(last)
-        recovered = dict(recorded, update=40, rank=[.2, .3, .05])
-        best["fit"].update(completed_updates=40, best_candidate=recovered)
-        with patch("pathlib.Path.is_file", return_value=True), \
-             patch.object(fixed_fit, "read_checkpoint", return_value=best):
-            self.assertEqual(fixed_fit.recover_fit_best(last, "memory"), recovered)
-        with patch.object(fixed_fit, "atomic_checkpoint") as save:
-            fixed_fit.publish_fit("memory", last, improved=False)
-        self.assertEqual([call.args[0].name for call in save.call_args_list],
-                         ["step_000020.pt", "last.pt"])
-        switched = copy.deepcopy(best)
-        switched["config"]["gs_structure"] = "none"
-        with patch("pathlib.Path.is_file", return_value=True), \
-             patch.object(fixed_fit, "read_checkpoint", return_value=switched):
-            with self.assertRaises(ValueError):
-                fixed_fit.recover_fit_best(last, "memory")
 
 
 if __name__ == "__main__":

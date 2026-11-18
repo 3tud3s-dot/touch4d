@@ -1,0 +1,22 @@
+{
+  "horizon": 15,
+  "delta": 1,
+  "windows": [
+    {"episode": 0, "start": 189},
+    {"episode": 0, "start": 225},
+    {"episode": 0, "start": 241},
+    {"episode": 1, "start": 181},
+    {"episode": 1, "start": 260}
+  ],
+  "data_root": "datasets/touch4d-v1",
+  "depth_root": "datasets/touch4d-depth-v1",
+  "g5_checkpoint": "weights/g5_e8.pt",
+  "soma_checkpoint": "weights/soma_e10.pth",
+  "g5_source_manifest": "provenance/g5_source.sha256",
+  "soma_source": "third_party/soma",
+  "soma_config": "third_party/soma/configs/SoMA/deform360_v0_stage2.py",
+  "soma_package": "baseline/config_a_2cam",
+  "soma_geometry": "baseline/config_a_2cam/pi3/gs/point_cloud/iteration_10000/point_cloud.ply",
+  "gsplat_dir": null,
+  "gsplat_binary_dir": null
+}

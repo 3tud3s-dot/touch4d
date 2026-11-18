@@ -1,0 +1,118 @@
+{
+  "tests_run": 249,
+  "passed": 222,
+  "failures": 0,
+  "errors": 0,
+  "skipped": [
+    {
+      "test": "test_all_three_scenes_future_offsets_units_masks_and_camera_order (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_all_three_scenes_future_offsets_units_masks_and_camera_order)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_batch_check_rejects_nonfinite_depth_bad_mask_and_nonrigid_calibration (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_batch_check_rejects_nonfinite_depth_bad_mask_and_nonrigid_calibration)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_collate_preserves_depth_and_rejects_mixed_or_partial_fields (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_collate_preserves_depth_and_rejects_mixed_or_partial_fields)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_default_camera_selection_uses_common_ordered_subset_and_lazy_reads (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_default_camera_selection_uses_common_ordered_subset_and_lazy_reads)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_depth_samples_are_independent_and_dataset_pickle_has_no_open_h5 (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_depth_samples_are_independent_and_dataset_pickle_has_no_open_h5)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_depth_schema_binding_and_calibration_failures_are_detected (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_depth_schema_binding_and_calibration_failures_are_detected)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_h10_h15_depth_covers_each_future_frame_with_matching_calibration (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_h10_h15_depth_covers_each_future_frame_with_matching_calibration)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_invalid_camera_options_and_missing_extension_fail_explicitly (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_invalid_camera_options_and_missing_extension_fail_explicitly)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_invalid_h5_dtype_shape_and_payload_fail_on_read (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_invalid_h5_dtype_shape_and_payload_fail_on_read)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_loader_and_read_only_cli_forward_depth_options (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_loader_and_read_only_cli_forward_depth_options)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_old_mode_does_not_open_or_require_depth (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_old_mode_does_not_open_or_require_depth)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_camera_tar_rejects_traversal_duplicates_and_links_before_copy (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_camera_tar_rejects_traversal_duplicates_and_links_before_copy)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_camera_tar_stream_preserves_selected_member_bytes_and_hash (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_camera_tar_stream_preserves_selected_member_bytes_and_hash)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_changed_recorded_tar_bytes_fail_even_with_correct_loose_copies (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_changed_recorded_tar_bytes_fail_even_with_correct_loose_copies)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_cleanup_failure_does_not_fail_publication_or_next_default_skip (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_cleanup_failure_does_not_fail_publication_or_next_default_skip)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_default_skip_validates_without_copying_sources_or_creating_output (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_default_skip_validates_without_copying_sources_or_creating_output)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_depth_root_cannot_overlap_core_or_source (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_depth_root_cannot_overlap_core_or_source)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_first_depth_layout_keeps_core_tar_timestamps_with_loose_copies (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_first_depth_layout_keeps_core_tar_timestamps_with_loose_copies)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_full_depth_validation_reads_only_depth_calibration_and_core_binding (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_full_depth_validation_reads_only_depth_calibration_and_core_binding)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_missing_recorded_tar_source_or_member_never_falls_back_to_loose (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_missing_recorded_tar_source_or_member_never_falls_back_to_loose)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_output_and_source_hashes_are_independently_verified (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_output_and_source_hashes_are_independently_verified)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_overwrite_publication_failure_restores_old_directory (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_overwrite_publication_failure_restores_old_directory)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_recorded_tar_depth_validates_and_skips_despite_added_loose_copies (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_recorded_tar_depth_validates_and_skips_despite_added_loose_copies)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_structure_only_still_checks_h5_and_exact_copy_provenance (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_structure_only_still_checks_h5_and_exact_copy_provenance)",
+      "reason": "Optional depth tests require h5py"
+    },
+    {
+      "test": "test_real_hdf5_memory_reader (scripts.tests.test_core_data_depth.CoreDepthTests.test_real_hdf5_memory_reader)",
+      "reason": "h5py absent: real HDF5 I/O remains unverified locally"
+    },
+    {
+      "test": "test_real_gsplat_depth_backward (scripts.tests.training.test_training.TrainingTests.test_real_gsplat_depth_backward)",
+      "reason": "Real gsplat CUDA backward test requires explicit server GPU run"
+    },
+    {
+      "test": "test_real_gsplat_rgb_alpha_geometry_backward (scripts.tests.training.test_training.TrainingTests.test_real_gsplat_rgb_alpha_geometry_backward)",
+      "reason": "Real gsplat CUDA backward test requires explicit server GPU run"
+    }
+  ],
+  "elapsed_seconds": 76.53972005844116,
+  "source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5"
+}

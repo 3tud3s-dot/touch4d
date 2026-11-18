@@ -1,0 +1,406 @@
+{
+  "state": "COMPLETED_BY_USER_POWERSHELL_WITH_DIRTY_WORKTREES_PRESERVED",
+  "checked_at": "2026-11-18T22:28:03.3274431+08:00",
+  "deleted": [
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p2-tool-anchor-b-h15-v1",
+      "logical_bytes": 833854
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p3-p4-debug-audit-v1",
+      "logical_bytes": 1032545
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p3-p4-spatial-dynamics-v1",
+      "logical_bytes": 871214
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-001-h10-e8",
+      "logical_bytes": 949087
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-001-h15-e8",
+      "logical_bytes": 867411
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-action-identifiability-v1",
+      "logical_bytes": 937880
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-action-loss-comparison-v1",
+      "logical_bytes": 971033
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-anchor-interaction-ablation-v1",
+      "logical_bytes": 932030
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-attention-gradient-audit-v1",
+      "logical_bytes": 1017705
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-contact-audit-ep1",
+      "logical_bytes": 903370
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-contact-manual-labeling-001",
+      "logical_bytes": 949903
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-contact-optimization-v1",
+      "logical_bytes": 938561
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-controller-object-signed-motion-audit-v1",
+      "logical_bytes": 1010180
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-d0-oracle-capacity-v1",
+      "logical_bytes": 918120
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g4-frozen-attribution-v1",
+      "logical_bytes": 990723
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g4-global-motion-v1",
+      "logical_bytes": 952714
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-arap-iso-ablation-v1",
+      "logical_bytes": 1441933
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-e16-continuation-v1",
+      "logical_bytes": 1193482
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-h15-delta4-v1",
+      "logical_bytes": 1174141
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-stride4-v1",
+      "logical_bytes": 1202469
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-frozen-attention-routing-v1",
+      "logical_bytes": 1401945
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-frozen-condition-attribution-v1",
+      "logical_bytes": 1498813
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-frozen-cross-attention-audit-v1",
+      "logical_bytes": 1310931
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-frozen-motion-attribution-v1",
+      "logical_bytes": 1242229
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-geo-joint-scratch-v1",
+      "logical_bytes": 1314084
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-geometry-decoder-v1",
+      "logical_bytes": 1270546
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-runner-integration-smoke-v1",
+      "logical_bytes": 1168994
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-signed-local-v1",
+      "logical_bytes": 1433116
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-struct-state-ablation-v1",
+      "logical_bytes": 1422912
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-h15-condition-ablation-v1",
+      "logical_bytes": 917240
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-normal-oracle-motion-field-audit-v1",
+      "logical_bytes": 960205
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-squared-chamfer-v1",
+      "logical_bytes": 947201
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-stage1-smoke",
+      "logical_bytes": 20874170
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\008-episode-action-review-20261118-001",
+      "logical_bytes": 6181902
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\008-pink-cloth-episode0-split.html",
+      "logical_bytes": 13452297
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\contact-audit-ep1-v1",
+      "logical_bytes": 33687731
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\contact-boundaries-001-frozen-v1",
+      "logical_bytes": 2641356
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\contact-manual-labeling-001-v1",
+      "logical_bytes": 464850680
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\p2-condition-identifiability-v1",
+      "logical_bytes": 80828621
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\p2-tool-anchor-b-h15-v1",
+      "logical_bytes": 83783843
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\p3-p4-debug-audit-v1",
+      "logical_bytes": 277876130
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\p3-p4-spatial-dynamics-v1",
+      "logical_bytes": 1699850160
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-008-stage1-gap10-visual-001",
+      "logical_bytes": 14340522
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-008-stage1-stage2-rerun-001",
+      "logical_bytes": 19289
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-g5-008-cross-episode-strong-001",
+      "logical_bytes": 82249391
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-g5-008-h15-compare-001",
+      "logical_bytes": 26399330
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-001-h10-e8-visual-audit-v1",
+      "logical_bytes": 321757277
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-001-h15-best-visual-v1",
+      "logical_bytes": 402735650
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-action-identifiability-v1",
+      "logical_bytes": 80473089
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-action-loss-comparison-v1",
+      "logical_bytes": 99838707
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-anchor-interaction-ablation-v1",
+      "logical_bytes": 1026201696
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-anchor-interaction-ablation-v1-review-package",
+      "logical_bytes": 277541034
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-attention-gradient-audit-v1",
+      "logical_bytes": 63467132
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-contact-optimization-v1",
+      "logical_bytes": 855289902
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-contact-optimization-v1-review-package",
+      "logical_bytes": 256099981
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-controller-object-signed-motion-audit-v1",
+      "logical_bytes": 11804323
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-d0-oracle-capacity-v1",
+      "logical_bytes": 32719731
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g0-g4-g5-h15-best-visual-v1",
+      "logical_bytes": 697464968
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-frozen-attribution-v1",
+      "logical_bytes": 34617918
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-global-motion-v1-integration",
+      "logical_bytes": 12354
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-global-motion-v1-smoke",
+      "logical_bytes": 153802
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-global-motion-v1-training",
+      "logical_bytes": 21269138
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-global-motion-v1-training-protocol",
+      "logical_bytes": 338061
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-arap-iso-ablation-v1",
+      "logical_bytes": 508838
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-cross-necessity-v1",
+      "logical_bytes": 496623
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-008-all-v1",
+      "logical_bytes": 560925550
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-008-v1",
+      "logical_bytes": 823765205
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-e16-continuation-v1",
+      "logical_bytes": 524683
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-geo-h15-visual-v1",
+      "logical_bytes": 182927985
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-h15-delta4-v1",
+      "logical_bytes": 230975
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-soma-001-v1",
+      "logical_bytes": 17152802
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-stride4-v1",
+      "logical_bytes": 143656
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-formal-training-readiness-v1",
+      "logical_bytes": 1383394
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-frozen-attention-routing-v1",
+      "logical_bytes": 1620409317
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-frozen-condition-attribution-v1",
+      "logical_bytes": 1894406742
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-frozen-cross-attention-audit-v1",
+      "logical_bytes": 249866439
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-frozen-motion-attribution-v1",
+      "logical_bytes": 269256646
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-geo-joint-scratch-v1",
+      "logical_bytes": 18408
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-geometry-decoder-v1",
+      "logical_bytes": 23707751
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-geometry-decoder-v1-training",
+      "logical_bytes": 17017608
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-paired-h15-launch-v1",
+      "logical_bytes": 919014
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-runner-integration-smoke-v1",
+      "logical_bytes": 1504234
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-signed-local-v1-implementation",
+      "logical_bytes": 70366
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-signed-local-v1-smoke",
+      "logical_bytes": 28846082
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-struct-state-ablation-v1",
+      "logical_bytes": 1400525
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-h10-single-window-v1",
+      "logical_bytes": 102665114
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-h15-condition-ablation-v1",
+      "logical_bytes": 121953039
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-h15-condition-ablation-v1-review-parts",
+      "logical_bytes": 118996347
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-h15-condition-ablation-v1-review.verification.json",
+      "logical_bytes": 355
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-normal-oracle-motion-field-audit-v1",
+      "logical_bytes": 39731053
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-squared-chamfer-v1",
+      "logical_bytes": 141557150
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d\\audit",
+      "logical_bytes": 5908186999
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d\\visual",
+      "logical_bytes": 2070570546
+    }
+  ],
+  "deleted_count": 93,
+  "reason": "Local recursive deletion was rejected by automatic approval: blocked by policy. Narrowed explicit audit/visual paths were also rejected. No alternate deletion tool was used.",
+  "retained": [
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\g5-local-response-prototype-v1",
+      "reason": "Uncommitted or untracked files; preserved by user-executed script"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p2-condition-identifiability-v1",
+      "reason": "Uncommitted or untracked files; preserved by user-executed script"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-cross-necessity-v1",
+      "reason": "Uncommitted or untracked files; preserved by user-executed script"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1",
+      "reason": "Uncommitted or untracked files; preserved by user-executed script"
+    }
+  ],
+  "git_commits": 0,
+  "server_receipt": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/provenance/cleanup_receipt_server.json",
+  "previous_state": "BLOCKED_BY_AUTOMATIC_APPROVAL",
+  "execution_by": "user",
+  "postcheck": {
+    "source_files_unchanged": 218,
+    "final_html_sha256": "87376114bf45a32de4535ff9ddcfcde397adc5f0d1c10a7e67791fb4ef715d0c"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "schema": "touch4d-current-workflow-v1",
+  "purpose": "One current 008 cloth workflow, preserving the published demo protocol",
+  "model": {
+    "input": "Initial independent GS plus causal recorded gripper and tactile conditions",
+    "horizon": 15,
+    "delta_frames": 1,
+    "parameters": 620511,
+    "updated_attributes": "XYZ; initial 11D appearance and covariance attributes retained",
+    "epochs": 8,
+    "train_windows_per_epoch": 140,
+    "successful_updates": 1120,
+    "seed": 42
+  },
+  "data": {
+    "scene": "008-pink-cloth",
+    "retained_episodes": [
+      0,
+      1
+    ],
+    "train_episode": 0,
+    "train_start_frames_inclusive": [
+      113,
+      252
+    ],
+    "holdout_start_frames_inclusive": [
+      268,
+      291
+    ],
+    "generalization_episode": 1,
+    "generalization_start_frames": [
+      181,
+      260
+    ],
+    "normalization": "Frozen training-derived centre/scale; not refit on evaluation windows",
+    "raw_inputs": "assets/current/raw_source_paths.json",
+    "v1_converter_commit": "36d304c5f9c82e752362e768048d5ea4636a5a15"
+  },
+  "entrypoints": [
+    {
+      "stage": "V1 conversion",
+      "command": "python -B scripts/rebuild_dataset/rebuild.py --scene 008-pink-cloth --episodes 0,1 --source-root <deform360> --output-root <v1>"
+    },
+    {
+      "stage": "V1 full-source validation",
+      "command": "python -B scripts/rebuild_dataset/validate.py --scene 008-pink-cloth --episodes 0,1 --source-root <deform360> --data-root <v1>"
+    },
+    {
+      "stage": "Depth conversion",
+      "command": "python -B -m scripts.rebuild_dataset.depth --mode build --scene 008-pink-cloth --episodes 0,1 --source-root <deform360> --core-root <v1> --depth-root <depth>"
+    },
+    {
+      "stage": "Depth full-source validation",
+      "command": "python -B -m scripts.rebuild_dataset.depth --mode validate --scene 008-pink-cloth --episodes 0,1 --source-root <deform360> --core-root <v1> --depth-root <depth>"
+    },
+    {
+      "stage": "Data and fixed-normalization preflight",
+      "command": "python -B -m scripts.training.cloth_data --root <v1> --depth-root <depth>"
+    },
+    {
+      "stage": "Training",
+      "command": "python -B -m scripts.training.cloth_train --mode formal --root <v1> --depth-root <depth> --output <new-run> --source-id <SHA256-of-new-source-manifest>",
+      "note": "Scheduled single GPU only. Freeze a source-manifest file before training and pass its actual byte SHA256 as --source-id; retain that same file for completed-run evaluation. Fresh independent output; preserved 8x140 protocol. This configuration launches no training."
+    },
+    {
+      "stage": "Frozen E8 evaluation preflight",
+      "command": "python -B -m scripts.training.cloth_evaluate --runtime-root <runtime> --output <new-output> --preflight"
+    },
+    {
+      "stage": "Frozen E8 and SoMA E10 evaluation",
+      "command": "python -B -m scripts.training.cloth_evaluate --runtime-root <runtime> --output <new-output> --gsplat-dir <gsplat-package> --gsplat-binary-dir <audited-extension>",
+      "note": "Scheduled single GPU. Default frozen-demo mode strictly locks historical checkpoint identities."
+    },
+    {
+      "stage": "New completed-run evaluation",
+      "command": "python -B -m scripts.training.cloth_evaluate --runtime-root <runtime> --g5-checkpoint <new-epoch08.pt> --g5-source-manifest <new-source-manifest> --completion <new-completion.json> --model-mode completed-run --output <new-output> --gsplat-dir <gsplat-package> --gsplat-binary-dir <audited-extension>",
+      "note": "Separately verifies new run provenance and complete update ledger. It is not the frozen historical demo."
+    },
+    {
+      "stage": "Presentation data packaging",
+      "command": "python -B -m scripts.visualization.pack_results --evaluation <evaluation-output> --dataset-root <v1> --output <demo_bundle.zip>"
+    },
+    {
+      "stage": "Standalone HTML",
+      "command": "python -B -m scripts.visualization.build_demo --bundle <demo_bundle.zip> --output <comparison.html>"
+    },
+    {
+      "stage": "Core CPU tests",
+      "command": "python -B -m unittest discover -s scripts/tests -t ."
+    }
+  ],
+  "limitations": [
+    "Resimulation and same-cloth cross-episode selected windows, not a full-distribution benchmark",
+    "SoMA and the current model differ in conditioning and training budget",
+    "RGB targets are SH0 GT-GS renders, not raw camera photographs",
+    "Historical metadata identity must not be overwritten by a newly generated metadata file",
+    "Historical E8 is a read-only frozen inference starting point, not an implicit resume target for a relocated training run"
+  ]
+}
