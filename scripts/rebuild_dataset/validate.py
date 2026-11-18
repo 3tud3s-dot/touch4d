@@ -1,18 +1,11 @@
 #!/usr/bin/env python3
 """Read-only validator for a reconstructed, audited Deform360 scene.
 
-Dependencies: Python >= 3.10, numpy; plyfile for full core source verification,
-h5py for --depth-only (which never reads core tactile/controller/GS arrays).
+Dependencies: Python >= 3.10, numpy; plyfile for full source verification.
 Examples (not executed automatically):
   python scripts/rebuild_dataset/validate.py --scene 001-rope
   python scripts/rebuild_dataset/validate.py --scene 008-pink-cloth
-  python scripts/rebuild_dataset/validate.py --scene 051-cube
   python scripts/rebuild_dataset/validate.py --scene 008-pink-cloth --episodes 0 --structure-only
-  python scripts/rebuild_dataset/validate.py --scene 001-rope --depth-only
-
---depth-only checks the separate touch4d-depth-v1 sibling of --data-root;
-override it with --depth-root. It binds to core metadata/timestamps without
-recomputing or hashing tactile, controller or GS files.
 
 By default verify every output hash, schema, timeline, mask, controller geometry,
 and every source hash; recompute tactile and GS fields from original files.
@@ -36,23 +29,23 @@ import numpy as np
 
 sys.dont_write_bytecode = True
 if __package__:
-    from . import rebuild as _rebuild
-    from .rebuild import (GS_FIELDS, HAND_ORDER, POINT_IDS, PROJECT, SCENE_BINDINGS, SCENE_MEDIANS,
-                          SUPPORTED_SCRIPT_VERSIONS, STREAMS, VERSION, SourceReader,
-                          binding_evidence, discover_episodes, episode_layout,
-                          find_raw_sources, observation_timeline,
-                          controller_arrays, gs_arrays, hand_slots, hash_file,
-                          load_actions, check_actions, load_median, load_raw, load_robot, parameters, parse_episodes,
-                          require, safe_relative, select_raw, tactile_arrays, timestamp_array)
-else:
-    import rebuild as _rebuild
-    from rebuild import (GS_FIELDS, HAND_ORDER, POINT_IDS, PROJECT, SCENE_BINDINGS, SCENE_MEDIANS,
+    from .rebuild import (GS_FIELDS, HAND_ORDER, POINT_IDS, PROJECT, SCENE_BINDINGS,
                          SUPPORTED_SCRIPT_VERSIONS, STREAMS, VERSION, SourceReader,
                          binding_evidence, discover_episodes, episode_layout,
                          find_raw_sources, observation_timeline,
                          controller_arrays, gs_arrays, hand_slots, hash_file,
                          load_actions, check_actions, load_median, load_raw, load_robot, parameters, parse_episodes,
-                         require, safe_relative, select_raw, tactile_arrays, timestamp_array)
+                         require, safe_relative, select_raw,
+                         tactile_arrays, timestamp_array)
+else:
+    from rebuild import (GS_FIELDS, HAND_ORDER, POINT_IDS, PROJECT, SCENE_BINDINGS,
+                         SUPPORTED_SCRIPT_VERSIONS, STREAMS, VERSION, SourceReader,
+                         binding_evidence, discover_episodes, episode_layout,
+                         find_raw_sources, observation_timeline,
+                         controller_arrays, gs_arrays, hand_slots, hash_file,
+                         load_actions, check_actions, load_median, load_raw, load_robot, parameters, parse_episodes,
+                         require, safe_relative, select_raw,
+                         tactile_arrays, timestamp_array)
 
 
 def read_npz(path, required_keys):
@@ -124,9 +117,6 @@ def check_sources_schema(refs, scene, episode, frames, prefix, cameras, camera):
             pattern = r"median_\d+\.npy" if kind == "median" else (
                 re.escape(sensor) + (r"_\d+\.npy" if kind == "raw" else r"_\d+\.txt"))
             require(re.fullmatch(pattern, path.name) is not None, "Unexpected tactile source name")
-            if kind == "median" and scene in SCENE_MEDIANS:
-                require(path.name == SCENE_MEDIANS[scene][STREAMS[channel]],
-                        f"Wrong reviewed baseline for {scene}/{sensor}")
         require(Path(refs[f"tactile_{channel}_raw"]["path"]).stem ==
                 Path(refs[f"tactile_{channel}_timestamps"]["path"]).stem, "Raw/timestamp stems differ")
     for f in range(frames):
@@ -217,7 +207,7 @@ def validate_episode(directory, *, expected_scene=None, source_root=None, verify
         # Further pixel validity and response values require the original raw/median.
 
     controller_keys = {"controller_points", "controller_valid_mask", "T_worlds", "openings", "opening_clipped"}
-    has_actions = metadata["script_version"] in ("1.3.0", "1.4.0")
+    has_actions = metadata["script_version"] == "1.3.0"
     if has_actions:
         controller_keys.add("actions")
     controller = read_npz(directory / "controller.npz", controller_keys)
@@ -326,109 +316,23 @@ def validate_episode(directory, *, expected_scene=None, source_root=None, verify
             "source_files_verified": len(refs) if verify_sources else 0}
 
 
-def check_depth_sources_schema(metadata):
-    scene, episode, cameras = metadata["scene"], metadata["episode"], metadata["cameras"]
-    prefix = safe_relative(metadata["source_episode_directory"])
-    match = re.fullmatch(re.escape(f"processed/{scene}/episode_") + r"(\d+)", prefix)
-    require(match is not None and int(match[1]) == episode, "Wrong depth source episode directory")
-    refs = metadata["source_files"]
-    expected = {"episode_metadata", "extrinsics", *(f"camera_timestamps_{c}" for c in cameras),
-                *(f"depth_{c}" for c in cameras)}
-    require(isinstance(refs, dict) and set(refs) == expected, "Incomplete or unexpected depth source manifest")
-    for ref in refs.values():
-        check_source_ref(ref)
-    for key, path in (("episode_metadata", f"{prefix}/metadata.json"),
-                      ("extrinsics", f"raw/{scene}/calibration_refined/extrinsics.npy")):
-        require((refs[key]["path"], refs[key]["member"]) == (path, None), f"Wrong depth source: {key}")
-    for camera in cameras:
-        for key, filename in ((f"camera_timestamps_{camera}", "aligned_timestamps.txt"),
-                              (f"depth_{camera}", "rendered_depth.h5")):
-            relative = f"{camera}/{filename}"
-            ref = refs[key]
-            require((ref["path"], ref["member"]) in
-                    ((f"{prefix}/{relative}", None), (f"{prefix}/cameras.tar", relative)),
-                    f"Wrong depth source path: {key}")
-        require(refs[f"depth_{camera}"]["sha256"] == metadata["output_files"][f"{camera}/rendered_depth.h5"],
-                f"Depth must preserve exact source H5 bytes: {camera}")
-
-
-def validate_depth_episode(directory, *, core_directory, expected_scene=None, expected_episode=None,
-                           source_root=None, verify_sources=True):
-    """Validate only the isolated extension and its small binding to existing core data."""
-    _rebuild.require_h5py()
-    directory, core_directory = map(_rebuild.checked_path, (directory, core_directory))
-    require(not directory.is_relative_to(core_directory) and not core_directory.is_relative_to(directory),
-            "Depth and core episode directories must be disjoint")
-    metadata = _rebuild.read_depth_metadata(directory, core_directory,
-                    expected_scene=expected_scene, expected_episode=expected_episode)
-    check_depth_sources_schema(metadata)
-    scene, episode, cameras, frames = (metadata[k] for k in ("scene", "episode", "cameras", "frames"))
-    for relative, digest in metadata["output_files"].items():
-        path = directory / relative
-        require(hash_file(path) == digest, f"Depth output SHA-256 mismatch: {relative}")
-        if relative.endswith(".h5"):
-            require(path.stat().st_size == metadata["source_files"][f"depth_{Path(relative).parent.name}"]["bytes"],
-                    f"Depth source/output byte count mismatch: {relative}")
-            _rebuild.check_depth_h5(path, frames, metadata["height"], metadata["width"])
-    if verify_sources:
-        source_root = _rebuild.checked_path(source_root or metadata["source_root"])
-        core, obs, binding = _rebuild.read_core_depth_binding(core_directory, expected_scene=scene,
-                                                             expected_episode=episode)
-        require(binding == metadata["core_binding"], "Core changed during depth verification")
-        require(core["source_episode_directory"] == metadata["source_episode_directory"], "Core source directory changed")
-        with _rebuild.DepthSourceReader(source_root) as reader:
-            plan = _rebuild.depth_source_layout(reader, core, obs, source_refs=metadata["source_files"])
-            require((plan["height"], plan["width"]) == (metadata["height"], metadata["width"]),
-                    "Depth dimensions differ from source metadata")
-            with np.load(directory / "camera_parameters.npz", allow_pickle=False) as params:
-                equal(params["intrinsics"], plan["intrinsics"], "Depth source intrinsics")
-                equal(params["camera_to_world"], plan["camera_to_world"], "Depth source camera_to_world")
-            for camera in cameras:
-                reader.stream(f"depth_{camera}", *plan["depth_refs"][camera])
-            require(reader.refs == metadata["source_files"], "Depth source hashes/paths changed")
-    # A core overwrite during validation must not leave a stale extension marked valid.
-    _, _, binding = _rebuild.read_core_depth_binding(core_directory, expected_scene=scene, expected_episode=episode)
-    require(binding == metadata["core_binding"], "Core changed during depth validation")
-    return {"scene": scene, "episode": episode, "status": "PASS", "frames": frames,
-            "cameras": len(cameras), "height": metadata["height"], "width": metadata["width"],
-            "depth_only": True, "source_verification": "full" if verify_sources else "skipped (structure-only)",
-            "source_files_verified": len(metadata["source_files"]) if verify_sources else 0}
-
-
 def validate_depth_main(args):
-    core_root = _rebuild.checked_path(args.data_root)
-    depth_root = _rebuild.checked_path(args.depth_root or (core_root.parent / _rebuild.DEPTH_VERSION))
-    require(not depth_root.is_relative_to(core_root) and not core_root.is_relative_to(depth_root),
-            "Depth root must be disjoint from core root")
-    available = discover_episodes(core_root / args.scene)
-    episodes = args.episodes if args.episodes is not None else list(available)
-    require(set(episodes) <= set(available), "Missing core episodes for depth validation")
-    failed = False
-    for episode in episodes:
-        target = depth_root / args.scene / f"episode_{episode}"
-        try:
-            require(not target.with_name(f".episode_{episode}.incomplete").exists(), "Unpublished depth partial exists")
-            result = validate_depth_episode(target, core_directory=available[episode], expected_scene=args.scene,
-                                           expected_episode=episode, source_root=args.source_root,
-                                           verify_sources=not args.structure_only)
-            backup = target.with_name(f".episode_{episode}.previous")
-            if backup.exists() or backup.is_symlink():
-                print(f"WARNING: published depth validated; retained backup needs inspection: {backup}",
-                      file=sys.stderr, flush=True)
-        except (ValueError, OSError, KeyError, TypeError, ImportError, tarfile.TarError) as exc:
-            failed = True
-            result = {"scene": args.scene, "episode": episode, "depth_only": True, "status": "FAIL", "error": str(exc)}
-        print(json.dumps(result, ensure_ascii=False, allow_nan=False), flush=True)
-    return int(failed)
+    """Legacy CLI dispatch; depth validation lives in the separate extension."""
+    if __package__:
+        from .depth import validate_depth_main as dispatch
+    else:
+        from depth import validate_depth_main as dispatch
+    return dispatch(args)
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--scene", required=True, choices=sorted(SCENE_BINDINGS), help="Full audited scene name")
+    requested = sys.argv[1:] if argv is None else argv
+    scene_choices = sorted(set(SCENE_BINDINGS) | ({"051-cube"} if "--depth-only" in requested else set()))
+    parser.add_argument("--scene", required=True, choices=scene_choices, help="Full audited scene name")
     parser.add_argument("--data-root", type=Path, default=PROJECT / "datasets/touch4d-v1")
-    parser.add_argument("--depth-only", action="store_true", help="Validate only the isolated depth extension")
-    parser.add_argument("--depth-root", type=Path,
-                        help="Depth extension root; default: data-root sibling touch4d-depth-v1")
+    parser.add_argument("--depth-only", action="store_true", help="Forward to independent depth validation")
+    parser.add_argument("--depth-root", type=Path, help="Separate depth-extension root")
     parser.add_argument("--source-root", type=Path, help="Override the original data root stored in metadata")
     parser.add_argument("--episodes", type=parse_episodes, metavar="0-9 or 0,5",
                         help="Optional subset; default: all scene episodes")

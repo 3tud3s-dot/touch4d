@@ -1,0 +1,3858 @@
+{
+  "schema_version": "touch4d-v1",
+  "script_version": "1.3.0",
+  "scene": "008-pink-cloth",
+  "episode": 1,
+  "frames": 422,
+  "created_utc": "2026-10-22T06:59:48.597210+00:00",
+  "observation_camera": "brics-odroid-001_cam0",
+  "observation_cameras": [
+    "brics-odroid-001_cam0",
+    "brics-odroid-001_cam1",
+    "brics-odroid-002_cam0",
+    "brics-odroid-006_cam0",
+    "brics-odroid-007_cam0",
+    "brics-odroid-007_cam1",
+    "brics-odroid-008_cam0",
+    "brics-odroid-008_cam1",
+    "brics-odroid-009_cam0",
+    "brics-odroid-009_cam1",
+    "brics-odroid-010_cam0",
+    "brics-odroid-010_cam1",
+    "brics-odroid-011_cam0",
+    "brics-odroid-012_cam0",
+    "brics-odroid-012_cam1",
+    "brics-odroid-013_cam0",
+    "brics-odroid-013_cam1",
+    "brics-odroid-014_cam1",
+    "brics-odroid-015_cam0",
+    "brics-odroid-015_cam1",
+    "brics-odroid-016_cam0",
+    "brics-odroid-017_cam0",
+    "brics-odroid-017_cam1",
+    "brics-odroid-019_cam1",
+    "brics-odroid-021_cam0",
+    "brics-odroid-021_cam1",
+    "brics-odroid-022_cam0",
+    "brics-odroid-022_cam1",
+    "brics-odroid-023_cam0",
+    "brics-odroid-024_cam0",
+    "brics-odroid-024_cam1",
+    "brics-odroid-025_cam0",
+    "brics-odroid-025_cam1",
+    "brics-odroid-027_cam0",
+    "brics-odroid-027_cam1",
+    "brics-odroid-028_cam0"
+  ],
+  "source_episode_directory": "processed/008-pink-cloth/episode_1",
+  "source_root": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360",
+  "stream_order": [
+    "tactilel_left",
+    "tactilel_right",
+    "tactiler_left",
+    "tactiler_right"
+  ],
+  "hand_order": [
+    "left",
+    "right"
+  ],
+  "robot_slot_hands": [
+    "right"
+  ],
+  "physical_hand_to_robot_slot": {
+    "left": null,
+    "right": 0
+  },
+  "binding_basis": {
+    "camera": "brics-odroid-001_cam0",
+    "method": "episode-specific RGB and projected robot geometry review; no inferred identity",
+    "review_frames": [
+      113,
+      238,
+      364
+    ],
+    "review_record": "008 representative-frame review"
+  },
+  "controller_point_ids": [
+    "left_r00_c00",
+    "left_r00_c08",
+    "left_r00_c16",
+    "left_r00_c23",
+    "left_r00_c31",
+    "left_r06_c00",
+    "left_r06_c08",
+    "left_r06_c16",
+    "left_r06_c23",
+    "left_r06_c31",
+    "left_r11_c00",
+    "left_r11_c08",
+    "left_r11_c16",
+    "left_r11_c23",
+    "left_r11_c31",
+    "right_r00_c00",
+    "right_r00_c08",
+    "right_r00_c16",
+    "right_r00_c23",
+    "right_r00_c31",
+    "right_r06_c00",
+    "right_r06_c08",
+    "right_r06_c16",
+    "right_r06_c23",
+    "right_r06_c31",
+    "right_r11_c00",
+    "right_r11_c08",
+    "right_r11_c16",
+    "right_r11_c23",
+    "right_r11_c31"
+  ],
+  "source_robot_shapes": {
+    "T_worlds": [
+      422,
+      4,
+      4
+    ],
+    "openings": [
+      422
+    ],
+    "actions": [
+      422,
+      5,
+      3
+    ]
+  },
+  "source_robot_dtypes": {
+    "T_worlds": "float64",
+    "openings": "float64",
+    "actions": "float64"
+  },
+  "parameters": {
+    "max_age_us": 75000,
+    "max_age_status": "provisional",
+    "rigid_atol": 1e-06,
+    "rigid_rtol": 0,
+    "opening_clip_m": [
+      0.04,
+      0.112
+    ],
+    "surface_offset_m": 0.007,
+    "crop_rows": [
+      0,
+      12
+    ],
+    "invalid_columns": [
+      31
+    ],
+    "row_flip": false,
+    "tactile_formula": "maximum(raw - median, 0)",
+    "tactile_subtraction_dtype": "float64",
+    "tactile_output_dtype": "float32",
+    "contact_threshold": null,
+    "duplicate_timestamps": "last raw record wins",
+    "sampling": "latest past, no interpolation",
+    "gs_coordinate_transform": "identity; native world metres",
+    "quaternion_order": "WXYZ",
+    "sh_rest_order": "f_rest_0..44 unchanged; channel/basis layout pending",
+    "gs_correspondence": "no fixed cross-frame identity"
+  },
+  "source_files": {
+    "episode_metadata": {
+      "path": "processed/008-pink-cloth/episode_1/metadata.json",
+      "member": null,
+      "bytes": 4017,
+      "sha256": "3c74ebbe42ccd8668b6174befb96d62dc1afd755fb8b515a3458b2630b311078"
+    },
+    "camera_timestamps_brics-odroid-001_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-001_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-001_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-001_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-002_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-002_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-006_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-006_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-007_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-007_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-007_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-007_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-008_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-008_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-008_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-008_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-009_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-009_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-009_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-009_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-010_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-010_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-010_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-010_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-011_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-011_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-012_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-012_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-012_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-012_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-013_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-013_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-013_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-013_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-014_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-014_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-015_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-015_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-015_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-015_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-016_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-016_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-017_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-017_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-017_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-017_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-019_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-019_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-021_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-021_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-021_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-021_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-022_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-022_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-022_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-022_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-023_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-023_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-024_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-024_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-024_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-024_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-025_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-025_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-025_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-025_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-027_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-027_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-027_cam1": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-027_cam1/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "camera_timestamps_brics-odroid-028_cam0": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-028_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "observation": {
+      "path": "processed/008-pink-cloth/episode_1/cameras.tar",
+      "member": "brics-odroid-001_cam0/aligned_timestamps.txt",
+      "bytes": 15192,
+      "sha256": "13839c3b4fd1f88f73b844ffde16d74d61f351de9cc0e4de903e95d87c8f6821"
+    },
+    "robot": {
+      "path": "processed/008-pink-cloth/episode_1/robot/robot.npy",
+      "member": null,
+      "bytes": 108549,
+      "sha256": "90d474574fc4827db8009be4e788cda0f08c9b7e0b1eb42148ca04bd041293fa"
+    },
+    "tactile_0_raw": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.npy",
+      "member": null,
+      "bytes": 851968,
+      "sha256": "20093d9fecbdc62b64d3696e7e136c02864e1f83d5d00addf0165862def95a5f"
+    },
+    "tactile_0_timestamps": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.txt",
+      "member": null,
+      "bytes": 16640,
+      "sha256": "b4a1fbf7692363248db1774a0c5132f71ce11e2271b5fa35f0af7d84a071acee"
+    },
+    "tactile_0_median": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactilel_left/median_1766008210055310.npy",
+      "member": null,
+      "bytes": 4224,
+      "sha256": "20f789615141be563ce3986d5a8fa34e1711609f7b6550b85153d13ce22b506b"
+    },
+    "tactile_1_raw": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008323854084.npy",
+      "member": null,
+      "bytes": 851968,
+      "sha256": "7cefb3942a46c890a4d63a9d682dafe90df4992174d3680ac9e0db9ebf73449e"
+    },
+    "tactile_1_timestamps": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008323854084.txt",
+      "member": null,
+      "bytes": 16640,
+      "sha256": "70811e73833ca33c468685429735b95f46cffa530300fefe1819cb12da20fe1b"
+    },
+    "tactile_1_median": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactilel_right/median_1766008210670051.npy",
+      "member": null,
+      "bytes": 4224,
+      "sha256": "3c525444a21c353a22b597e5eb7eb902009ca949e81859c64c53056881f7e497"
+    },
+    "tactile_2_raw": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008323830589.npy",
+      "member": null,
+      "bytes": 851968,
+      "sha256": "97181fc0d9da03396fc17487eca7b62dd5119c3b2f0b047319c155e93efddf9c"
+    },
+    "tactile_2_timestamps": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008323830589.txt",
+      "member": null,
+      "bytes": 16640,
+      "sha256": "c7f26b5a6ca454984d5bc6637b930c08ab0868d8a78505817bbaba036600d0a9"
+    },
+    "tactile_2_median": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactiler_left/median_1766008207995074.npy",
+      "member": null,
+      "bytes": 4224,
+      "sha256": "f4eb9fbf190f8a6e9eaf2bdfe95c9384313e71f65d6a031793fbe7a57a96c165"
+    },
+    "tactile_3_raw": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008323828972.npy",
+      "member": null,
+      "bytes": 851968,
+      "sha256": "b42350403d04059553eb7ace6672c9bc6335a3e696b99956f99652444f1582d6"
+    },
+    "tactile_3_timestamps": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008323828972.txt",
+      "member": null,
+      "bytes": 16640,
+      "sha256": "a3e577fe51c0e68503ac13a40b139d56e2eeda2d64f523ac6b74a6f0cebe48e3"
+    },
+    "tactile_3_median": {
+      "path": "raw/008-pink-cloth/brics-odroid_tactiler_right/median_1766008209026018.npy",
+      "member": null,
+      "bytes": 4224,
+      "sha256": "21b0de56c24f34703cea7c52741e7a2df969b99a1445f1446e87fd4da046f630"
+    },
+    "gs_0": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_0.ply",
+      "bytes": 5770568,
+      "sha256": "8f3d815b8ca7f71ccb2cd9251b5425bc70de90919fc678a42552ddeb88895740"
+    },
+    "gs_1": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_1.ply",
+      "bytes": 4067304,
+      "sha256": "a03572970b555fb35f06e6d14a7b018d6e349f39c0510b77b852cc1b23376b38"
+    },
+    "gs_2": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_2.ply",
+      "bytes": 4044984,
+      "sha256": "6a94c33b59b44c9cfd00fb522628df05fd00246e2cb9cd8c12c5b227576ff218"
+    },
+    "gs_3": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_3.ply",
+      "bytes": 4157824,
+      "sha256": "9422518ec74b4d944dccb4505563d0b9f8d7b43bcf912a5549b50913685d832b"
+    },
+    "gs_4": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_4.ply",
+      "bytes": 4113928,
+      "sha256": "8a67867bb9b4b2c6855753b2742d90ec26e5251deb73773eeab52fb91d0944ba"
+    },
+    "gs_5": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_5.ply",
+      "bytes": 4041760,
+      "sha256": "0fde56b131e49a1f59e1362be96d2c6c1811e52fcf631c4ca9ff4d302c90d21c"
+    },
+    "gs_6": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_6.ply",
+      "bytes": 4125832,
+      "sha256": "d4b2957aedfbd4710050db3614aca944d0c8bfd18290bd88ed69cd98439f0d6b"
+    },
+    "gs_7": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_7.ply",
+      "bytes": 4144928,
+      "sha256": "98b0488e9a0572af040bc78d0aa83d49043b046dcf557dca6e18c381359ec8b2"
+    },
+    "gs_8": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_8.ply",
+      "bytes": 4073256,
+      "sha256": "ed92a1b1e11b08492d438fedb0f25eecd0b689848ffe12ef80e003d69383ab10"
+    },
+    "gs_9": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_9.ply",
+      "bytes": 4113680,
+      "sha256": "b63d46ee89d97239121377a67c544b22b5f6a333834348b6069e092f59be4374"
+    },
+    "gs_10": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_10.ply",
+      "bytes": 4136496,
+      "sha256": "069dd47e6a99ec3cfbaff3b785fab3cc868b05f2964c07a6f076510e2e984f4d"
+    },
+    "gs_11": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_11.ply",
+      "bytes": 4106736,
+      "sha256": "8151de4ec1d99a4ea35fe5839120f2623d5e894033a0f0186d8ff71dd5211471"
+    },
+    "gs_12": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_12.ply",
+      "bytes": 4179152,
+      "sha256": "8fa4779e4bfa28444fe6b11d64b96688dce02dbcb263f46d7255e295563092cb"
+    },
+    "gs_13": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_13.ply",
+      "bytes": 4241648,
+      "sha256": "722dd38ee6bba2ef19d19652a219ff30620b98ed53af1702579bb6e4d034f834"
+    },
+    "gs_14": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_14.ply",
+      "bytes": 4165016,
+      "sha256": "3356ea218cfb5008a8b12fe1496f406ec8f776eb6716addc6ebd2f28123220f0"
+    },
+    "gs_15": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_15.ply",
+      "bytes": 4223048,
+      "sha256": "7aa69b89cf3a06ecbe5bb6795f0bf38077ca02588e2670a41281f50db83ae767"
+    },
+    "gs_16": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_16.ply",
+      "bytes": 4185600,
+      "sha256": "272cc1f052086f7d197b1a81ec464f5f0839e4e37d4731cb4e9d6b0153f7e7b3"
+    },
+    "gs_17": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_17.ply",
+      "bytes": 4118640,
+      "sha256": "2dfc9c2dfee944ebb72d4fae63e2c20fa0f642d01a8634e3a48b23053ba926fd"
+    },
+    "gs_18": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_18.ply",
+      "bytes": 4053416,
+      "sha256": "f02be3bacc093d50384d0d335b75860f26bda6d85338e055df0eabfa3fcfeb30"
+    },
+    "gs_19": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_19.ply",
+      "bytes": 4082680,
+      "sha256": "96ebcbe127841ea01ce8805f8017c6804acc8913fff39716d56cbbf6fbeeba2c"
+    },
+    "gs_20": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_20.ply",
+      "bytes": 4113680,
+      "sha256": "667ae85c883dfb935575320d3d23da82677b64c40ce58d2e70866a8aa445dab4"
+    },
+    "gs_21": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_21.ply",
+      "bytes": 4113928,
+      "sha256": "ade6b9ac8a57446dbce714be953b6fcae20f456ac4ce14abe60cc81b951ba89b"
+    },
+    "gs_22": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_22.ply",
+      "bytes": 4046472,
+      "sha256": "d59d0ccfa4f1e87d892eb72e9bcee165070c94ae4aebf15e5666f1d6fe701144"
+    },
+    "gs_23": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_23.ply",
+      "bytes": 4115416,
+      "sha256": "afd6b88b3d2593ef3eef1a0e5b1ecffc5b1df8504cec98bde7f6b54c3a0419d8"
+    },
+    "gs_24": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_24.ply",
+      "bytes": 4166504,
+      "sha256": "5e76390bf48704856595c3d0ffc6378a9ee6d30557d85681cdc2171feec5bdae"
+    },
+    "gs_25": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_25.ply",
+      "bytes": 4139720,
+      "sha256": "347a4315177235b5af455ab5c8f8d2ec2cfa3727be8bc9b4573b52f9846b029b"
+    },
+    "gs_26": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_26.ply",
+      "bytes": 4143192,
+      "sha256": "90287c734e754e7559e1f752ab9bcf474429347c0f8cc4b50af2c9763dd505d5"
+    },
+    "gs_27": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_27.ply",
+      "bytes": 4105992,
+      "sha256": "436040976f6b6291a21cda21fce1d38d1ffad6f0ba5b10dd257ac9bd0fae75dd"
+    },
+    "gs_28": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_28.ply",
+      "bytes": 4027624,
+      "sha256": "fc9cb87d3b50be83f4d38ba6dd82639f320d5e25467f6bf95454be1872c244a9"
+    },
+    "gs_29": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_29.ply",
+      "bytes": 4040272,
+      "sha256": "a081acbd21e84f5b1ece37cbef4476586122f0eef85114cb0ee37d647fc7eb3a"
+    },
+    "gs_30": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_30.ply",
+      "bytes": 3974800,
+      "sha256": "dcaec2731e5b21c0968a678c5d4153fb3881286c39d0114f6a5142b144b60b17"
+    },
+    "gs_31": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_31.ply",
+      "bytes": 4030352,
+      "sha256": "d9038019010c1a1bcfc1c1ed7b7b6661fc73a03a2989796e142162341564523e"
+    },
+    "gs_32": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_32.ply",
+      "bytes": 4013984,
+      "sha256": "d25c9e0d2c79155352a1be11506b9bb63d6901578432d23ec2a5f0b5f776b4c1"
+    },
+    "gs_33": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_33.ply",
+      "bytes": 4031344,
+      "sha256": "53af96b14e8be213dccde79569955480656d291379ecdc5e33a6c6ddc9382860"
+    },
+    "gs_34": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_34.ply",
+      "bytes": 3949008,
+      "sha256": "49aaa6eee856457b711ec1e3b9da0b1278a2df922a1ec4cb5085f34c33dd5736"
+    },
+    "gs_35": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_35.ply",
+      "bytes": 3983232,
+      "sha256": "0b7c602d7ac5b061ac6e24d99666d77cf171652ff11dc13f87246a4af6e52736"
+    },
+    "gs_36": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_36.ply",
+      "bytes": 4030848,
+      "sha256": "b67a809bdedfa37e00f44c7b32b03700a9a0f26240923cd8d3a6ca8aac31e0bf"
+    },
+    "gs_37": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_37.ply",
+      "bytes": 3932888,
+      "sha256": "87f720365aea84ccc9fa906facd35967fde61423c6658bf3e30f09831e6ceafb"
+    },
+    "gs_38": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_38.ply",
+      "bytes": 3968352,
+      "sha256": "76ebaf1e8e7f87c6d2d6d406483b1443a0d21b36ef7deae40f6962643598ea94"
+    },
+    "gs_39": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_39.ply",
+      "bytes": 3797480,
+      "sha256": "57503227ef0d6d258035c7d8c5f6a3175c0a3430888bb44da852f708dba7ed73"
+    },
+    "gs_40": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_40.ply",
+      "bytes": 3841872,
+      "sha256": "2387cbe7864bfc47544c3f1cff29123b8059033891a73d65e7789960501a5109"
+    },
+    "gs_41": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_41.ply",
+      "bytes": 3786072,
+      "sha256": "d909c71d3580f5a2ae4815c9c5fb2048af58509b8f5adba4ccd90d8857dd2425"
+    },
+    "gs_42": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_42.ply",
+      "bytes": 3778384,
+      "sha256": "7309c37122bb983fa16e9aaed0606a54c9b35dbaeec071a2794012bac7f3defa"
+    },
+    "gs_43": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_43.ply",
+      "bytes": 3778384,
+      "sha256": "022950bf257a67c1b6ca5f688804509e2f01ab2b5352f1c71fd320bc667bc13b"
+    },
+    "gs_44": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_44.ply",
+      "bytes": 3807648,
+      "sha256": "3f99c9e4c15782e350bb0bd206a1e437e4af5e7736377aa1dbf61dc51c63d1fd"
+    },
+    "gs_45": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_45.ply",
+      "bytes": 3752840,
+      "sha256": "d463868a540fdde19a88beb4d9ecbe4567a67b27d6fa8a4891f235f604aa1ac9"
+    },
+    "gs_46": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_46.ply",
+      "bytes": 3662816,
+      "sha256": "ec5bf1266847a1e1f7928284c510377a7b7bc8989f095d2bf6a1bc8087caea8d"
+    },
+    "gs_47": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_47.ply",
+      "bytes": 3631568,
+      "sha256": "8957d603daa2470d48f2e754174d2e114796140563408936f20bb0a4bc1f9754"
+    },
+    "gs_48": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_48.ply",
+      "bytes": 3558408,
+      "sha256": "717ae5bde401cd33f8ecb5c48cbc8bdacce6ed697d76edaace6e03f27b5f20ef"
+    },
+    "gs_49": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_49.ply",
+      "bytes": 3556920,
+      "sha256": "7f57a5bde44d9ca5242620fd1d52042e6afe743b5a2db9d5cdb0a22fe32ea3c3"
+    },
+    "gs_50": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_50.ply",
+      "bytes": 3530632,
+      "sha256": "fea3a42c4ca5f4e8d34e619557a407b6cd957dc5a2735ef1a314bcb3a5a90415"
+    },
+    "gs_51": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_51.ply",
+      "bytes": 3535840,
+      "sha256": "6c24d4273908bd74977c8ac292724b1a3e71329251421b31a4d79a6c36571029"
+    },
+    "gs_52": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_52.ply",
+      "bytes": 3535592,
+      "sha256": "fdd3cc0bbf807dba9e3bb31a4623bef81d8487c2a56823db7759ec9183a0bbef"
+    },
+    "gs_53": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_53.ply",
+      "bytes": 3529144,
+      "sha256": "7bc18f25b4959236644c5c473a77d88865d6b5bd736467b95e25145262c15347"
+    },
+    "gs_54": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_54.ply",
+      "bytes": 3508312,
+      "sha256": "8801e28797606b1971d71b24fa640efa7bbe5d3d073c318ff7669ec7ac2b0d0b"
+    },
+    "gs_55": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_55.ply",
+      "bytes": 3443336,
+      "sha256": "cbd5dcca67015bfd8f3bca872c774857e044af193e87926f116547ff2dee51d0"
+    },
+    "gs_56": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_56.ply",
+      "bytes": 3488224,
+      "sha256": "2b39e4452a7192fc14af015f48023285ff677cf43e818a85840c14304de7b155"
+    },
+    "gs_57": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_57.ply",
+      "bytes": 3460944,
+      "sha256": "cd61940a566ef02f91015de4f78c0d27cf910da9f8c3d99abad3e0c06371dc06"
+    },
+    "gs_58": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_58.ply",
+      "bytes": 3425728,
+      "sha256": "8665b561ecd623979045c3c03dad80aeaecfad347ab3ac73f04a039d2e3eef6d"
+    },
+    "gs_59": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_59.ply",
+      "bytes": 3372408,
+      "sha256": "09ad02e7d0cd46e830f737cf94dae91e154a7abab590d65176fc9d727053fdd8"
+    },
+    "gs_60": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_60.ply",
+      "bytes": 3484504,
+      "sha256": "8098415069bfae41281227c037a81e1c0da741b9b9553030cb7a235e2face05f"
+    },
+    "gs_61": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_61.ply",
+      "bytes": 3426720,
+      "sha256": "6a67e57a6354843dd8af7030d044eea8415007603c004d386f234d12351c0af3"
+    },
+    "gs_62": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_62.ply",
+      "bytes": 3405640,
+      "sha256": "ee9149fbdb537405b8b0a45c7de3c29a81dfd86df1098b890a7a96527166665c"
+    },
+    "gs_63": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_63.ply",
+      "bytes": 3387288,
+      "sha256": "315c9c09daa7af66143da1ab02a63abc1db3f7cefa2f689eb92ff66a1c81421e"
+    },
+    "gs_64": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_64.ply",
+      "bytes": 3317848,
+      "sha256": "09f7cb6453c59fa145269edfd1875166fcd21508da743a0587264302d93363b7"
+    },
+    "gs_65": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_65.ply",
+      "bytes": 3336696,
+      "sha256": "a238a072ce15db895de603ffa4570296bbf60829abdca9de8d58e96478dbdc4c"
+    },
+    "gs_66": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_66.ply",
+      "bytes": 3309168,
+      "sha256": "e5aac891009df2e0acf361f5c2a8921d954a55389f8c6087e66d4dbef1dcc652"
+    },
+    "gs_67": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_67.ply",
+      "bytes": 3303960,
+      "sha256": "9aa8eb8f306e2096acad61c43b9a9089ca6e1e19e8cd9c0d185d3c368c3d10c9"
+    },
+    "gs_68": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_68.ply",
+      "bytes": 3353312,
+      "sha256": "e4bd0fc8c230e7239f051711a8b7b094a155cef9006b427ea55e4fbbbaffffb7"
+    },
+    "gs_69": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_69.ply",
+      "bytes": 3280152,
+      "sha256": "bf67b07dd40bfefc4455def77dca7a38e252f7013434597c31cdf5cd84c508bc"
+    },
+    "gs_70": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_70.ply",
+      "bytes": 3277424,
+      "sha256": "8975fc24ec0bdadeabcd50b16d678638b8ee14bf0d5c3647b4fadd6745056ac4"
+    },
+    "gs_71": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_71.ply",
+      "bytes": 3319088,
+      "sha256": "3910eb4f39c333d6aec9078af1e742d1405535858ca19187339fbe6ea04ccb7c"
+    },
+    "gs_72": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_72.ply",
+      "bytes": 3299992,
+      "sha256": "337288989d685569b5f31d16a18c5f8d6a8051d3c72c64fd59becf1898871803"
+    },
+    "gs_73": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_73.ply",
+      "bytes": 3315368,
+      "sha256": "abf0a92a72fefde239bafac45a0332337b7c9b459bc4d62c86ed2dbd5c69fde1"
+    },
+    "gs_74": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_74.ply",
+      "bytes": 3238488,
+      "sha256": "c88e60301a74a145315c79eeec58a02d94cd2f3eb311615bf86c692bb94bb372"
+    },
+    "gs_75": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_75.ply",
+      "bytes": 3221624,
+      "sha256": "609d693753a4c492e7be6a7cd27c3ca6aaec3219940a81f27dd3f190d5477a44"
+    },
+    "gs_76": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_76.ply",
+      "bytes": 3184672,
+      "sha256": "fc9979e7d52f7f54287786b11be783dbd155f46e428bc56acf56ff81bc9a0de2"
+    },
+    "gs_77": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_77.ply",
+      "bytes": 3216416,
+      "sha256": "1a7bdbeed9d392fb6e2d4a75abe7e3d04256d590c3d923e824218d8204a2d80e"
+    },
+    "gs_78": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_78.ply",
+      "bytes": 3221624,
+      "sha256": "9f6a07efacb2f218ad8904df923d2bd830301c71977a5987090266d91ac5e150"
+    },
+    "gs_79": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_79.ply",
+      "bytes": 3197320,
+      "sha256": "c0605bde095ed190e11fb6c420445600ca36bf7b5837b10f061726b57664dd61"
+    },
+    "gs_80": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_80.ply",
+      "bytes": 3174256,
+      "sha256": "7973e70470520ae08c555e1af69c1ec4b3cc3103aace815d06a23660b84e10ed"
+    },
+    "gs_81": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_81.ply",
+      "bytes": 3229064,
+      "sha256": "a983775607cd586f77c62f8d2763586219c3e9b935cf70a93db0c6923198da1e"
+    },
+    "gs_82": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_82.ply",
+      "bytes": 3208480,
+      "sha256": "c7f88960c7d0e0bbce01424080b675b1b28fc9260fd4961e8dfd299533927a5f"
+    },
+    "gs_83": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_83.ply",
+      "bytes": 3168552,
+      "sha256": "fcade6f1f7f6248169e50619a7bc6af899eaa38c07c38ad15dd66cbe85ec31f1"
+    },
+    "gs_84": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_84.ply",
+      "bytes": 3242704,
+      "sha256": "f18ffbda90b1cfef1ea7e1f71e70b04f5066de1dfdbc9e83968a383352a5ce43"
+    },
+    "gs_85": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_85.ply",
+      "bytes": 3206744,
+      "sha256": "2f390878274b5ec96cdf98c764cf5ce8bde7bc3e76c76aec5045b875e113e1b4"
+    },
+    "gs_86": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_86.ply",
+      "bytes": 3094896,
+      "sha256": "6be8847f9262e4eb5e12092e9e26af5d17df49b8f39837fef05148c7b423ed21"
+    },
+    "gs_87": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_87.ply",
+      "bytes": 3089440,
+      "sha256": "5eced4d831c66f5e1b8351fb3317d6063dfd4451070e2e64f017aa4652e8f4f0"
+    },
+    "gs_88": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_88.ply",
+      "bytes": 3116968,
+      "sha256": "77959b4c6e1da022c34ef91d776d30e01a2eb8fb5d88da809b6289d8dac28f2e"
+    },
+    "gs_89": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_89.ply",
+      "bytes": 3035624,
+      "sha256": "e2f49fbbb8279b956c7d525ffa39fd22e23bdeb49bdb2d5f04ab51e8d18859f3"
+    },
+    "gs_90": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_90.ply",
+      "bytes": 3101096,
+      "sha256": "70620484bd912ce94f4029fad7693f41e8f82b0ac191edc8ad89a0d27a78f378"
+    },
+    "gs_91": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_91.ply",
+      "bytes": 3038848,
+      "sha256": "73f9aee7328469d4a760ea87b19ec772021b215caccd19e1d262286e97bce950"
+    },
+    "gs_92": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_92.ply",
+      "bytes": 3046288,
+      "sha256": "e4f9a4db2cc13b9b00b06c156f388dd7e055619cebc6039820115fd2d20018b5"
+    },
+    "gs_93": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_93.ply",
+      "bytes": 3060920,
+      "sha256": "eda797999c7f6da8a7822bfc5d0de2ee31360893218351e405e76ccfd1fcf440"
+    },
+    "gs_94": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_94.ply",
+      "bytes": 3046784,
+      "sha256": "348b23edc083769a53ea375bc947bcabb35812446e23005729dec633bf69b814"
+    },
+    "gs_95": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_95.ply",
+      "bytes": 3023224,
+      "sha256": "49b10a51a3f4eb2f8bdc37e45b6005e3aa1669baedc7464e701d7297911d0c9c"
+    },
+    "gs_96": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_96.ply",
+      "bytes": 3139784,
+      "sha256": "252109a19f642a6d1d990568701aa16ebbf72de9b2e698030a2eb9be92f28fea"
+    },
+    "gs_97": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_97.ply",
+      "bytes": 3080760,
+      "sha256": "c6df0dc425bf4be96691e7d47d4e77129bdcc22c604ed7f467445505e2db0811"
+    },
+    "gs_98": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_98.ply",
+      "bytes": 3175000,
+      "sha256": "6ece2f419e25b071044c47dcd1a0cd9b2d1e596d3a1ac61517d328dd04561feb"
+    },
+    "gs_99": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_99.ply",
+      "bytes": 3155656,
+      "sha256": "e1531af1f19651e97103d4e725bcb7a16acdba09c6be33be0887010cc69289b2"
+    },
+    "gs_100": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_100.ply",
+      "bytes": 3094400,
+      "sha256": "3889e6bec4c53082ee60bce0c78ac2ae568411c9973686ff33558779e68bb900"
+    },
+    "gs_101": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_101.ply",
+      "bytes": 3046536,
+      "sha256": "d3a9d2f4c0366560f6715aeb87a5db89ee8aa576b5dea49be21e05bae1286fd4"
+    },
+    "gs_102": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_102.ply",
+      "bytes": 3063400,
+      "sha256": "256bdd198d243c71101c53c01b357e7e4825862b726882c184efdb8dea1d1962"
+    },
+    "gs_103": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_103.ply",
+      "bytes": 3057696,
+      "sha256": "3fe9487338e46c652859a76b3b7640489a093be8f45b5b27cd79f9725a7b3dc6"
+    },
+    "gs_104": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_104.ply",
+      "bytes": 3036368,
+      "sha256": "7e5e8d2a4917317484a6c0e051e7ae940d2afbb701b53a4d0a27ec3a0d86183b"
+    },
+    "gs_105": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_105.ply",
+      "bytes": 3099112,
+      "sha256": "b54bae729ddd1b1e6c34a75f185be085d5c331f9ddab90eb9705cd2667f75b23"
+    },
+    "gs_106": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_106.ply",
+      "bytes": 3086216,
+      "sha256": "e703ea9c00e204ef0dd286acb8b70373518bff18190ba3d387d98f8318d4379b"
+    },
+    "gs_107": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_107.ply",
+      "bytes": 3070840,
+      "sha256": "7c7bb7dbd8732c74be6d1aa9540229dcb642d20dfcf817d7cf31ffc1bcf60e8d"
+    },
+    "gs_108": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_108.ply",
+      "bytes": 3174256,
+      "sha256": "ac75a4433bd91f938a766196a7df8d44a22820377953c968e2fd1fecd0a8bb0e"
+    },
+    "gs_109": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_109.ply",
+      "bytes": 3136560,
+      "sha256": "18ea1d161ac15313ab2ca76436f4add01b6cf6f43740c992f9cfb5dbedddc8f3"
+    },
+    "gs_110": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_110.ply",
+      "bytes": 3047776,
+      "sha256": "82ff1a8fa380bc8c36a35119b9982358d8bcf8d8c5dd0f7a85329694eac7e31c"
+    },
+    "gs_111": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_111.ply",
+      "bytes": 3088200,
+      "sha256": "959d56008b61292fa9c230b7ab402ec21259f167e236f07263bf5bd9f567dfa7"
+    },
+    "gs_112": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_112.ply",
+      "bytes": 3072328,
+      "sha256": "dc2c56349e34f504326d166b55280b7b5020d28c2d2db1e5853ba55e70dde10b"
+    },
+    "gs_113": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_113.ply",
+      "bytes": 3087952,
+      "sha256": "b32414973d0ffe01ccce26704487b9a59a6ebd8927cabc2087c4eb260bd71474"
+    },
+    "gs_114": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_114.ply",
+      "bytes": 3023472,
+      "sha256": "52acef54bce94937843c0257a19f60444b15363779da9cd193d19951fc7fb2f8"
+    },
+    "gs_115": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_115.ply",
+      "bytes": 3013552,
+      "sha256": "43518c13ee2ca05486c80a613901c9b6faf9b38f31e42094010611c63202de98"
+    },
+    "gs_116": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_116.ply",
+      "bytes": 2962712,
+      "sha256": "0d633745de19662a4f5e4ae304de2f1a95cc8542c4dd610adfeafdf912ef9dd8"
+    },
+    "gs_117": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_117.ply",
+      "bytes": 3079272,
+      "sha256": "6e4d96ca5053d370a1819c1a240191a83203b890486072eba2c830b4e444433c"
+    },
+    "gs_118": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_118.ply",
+      "bytes": 3040832,
+      "sha256": "84d0a7b2e2ab9c36f2a68ee5e1efa0a8f8499970b74aa47609027c712ca19328"
+    },
+    "gs_119": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_119.ply",
+      "bytes": 3033888,
+      "sha256": "65528114bff13a5995c9ce271bafc0c510ce8e235c129a4148c0282556a42fd9"
+    },
+    "gs_120": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_120.ply",
+      "bytes": 3073816,
+      "sha256": "9ce047011e9111f4116e8a269327c39c65be12ffc48cd7758f03ad46b9d778bd"
+    },
+    "gs_121": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_121.ply",
+      "bytes": 3070096,
+      "sha256": "346890f139d6dbeff0cba320dfa04018569390027b4b601ead1ac29e024b8466"
+    },
+    "gs_122": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_122.ply",
+      "bytes": 2997432,
+      "sha256": "eb742e8d9eabf9a6c993013b0b323c7bd1dcb5a0944610f876d4256cc9fedfe4"
+    },
+    "gs_123": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_123.ply",
+      "bytes": 3016032,
+      "sha256": "2a7825a820ed30dcaa1b92f7698b9ad5d50852f5c2400b553d4a776f25d6b41d"
+    },
+    "gs_124": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_124.ply",
+      "bytes": 3087456,
+      "sha256": "a72346bd6b856630c37c6c1ec28037799b7319b2800695e150ef512e7fe08c5c"
+    },
+    "gs_125": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_125.ply",
+      "bytes": 3051496,
+      "sha256": "118e3086ec3be5fe94e64c2334e1e3a72196ba120c73db2ea7e0070bdb2503ea"
+    },
+    "gs_126": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_126.ply",
+      "bytes": 3107792,
+      "sha256": "e8d6a5c42776471e07489b83ce8483230ca9dc686a667c96de2979f7a1103810"
+    },
+    "gs_127": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_127.ply",
+      "bytes": 3096632,
+      "sha256": "57a6090f075293068b50ebaea4579e138a356fd07e6b4d7c7bb8a0744a26f92a"
+    },
+    "gs_128": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_128.ply",
+      "bytes": 3056208,
+      "sha256": "fd0509ec18c7a428b685aed9162190d05de655d20e873332e3812113c3840ff3"
+    },
+    "gs_129": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_129.ply",
+      "bytes": 3120936,
+      "sha256": "e5d6d81cc3ca13defecec25f79ca4ebba499d7855b5430e3f84a2b2e0f13d60b"
+    },
+    "gs_130": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_130.ply",
+      "bytes": 3067864,
+      "sha256": "3b9d18be87bdc6669c2e020900caa08b7dbce3568fbe8efb67e8121f11f76439"
+    },
+    "gs_131": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_131.ply",
+      "bytes": 3092168,
+      "sha256": "18321b635105dba7744f7864e53b227457177432552a25b6f1a62f9858448926"
+    },
+    "gs_132": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_132.ply",
+      "bytes": 3181696,
+      "sha256": "64c121219235aa69219307c90cacc7fc2d564a3d4a2cd23d44737d6abd49dad0"
+    },
+    "gs_133": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_133.ply",
+      "bytes": 3107048,
+      "sha256": "1c1ab11c8a60dffc4957e17fe30507250deed196afbf3a8d2eec0b2119888b7e"
+    },
+    "gs_134": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_134.ply",
+      "bytes": 3114984,
+      "sha256": "addb7940c6de8e859eeccbe6899e894171c69d5826093abc7add2c43b810b00a"
+    },
+    "gs_135": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_135.ply",
+      "bytes": 3071832,
+      "sha256": "f77d35ffc514dc6e5bed7936ccb63ea3de20401c535bb124f9c54d8dc7281375"
+    },
+    "gs_136": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_136.ply",
+      "bytes": 3122176,
+      "sha256": "60a055d0e1259fc5c22baf8f9c0d6b916413b02b99a37b832a62c20eb1d36afb"
+    },
+    "gs_137": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_137.ply",
+      "bytes": 3127880,
+      "sha256": "3edc97b2a14f8e6ceb0ceb30bf89cedb08e9d28ecaabcd348801a298853b1539"
+    },
+    "gs_138": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_138.ply",
+      "bytes": 3139288,
+      "sha256": "4b0cd9a2be6fe1ba02379dfea2455de2e128876b19485267468f570a866d9b70"
+    },
+    "gs_139": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_139.ply",
+      "bytes": 3107544,
+      "sha256": "069218c5359e7b711b6f5fcb0719b0ad6e82f55a1306a3cfb4af29ff0887d7c2"
+    },
+    "gs_140": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_140.ply",
+      "bytes": 3151936,
+      "sha256": "fbcd32aadd53e7af537a1156ef84f471b8c9ac48b114166ac249fb22ca839879"
+    },
+    "gs_141": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_141.ply",
+      "bytes": 3086464,
+      "sha256": "31ae608a0a08bf4026edb6f26f6464509f2c5a08467d50e8c9aac8fb0bbbdc6a"
+    },
+    "gs_142": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_142.ply",
+      "bytes": 3104568,
+      "sha256": "c541f46b6686e81c4c70811ef6e2599e4797f486a1ef82cab703bea137b41721"
+    },
+    "gs_143": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_143.ply",
+      "bytes": 3121432,
+      "sha256": "4b4f27948bd68a381d00b7a4e940c6a634d3e0503538e0e74770726ddee50bca"
+    },
+    "gs_144": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_144.ply",
+      "bytes": 3177232,
+      "sha256": "ab048237c6b4591ee7ce8c95ba5ca0c617daaa7408fb49412cfad9a56b4114d3"
+    },
+    "gs_145": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_145.ply",
+      "bytes": 3199552,
+      "sha256": "ddd4ad8f1287d330f53696bd5f9a57212bb7156268d3401daf9f87d060024e96"
+    },
+    "gs_146": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_146.ply",
+      "bytes": 3134080,
+      "sha256": "8a6d19053ae44e4275672ebfa2d9c81b6359c678159e7eb0a1197553f5b9d1be"
+    },
+    "gs_147": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_147.ply",
+      "bytes": 3125152,
+      "sha256": "ef530d6c76981f13ab0e59249e405c5bffcd3f659a022ed7a40300cb6c2f74c5"
+    },
+    "gs_148": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_148.ply",
+      "bytes": 3153424,
+      "sha256": "50fbc78e59eea61a78b199e8d53eb0980da3fc8c4341e53f3a54d054cc5b416b"
+    },
+    "gs_149": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_149.ply",
+      "bytes": 3177232,
+      "sha256": "247f9a7b5913bc17f164e12f64841cae474c78858fe5bf9d34cd5bae6ab14079"
+    },
+    "gs_150": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_150.ply",
+      "bytes": 3191120,
+      "sha256": "2d67d1811fb462514d3cb96fe32a86e495d9839e7ae880f06dabdc1c38e21b73"
+    },
+    "gs_151": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_151.ply",
+      "bytes": 3202032,
+      "sha256": "48e4d97928e024c6df18e2c5709790d3a653f3934584ee4c7b0ecd99868de90e"
+    },
+    "gs_152": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_152.ply",
+      "bytes": 3120936,
+      "sha256": "fcd1c1ebdfc14a7bbd685614b60c67b8a34430c5e3456a6ad248784444e8a665"
+    },
+    "gs_153": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_153.ply",
+      "bytes": 3186904,
+      "sha256": "f852b496036d476c769662ab3be8bcfe92a9d3b2ad43fcee4717186cbad1743e"
+    },
+    "gs_154": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_154.ply",
+      "bytes": 3151440,
+      "sha256": "c1221d8c4d1799a774d74ce7cb1c181db73c575fb48bcf864549f6cedbf5f071"
+    },
+    "gs_155": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_155.ply",
+      "bytes": 3213688,
+      "sha256": "18f57a6dbc8645e540b5703e815357d6722bc8a263a861661633e9e33c58a9c5"
+    },
+    "gs_156": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_156.ply",
+      "bytes": 3227328,
+      "sha256": "eb86f3682b09732b3741015dc492bcc5e23b45303d2adc583ef7ec7e0e76c278"
+    },
+    "gs_157": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_157.ply",
+      "bytes": 3155656,
+      "sha256": "1152a20ccb7ed46f1ab388b5f6f0bc591aa63fa20b54f2c0473b533bf2090efc"
+    },
+    "gs_158": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_158.ply",
+      "bytes": 3156648,
+      "sha256": "b2bd6dfd0c2010a6a427c88769eb5af23716c8168ca7be3152d81c9af3a00fb3"
+    },
+    "gs_159": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_159.ply",
+      "bytes": 3159128,
+      "sha256": "02e8b323c9f9102146d99634a8eabc3e0a4b503dc220d980fe58455a87dfeb63"
+    },
+    "gs_160": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_160.ply",
+      "bytes": 3154416,
+      "sha256": "d18a241bec662e7d2395f6e9cbb212957a86569e79817d8544fa5d1f0f6b1b24"
+    },
+    "gs_161": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_161.ply",
+      "bytes": 3193848,
+      "sha256": "02381e3761e5dd4009ce6bfd0df88a4efceac333b6fe7d9038b7fb05acae5fdb"
+    },
+    "gs_162": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_162.ply",
+      "bytes": 3159376,
+      "sha256": "0d4f3e9f1a3e8fdd6670280536354baacf0eeff2925f02507b110bb8c15966a4"
+    },
+    "gs_163": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_163.ply",
+      "bytes": 3104320,
+      "sha256": "71bc3175b718ed69f471bc01baffcb993fffcded64f94a7ccedc02a50010c1f7"
+    },
+    "gs_164": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_164.ply",
+      "bytes": 3146480,
+      "sha256": "edb3c4059c0370dab3fdcae8fdde025ae6d6af151950db5d04a6083f62b2be24"
+    },
+    "gs_165": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_165.ply",
+      "bytes": 3073816,
+      "sha256": "325326c0fb5d7d84497bd4755002243fd1834db1d9e99548cb44afb9b4374cfd"
+    },
+    "gs_166": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_166.ply",
+      "bytes": 3082992,
+      "sha256": "d72fd6ce9184fdab9a6e07a24c0e7a76b82a00dd33b7db71c337f215ef7277f0"
+    },
+    "gs_167": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_167.ply",
+      "bytes": 3123416,
+      "sha256": "8cd6343a14fa918f8ecdaefb772c705cdd76f313e4f12836fbdbb12e01ed1c03"
+    },
+    "gs_168": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_168.ply",
+      "bytes": 3115976,
+      "sha256": "73c90f4b95f694202408e7e231b986492552966595da8236196dd7f8a770e4bd"
+    },
+    "gs_169": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_169.ply",
+      "bytes": 3168056,
+      "sha256": "2440d8dd4cde73b7de876d5983f0e92970b11fa5699b23cfa32b567da591aacb"
+    },
+    "gs_170": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_170.ply",
+      "bytes": 3146976,
+      "sha256": "2c459e988cd20217667996a45925e065851f190f399343e11b957e19dc22ae9a"
+    },
+    "gs_171": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_171.ply",
+      "bytes": 3070344,
+      "sha256": "433984024ddb5ae84ce7ceb7173ac63267caff4cbf5ff16790e9e61bfef4748e"
+    },
+    "gs_172": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_172.ply",
+      "bytes": 3159872,
+      "sha256": "9930e5424880054f156f7d292f4e2bc140db63c6ec068a6e2277e54ade5ba74f"
+    },
+    "gs_173": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_173.ply",
+      "bytes": 3066624,
+      "sha256": "7860ad58a3aad0bbe8987a327e9770b11960850f402ebfc16d910a91c0994d8c"
+    },
+    "gs_174": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_174.ply",
+      "bytes": 3007848,
+      "sha256": "9e43339376562a235f6b029a7d70a66bf0001c60755de24538f7c7cc72127697"
+    },
+    "gs_175": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_175.ply",
+      "bytes": 3080016,
+      "sha256": "0dea4547622126d52ff2a8e36bb2420e628a73d890557e1b7b10e8e6714b79fc"
+    },
+    "gs_176": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_176.ply",
+      "bytes": 3049016,
+      "sha256": "75cc6594d03b21540df5f13f6860ad0eed475046198d764fa001b74a022e81e6"
+    },
+    "gs_177": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_177.ply",
+      "bytes": 3138048,
+      "sha256": "1ea907cca84249e4e0aee121ea8ff69537b718f4c2c2212640bcd47daa4a3dd1"
+    },
+    "gs_178": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_178.ply",
+      "bytes": 3070344,
+      "sha256": "ab3060d85acedccdfd5c8720d084c404c30194d8570615e1f5afddb157be1064"
+    },
+    "gs_179": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_179.ply",
+      "bytes": 3134328,
+      "sha256": "163ab61d20084e6d15caf8ce8defc27f75b54e553f04f1a09a1a30dea5869707"
+    },
+    "gs_180": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_180.ply",
+      "bytes": 3213440,
+      "sha256": "43ddbedded373bda390396b2cfc3220999e850f1e5766ba84c7036eae3eb5103"
+    },
+    "gs_181": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_181.ply",
+      "bytes": 3165576,
+      "sha256": "bbc162a47d08b079fbb73389efbeed7f737fe35da236235734c2cc9570170f20"
+    },
+    "gs_182": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_182.ply",
+      "bytes": 3095640,
+      "sha256": "9c52f4909bbe2de04192b3532dc79c4f792e5b9ef536d6a1ca26b08a7aa27b70"
+    },
+    "gs_183": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_183.ply",
+      "bytes": 3106552,
+      "sha256": "4e1d85c932b110e40f7099bf6d21c0730620a2026b3b5f4a55ed6156b341252e"
+    },
+    "gs_184": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_184.ply",
+      "bytes": 3116720,
+      "sha256": "deab2a0495653116053103d2992030b4e18a7e9b9524e56d3d64d6afc4f64f79"
+    },
+    "gs_185": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_185.ply",
+      "bytes": 3179216,
+      "sha256": "09eb39059e5a5a8e60bde3a6c2e9f1f0c7905d1214092b3fd34c015e7a40f366"
+    },
+    "gs_186": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_186.ply",
+      "bytes": 3194344,
+      "sha256": "41679c92557664282435379da63b952e80a1aeb1b8057e4523490de3a7b2988d"
+    },
+    "gs_187": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_187.ply",
+      "bytes": 3148960,
+      "sha256": "5b9f24a268bd1434c1a5d19947215b0b390a2dfbb58af5a3764b4de0bd4c43cd"
+    },
+    "gs_188": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_188.ply",
+      "bytes": 3134576,
+      "sha256": "00c63ae3928805ce8448ac843ef5bf83a853a8453fd7b0504d9c2382a480e851"
+    },
+    "gs_189": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_189.ply",
+      "bytes": 3158384,
+      "sha256": "42b01bcf8c8be98d93b854497b4457fbbab30f73f56d12487b580346ea0cbeb4"
+    },
+    "gs_190": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_190.ply",
+      "bytes": 3194592,
+      "sha256": "02bbee0b2ec2ca8258a4fe187bedb64a189c85a3e31b0e08853558effa3b761a"
+    },
+    "gs_191": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_191.ply",
+      "bytes": 3118208,
+      "sha256": "62cc17580f31b88d305e3f9ae078c8499facf684f5882f66a8a1bf12f7fe3acb"
+    },
+    "gs_192": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_192.ply",
+      "bytes": 3274696,
+      "sha256": "fde41a2f367e7668f78b2d18baa5641c32bbf91ac61d207ed056c80786bb7954"
+    },
+    "gs_193": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_193.ply",
+      "bytes": 3204016,
+      "sha256": "fa6dfd79af077fbb5fbe210b73bb3952daa8f066685ae4600710332319dfec60"
+    },
+    "gs_194": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_194.ply",
+      "bytes": 3186160,
+      "sha256": "53a88076fdef15fe2540946c89287627ff1cb5600add59aae1a7b7470062bc6d"
+    },
+    "gs_195": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_195.ply",
+      "bytes": 3180208,
+      "sha256": "585666d86815d93e5b59b99378054522f1b811be10c387d1f7d34eedf7266347"
+    },
+    "gs_196": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_196.ply",
+      "bytes": 3272464,
+      "sha256": "3359eef9f534d583681450b2422510beb782e80a1ef8125125455855932029fb"
+    },
+    "gs_197": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_197.ply",
+      "bytes": 3189632,
+      "sha256": "f9837f0c29bdc24651375892f3b0050e9714171136f4241acedb3faa819d8992"
+    },
+    "gs_198": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_198.ply",
+      "bytes": 3153176,
+      "sha256": "56cc4e469a848bb94a3a5585cda01b14d18c8e147586bf452dda99e5810ea1a5"
+    },
+    "gs_199": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_199.ply",
+      "bytes": 3161608,
+      "sha256": "980fafe64ac636ac9434c0cbbdbe0abee574620c05d1cc224a632ad2090fb078"
+    },
+    "gs_200": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_200.ply",
+      "bytes": 3150200,
+      "sha256": "4fd86d354c5b5707673ca3bb8e334f7b1a17f8fa0075dd189c83774c3ee76a15"
+    },
+    "gs_201": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_201.ply",
+      "bytes": 3155408,
+      "sha256": "8ef4271ec2863428c9e0c15f4dbc35e62b2565b2f9a608f207549a09753a69a8"
+    },
+    "gs_202": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_202.ply",
+      "bytes": 3165576,
+      "sha256": "05d6e8054a8690bc247c8a24a1a6a0a01d794a1837a84be8b9f11f3d225dc58d"
+    },
+    "gs_203": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_203.ply",
+      "bytes": 3231296,
+      "sha256": "3614c9ab726e3e9085f63a7de245e5ed3c5b6d43f81a8b57ca3c893bb6ae4305"
+    },
+    "gs_204": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_204.ply",
+      "bytes": 3273952,
+      "sha256": "13aa9a1194b5c650e55ecde3c12670bb2eed1f8590def02a541350f4b64b6fa2"
+    },
+    "gs_205": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_205.ply",
+      "bytes": 3216912,
+      "sha256": "51f7cc4b3b3f8ed6a0f4e054ecabca0729e6672cc8fa595ad7a629e049c9e7c8"
+    },
+    "gs_206": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_206.ply",
+      "bytes": 3158384,
+      "sha256": "f38a11936f21f61f06f854ecea7a82f08825df0585f375a67108cfd5b0436c35"
+    },
+    "gs_207": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_207.ply",
+      "bytes": 3171528,
+      "sha256": "e4840ac8d6cc9587c988d26e0d37409344880efb9af0660888d7801c114f1054"
+    },
+    "gs_208": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_208.ply",
+      "bytes": 3186904,
+      "sha256": "00d5a677793ffb5aed15d55e2222910f9059c2227168b3dd85699a1f0438a169"
+    },
+    "gs_209": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_209.ply",
+      "bytes": 3137552,
+      "sha256": "a9cf538d6709ae2fe8248cb072cb1bbf704cc43e40880e55db41b999f8aac406"
+    },
+    "gs_210": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_210.ply",
+      "bytes": 3144992,
+      "sha256": "132e72e8a8158b75b1322dbf1d0b8318d1e53bd0c1145eed9ded1c84056459ef"
+    },
+    "gs_211": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_211.ply",
+      "bytes": 3163096,
+      "sha256": "c245bb7068e62bf6a6b7ded25beb77d10ac075d8e8b940e23cdbabb7cca41f33"
+    },
+    "gs_212": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_212.ply",
+      "bytes": 3202032,
+      "sha256": "3749f753e262c44655282e3706cbd5a6a7bee84d11e376a546bbd4767e6635c8"
+    },
+    "gs_213": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_213.ply",
+      "bytes": 3193104,
+      "sha256": "855180aea436b3be5b1984313e441b63a6c48cf3cf4b46bd79568437b04c309e"
+    },
+    "gs_214": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_214.ply",
+      "bytes": 3160864,
+      "sha256": "392d4299ee3308a686bc500b4a7bf0c31545a597042fc61373f4a8b679f6b8f0"
+    },
+    "gs_215": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_215.ply",
+      "bytes": 3156648,
+      "sha256": "d1e3e0ddab67266ef5d9887e585a2617a04e4b964bb009838017448e55e64b29"
+    },
+    "gs_216": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_216.ply",
+      "bytes": 3276184,
+      "sha256": "1da71c7acdfe526e312f65589291af67155d64bfa7305f646254356437f2e69b"
+    },
+    "gs_217": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_217.ply",
+      "bytes": 3182192,
+      "sha256": "767a3accddb195282f9cfd2e0bd77d4468404c210c5c7961e079747dae648436"
+    },
+    "gs_218": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_218.ply",
+      "bytes": 3174752,
+      "sha256": "494bc2e51cfe2f783436efde5e38c23abfc9c21d449269c9f657944a6d137405"
+    },
+    "gs_219": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_219.ply",
+      "bytes": 3218896,
+      "sha256": "b756ea9a7338c96bdcda8bc03a6dc1af7e16275c7a092f7b1be73022917b8e47"
+    },
+    "gs_220": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_220.ply",
+      "bytes": 3204512,
+      "sha256": "bf1bd8b401af6ef53ac4b268bd1cb46f693be900184e198774ebcb82a8a966db"
+    },
+    "gs_221": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_221.ply",
+      "bytes": 3113248,
+      "sha256": "3fc133e914de9ed7b0a1b6929fb10874231e58060759b5c27d911c26fe95c089"
+    },
+    "gs_222": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_222.ply",
+      "bytes": 3122176,
+      "sha256": "a32b03e2407a75f90e878c7b86161fcd2d3d21628f3a418f65a18fbff7d7e512"
+    },
+    "gs_223": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_223.ply",
+      "bytes": 3089688,
+      "sha256": "355a3964d0e1809a83a51a7a85cb1097455fa379de2314ac2b44a88ca3227477"
+    },
+    "gs_224": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_224.ply",
+      "bytes": 3122424,
+      "sha256": "c1b98de6fb89fe75cbed374de2ef1a1576b489f6c57b76ea323b5291c12c9e7e"
+    },
+    "gs_225": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_225.ply",
+      "bytes": 3172768,
+      "sha256": "5f828d046846fa93a6b6e9635478fd0e5485a59ceb5dd612c4e7c86e4c657471"
+    },
+    "gs_226": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_226.ply",
+      "bytes": 3142264,
+      "sha256": "2f8951bf37ee5ffd9ca3d41cb4c1905d77ddefa291a33c81bfd00482de2afd91"
+    },
+    "gs_227": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_227.ply",
+      "bytes": 3106056,
+      "sha256": "264dbe5cf2bf9c1c97811b97d8938832a0e10b5beb1fc6640a734c6e1c3ce166"
+    },
+    "gs_228": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_228.ply",
+      "bytes": 3274944,
+      "sha256": "39a4f37e9d33442508e4685dc0d7f43839f0f1ebe9d873cd9938f532f728226a"
+    },
+    "gs_229": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_229.ply",
+      "bytes": 3182192,
+      "sha256": "52cb76047ee323e7aa51d26a56fe79334e331847d3fd91f1cf94de6fa3fbeacc"
+    },
+    "gs_230": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_230.ply",
+      "bytes": 3154664,
+      "sha256": "b9073fb0da59842482611e7cdccd2586c6e7579e8d68467645d5d34d24127553"
+    },
+    "gs_231": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_231.ply",
+      "bytes": 3165328,
+      "sha256": "2faa79bcb9a0aae50196e4610f90d6738b04b5afff94db7bb266f43fdc5d123e"
+    },
+    "gs_232": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_232.ply",
+      "bytes": 3219144,
+      "sha256": "e64a8b5d7077f8939aa46e5befc8965ccb13574bc4dfa7b0f640e4eb2fe828ef"
+    },
+    "gs_233": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_233.ply",
+      "bytes": 3228072,
+      "sha256": "f0f73cc379ffe38e1a7ecb352124d012c0cdbb9543434a0624da6fe8252ff35f"
+    },
+    "gs_234": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_234.ply",
+      "bytes": 3176488,
+      "sha256": "5313a0f6f2b8f28e69352de4e4ca8e8d882025fdc768c8a79b734475030557cc"
+    },
+    "gs_235": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_235.ply",
+      "bytes": 3171528,
+      "sha256": "f3f23ab147cfb0cf7345351ccf49e8621182cc973edb86022071399cab163ca9"
+    },
+    "gs_236": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_236.ply",
+      "bytes": 3206248,
+      "sha256": "03e0d32c931373206abd013075ffbb39e84e411b22620aace215dafabb1ff422"
+    },
+    "gs_237": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_237.ply",
+      "bytes": 3169048,
+      "sha256": "bc43721ef4aff3c965f24127ad93f73d9a3722975354eb81105e65247cc5322d"
+    },
+    "gs_238": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_238.ply",
+      "bytes": 3175744,
+      "sha256": "8c906f905ceb9f8b9d94fc45f674f78f4a3ad16b20da443d412e580c0d197d3e"
+    },
+    "gs_239": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_239.ply",
+      "bytes": 3087208,
+      "sha256": "8bd6dac161957b4bbd74350525e407c41772bc5a1473e203f8ee65906903d823"
+    },
+    "gs_240": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_240.ply",
+      "bytes": 3218152,
+      "sha256": "ba59059571b41985072a853e77934b0f03423a10ae0f6150846fe7750406ba77"
+    },
+    "gs_241": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_241.ply",
+      "bytes": 3262296,
+      "sha256": "245de3d8a34735e772508c33c7628b6ea0b7b8402ae8f976f4a5fd3afad316da"
+    },
+    "gs_242": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_242.ply",
+      "bytes": 3208728,
+      "sha256": "4aad8b85cfc7c2c81d5a67f6cda433ee795fa38100cf46a1b96b78a2ff2889c0"
+    },
+    "gs_243": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_243.ply",
+      "bytes": 3140032,
+      "sha256": "439e716b864ca51925d7f4fa8cc399d91df2dabcb00a93cd861be0980aa17d36"
+    },
+    "gs_244": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_244.ply",
+      "bytes": 3170784,
+      "sha256": "c737450772ecb990e70e5ad2b5e236f6d60e2c717fa8a1d12845482522f4f449"
+    },
+    "gs_245": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_245.ply",
+      "bytes": 3245184,
+      "sha256": "0b9113d0538812111701ca0df588a82065e8f76c1eea0aefbe0586aa7c457441"
+    },
+    "gs_246": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_246.ply",
+      "bytes": 3143504,
+      "sha256": "161ca2a5de52b23923c5ba0aaa145d21a77e46d983e8afeac3ef716e2b0eebca"
+    },
+    "gs_247": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_247.ply",
+      "bytes": 3130360,
+      "sha256": "2a0fd8a39423435d075028b590d9497a72f4b687f072bd6719a7a071d6363742"
+    },
+    "gs_248": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_248.ply",
+      "bytes": 3174008,
+      "sha256": "9ec365e857b862c20b8643cf43a949bca1d0911bb92d69ff99bca5fd7fde2124"
+    },
+    "gs_249": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_249.ply",
+      "bytes": 3093904,
+      "sha256": "e8222a361f4c88ee2c4794e80b1bd7ea7a052ead3de3dd3bb4a762d3b6710d7c"
+    },
+    "gs_250": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_250.ply",
+      "bytes": 3160120,
+      "sha256": "ee86ee74d9fcc2c440d731dd166555659197e8c9dc5a4624f90272fa9427bf55"
+    },
+    "gs_251": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_251.ply",
+      "bytes": 3198312,
+      "sha256": "aad21e39fb29e209c05d393c56c9c74cc6ccd9cfa9646d64a99ea355d8c18c4e"
+    },
+    "gs_252": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_252.ply",
+      "bytes": 3206992,
+      "sha256": "2d7fc209fbc514c6a07d9aa4c96ce74aac2a2d13a70d390c751c5794266679c0"
+    },
+    "gs_253": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_253.ply",
+      "bytes": 3265768,
+      "sha256": "1736b5efad2339220a3a7b10b398d1c128615b5e46104d64bf7ee5e15b8beb77"
+    },
+    "gs_254": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_254.ply",
+      "bytes": 3149208,
+      "sha256": "17c326b32d0aa89d68ac34a353eb74fbbaa85f0c8df2fac907d9105c5c8b959f"
+    },
+    "gs_255": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_255.ply",
+      "bytes": 3221872,
+      "sha256": "bf7ebba54da7328fee7cd69235710f3c77ffdcaaad903c9f893d56917de5f6e5"
+    },
+    "gs_256": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_256.ply",
+      "bytes": 3200048,
+      "sha256": "962a14098b7de75b18aa0f8c2db382387d4aca9580bf5a0cd4d246447fb3697d"
+    },
+    "gs_257": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_257.ply",
+      "bytes": 3183680,
+      "sha256": "e19bce717ddea52b978c9b2b8618680148770d1e8e3833c83177d964105e247b"
+    },
+    "gs_258": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_258.ply",
+      "bytes": 3242704,
+      "sha256": "de67bddea16d31e178f2ea9f0008d6fe06be8bd798c338d07a90960c695d9dc9"
+    },
+    "gs_259": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_259.ply",
+      "bytes": 3178224,
+      "sha256": "68dbdce7950b9925237ddfcd1f0e0f73eb3dec2b0854136574f789a195d55013"
+    },
+    "gs_260": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_260.ply",
+      "bytes": 3180952,
+      "sha256": "508efc0af25e10136486fde0975bd2bba73d23b09a07692f7d799b5e8cb19c72"
+    },
+    "gs_261": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_261.ply",
+      "bytes": 3161856,
+      "sha256": "7f8b63b4e9562814a1fb43d47a8d72153a319da565eff1d1005938509f41af1b"
+    },
+    "gs_262": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_262.ply",
+      "bytes": 3108040,
+      "sha256": "fb6be2247a641c7ccebe441ef2f4f6973a8911baa12469f2912b122a30f26e8f"
+    },
+    "gs_263": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_263.ply",
+      "bytes": 3123912,
+      "sha256": "c17100e4ff8ad342e7631250979eed4b343836617536c858e1a9eb4539f7e253"
+    },
+    "gs_264": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_264.ply",
+      "bytes": 3183928,
+      "sha256": "7eabb660aa73de3f82b9e7fca52ea2bc6344d78a08be37f1c61301a81d361d90"
+    },
+    "gs_265": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_265.ply",
+      "bytes": 3145984,
+      "sha256": "b31d0a88d85bbcdc1d047e95c1248d1e1f383c1c297e84c3f2aa2e4d355e9d51"
+    },
+    "gs_266": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_266.ply",
+      "bytes": 3135568,
+      "sha256": "c573ae8250015e2dba5b2ab7cab2ac422d52decb2e46acfa521d96412a3c7fec"
+    },
+    "gs_267": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_267.ply",
+      "bytes": 3161856,
+      "sha256": "c6a3a7c1728bd1e0262d22387a37a109f16fe8391c90c5f42ac289836a83da8f"
+    },
+    "gs_268": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_268.ply",
+      "bytes": 3175248,
+      "sha256": "1ee72f6dc2d6c0975a12c4092ad7d058b5d3ba95074b11fb43ad019884f04eb6"
+    },
+    "gs_269": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_269.ply",
+      "bytes": 3142264,
+      "sha256": "a31b4d2b7c0f528347024d964287e5a55fd815854140204dc2204908935bb8ec"
+    },
+    "gs_270": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_270.ply",
+      "bytes": 3178720,
+      "sha256": "644b436ee9e89e1da2206c9dd5c5e5d7e641698c353520077c463429a7a2e5d1"
+    },
+    "gs_271": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_271.ply",
+      "bytes": 3149952,
+      "sha256": "0f27456933be36f62b1377bfe9bb0edf10efe76b7941f77ce6ea2cbc7bad4921"
+    },
+    "gs_272": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_272.ply",
+      "bytes": 3123416,
+      "sha256": "fb836fbd8df99618ae3e13f851f3cd784d0aab8154a08d5ef3c892a162495d96"
+    },
+    "gs_273": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_273.ply",
+      "bytes": 3090928,
+      "sha256": "50ccaef5520fdd862e1e54cb180a40dd9958f12cff1f52708d49aa0ed77ba010"
+    },
+    "gs_274": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_274.ply",
+      "bytes": 3198064,
+      "sha256": "f6b3ecec7d2d78ca02a1121a0ce0ac5ec4169e037c375ee58e83c03c51516bf6"
+    },
+    "gs_275": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_275.ply",
+      "bytes": 3160864,
+      "sha256": "840f457e6ec7dc5493bfb7e895de5b2fd744632d76b49c86665fce1d24669447"
+    },
+    "gs_276": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_276.ply",
+      "bytes": 3173264,
+      "sha256": "fae2cff7ea11eacfd593c4e6f9ea3cc4d2acf5926803eead47801a1811be5902"
+    },
+    "gs_277": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_277.ply",
+      "bytes": 3143256,
+      "sha256": "b07309797d7d0de842e94a97068db7cc673138be31a7700a6f79aa6a1fc0b622"
+    },
+    "gs_278": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_278.ply",
+      "bytes": 3119200,
+      "sha256": "1020ad72fc11c068cb623e841bee52e3a4ba819333a90c91c751f45a4b14daf0"
+    },
+    "gs_279": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_279.ply",
+      "bytes": 3049016,
+      "sha256": "21a4dfdee61cb81d4ece260e10f72e057b30e7e907a2e2d22fb2327f813c8569"
+    },
+    "gs_280": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_280.ply",
+      "bytes": 3088944,
+      "sha256": "efa292b4e776602f7b1c87d4b84eca1a2fa559636b91a01f5329213c5b04a21d"
+    },
+    "gs_281": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_281.ply",
+      "bytes": 3064144,
+      "sha256": "d2caeb680fb4553a4ffa186b01f4d36ac18090e00e62ea56f5dc1de7ac991822"
+    },
+    "gs_282": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_282.ply",
+      "bytes": 3060920,
+      "sha256": "4ac1b2f1cad41fa2209574529b269310319b36529d80266c083c621678df1e12"
+    },
+    "gs_283": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_283.ply",
+      "bytes": 3060920,
+      "sha256": "a9c567414cb26de4b12de128ea53d3fe7139a00567289ad8c4ec7f2361eb1f2f"
+    },
+    "gs_284": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_284.ply",
+      "bytes": 3068112,
+      "sha256": "35e8698294a7886cb4951c940417a8df3cef8fc18e923693d5f2c1c726d3b621"
+    },
+    "gs_285": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_285.ply",
+      "bytes": 3061912,
+      "sha256": "d78d1b21b7a7746a209e59bb60aad758a067a2f9a61e7ad5d0aca0d394ffce7b"
+    },
+    "gs_286": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_286.ply",
+      "bytes": 3064392,
+      "sha256": "a6e0fb1a0bab716666238cd132f57e019382cd265c146bd9d326d9aac9db43ee"
+    },
+    "gs_287": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_287.ply",
+      "bytes": 3105808,
+      "sha256": "af654923eaa3fc6a8ce3f1cf497c4e1f64edb866679218c29c82e29fadca1729"
+    },
+    "gs_288": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_288.ply",
+      "bytes": 3086960,
+      "sha256": "a26e2127dbca16f0e06b8628a2b3e2c2d0ce285b41c3cbf0333e5994be1c5014"
+    },
+    "gs_289": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_289.ply",
+      "bytes": 3061912,
+      "sha256": "0a6ab8158b9a20b1e8c6720119cf82e14e02ce681066b47929e3e48e08a8a34c"
+    },
+    "gs_290": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_290.ply",
+      "bytes": 3056208,
+      "sha256": "5ad6c5b3ee78e9e579ba502cb7051ecef1efa8b6d38b42487f664f75c636cfe4"
+    },
+    "gs_291": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_291.ply",
+      "bytes": 3117216,
+      "sha256": "544e51c60adfe585214485c4efdd2f3d097299e28f163831e61e808d67af7bdc"
+    },
+    "gs_292": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_292.ply",
+      "bytes": 2976104,
+      "sha256": "1afd34ad8c45d01aa9ad837df586c0733af5a759485e15d0c0baf5c6f15c21c0"
+    },
+    "gs_293": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_293.ply",
+      "bytes": 3000160,
+      "sha256": "3074c3f10d62855824c044dc1234521a8d2d9acd8c74e27f5eccdf2662df2b44"
+    },
+    "gs_294": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_294.ply",
+      "bytes": 3076296,
+      "sha256": "226ae7814e1f1147397d5496ec96c4a77233a5ae564afec12fccefa42e654e80"
+    },
+    "gs_295": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_295.ply",
+      "bytes": 3105064,
+      "sha256": "012725401b9dd40ade40be16223c76b2ab3a48952e30e49b6b63864a95d3cb89"
+    },
+    "gs_296": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_296.ply",
+      "bytes": 3084480,
+      "sha256": "3ab97764f0b0c99c3f104fc684496685928678d52b495584bcefd9588fc4e554"
+    },
+    "gs_297": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_297.ply",
+      "bytes": 3051744,
+      "sha256": "95293be6d289ab28a5fbcf346b017efe6423d4577ef15bc108d928add3ee10af"
+    },
+    "gs_298": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_298.ply",
+      "bytes": 3075552,
+      "sha256": "bef41ea3e823afc22fc47618f236ae0e5950344c976afe3760156113576ac986"
+    },
+    "gs_299": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_299.ply",
+      "bytes": 3094896,
+      "sha256": "9fa22f3d23c895ab5e69e9c2f690d53f0068d480f2866637f005131bf44fbc33"
+    },
+    "gs_300": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_300.ply",
+      "bytes": 3124656,
+      "sha256": "f9b96c2a1c16f13a5162eba7900843874d1acbd2c8838d6182c1d5bb1ab4ad3a"
+    },
+    "gs_301": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_301.ply",
+      "bytes": 3052488,
+      "sha256": "216040b8f0d345eafc710645c2efcf2db427a0e75ad10652d822edf0f8d2405d"
+    },
+    "gs_302": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_302.ply",
+      "bytes": 3141520,
+      "sha256": "2bfa5e904e0483a9551538bf27c5cb059ee74011819782aea626e00ee6b02cae"
+    },
+    "gs_303": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_303.ply",
+      "bytes": 3086712,
+      "sha256": "c2e8e55c6d158e5bdab3d23b4d31c09f131f4f4182d5e49d823a51d9e946cfc6"
+    },
+    "gs_304": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_304.ply",
+      "bytes": 3096384,
+      "sha256": "8061853cdcc72595ef59ec500e1fa2651030807a96fc99b3cef1574e5a416922"
+    },
+    "gs_305": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_305.ply",
+      "bytes": 3078032,
+      "sha256": "9888545d0ec0f751a8e4a75e6538d1eb8d0a80f03343e6d07f697bcd14ac0033"
+    },
+    "gs_306": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_306.ply",
+      "bytes": 3117216,
+      "sha256": "4a2c720d639971d6cb654b6eb0046f84725a97557a05277f0b74412975bb3ff9"
+    },
+    "gs_307": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_307.ply",
+      "bytes": 3085720,
+      "sha256": "b17abd5ef8e5886e7ee4845b2d3cbc513a9e3e93f0e4ee54e31a5541d27ea0b5"
+    },
+    "gs_308": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_308.ply",
+      "bytes": 3080016,
+      "sha256": "00b55aca1daeb77ed926b186da36461efeaada36a22c96112cfd90db5d916b3e"
+    },
+    "gs_309": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_309.ply",
+      "bytes": 3069848,
+      "sha256": "09a164567ea41d9c9caa780abe4dbcdb6445414168e6885a9663c3089950859a"
+    },
+    "gs_310": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_310.ply",
+      "bytes": 3030168,
+      "sha256": "bbc67eb78a4f5fd5b867c1688c420235bc36fa7da93185b74bcf0c231c4b4407"
+    },
+    "gs_311": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_311.ply",
+      "bytes": 3023224,
+      "sha256": "1442d315bc65c38779c08722bfd9a6215b67c80d4a63e8121f1d4665cbcf2954"
+    },
+    "gs_312": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_312.ply",
+      "bytes": 3101840,
+      "sha256": "741e3c4a5e487d6acc57e6825b00dbc11cab7283f056cb5840169b323b7adfcc"
+    },
+    "gs_313": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_313.ply",
+      "bytes": 3073568,
+      "sha256": "5a71282e43e53342d6065212807e55a33488e2b98de52bd318e3bde040c88b6d"
+    },
+    "gs_314": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_314.ply",
+      "bytes": 3038848,
+      "sha256": "b87230ebb18792e7f1c0b0d7a5077c78a5daf49be4706dfb41819ec91e5a2500"
+    },
+    "gs_315": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_315.ply",
+      "bytes": 3068856,
+      "sha256": "32e780275efbe17b84fac964121026eec405faa12bdc2b364fac824ab3624218"
+    },
+    "gs_316": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_316.ply",
+      "bytes": 3098368,
+      "sha256": "b8fc00acf614d4352e72c48a01c93afc37f358b444167ba1fdf56151d884b85e"
+    },
+    "gs_317": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_317.ply",
+      "bytes": 2989000,
+      "sha256": "c65834ad1ebd4fec3a2f9cce7397a19dea4722c54cc27a68aac772b8611662dc"
+    },
+    "gs_318": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_318.ply",
+      "bytes": 3040088,
+      "sha256": "472166a2e6737f8fd5918b5c30f93304732d22e0a70cb6948c81c3a97b72c647"
+    },
+    "gs_319": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_319.ply",
+      "bytes": 2986520,
+      "sha256": "5810bc965f8e188a19e5226048bf5b888035ad15c610ea2268007ef7b6f319d6"
+    },
+    "gs_320": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_320.ply",
+      "bytes": 3096384,
+      "sha256": "a180c1d27258a265f2f751082e8505cda9f5aeae0f414b166af5d099ed3efef7"
+    },
+    "gs_321": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_321.ply",
+      "bytes": 3116720,
+      "sha256": "7fceb7bc03e0bf49236d108be8533a8c32137455cdff138742d990454579ee79"
+    },
+    "gs_322": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_322.ply",
+      "bytes": 3074808,
+      "sha256": "9bd203253ea31de76d40851dd9f5863152f3a205c0fe79906e043bed46e32ad8"
+    },
+    "gs_323": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_323.ply",
+      "bytes": 3049264,
+      "sha256": "8f0ee39cb7ede5d061393d01a01663205a49da1046ed1de2f0c8afa9e0765760"
+    },
+    "gs_324": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_324.ply",
+      "bytes": 3197568,
+      "sha256": "3ddd7fafb3a7c7c4429cb2266ed27b51fe33ce0e2b7ab74db4d8303ede6bf4f4"
+    },
+    "gs_325": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_325.ply",
+      "bytes": 3044552,
+      "sha256": "297c7e2e2ab0169c656e494c3a6311ad29a6f30ee3b0e8ea33e540dd0b76f01d"
+    },
+    "gs_326": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_326.ply",
+      "bytes": 3166072,
+      "sha256": "9778be84859adcb3fdb05b5a87e04fcb8ef289ad668d13ceb530a36107b90570"
+    },
+    "gs_327": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_327.ply",
+      "bytes": 3150696,
+      "sha256": "2a57a77d3a375e041646a07057df64a7100fedb410debc454cf30cdcd93b9a14"
+    },
+    "gs_328": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_328.ply",
+      "bytes": 3088448,
+      "sha256": "ed9439bd3299d3b4fda7d246d1223bea3a58cc8aa62bb8e2e9b2d6bab6ed11d9"
+    },
+    "gs_329": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_329.ply",
+      "bytes": 3050504,
+      "sha256": "196e750983f988181aef4b78ddfa3ed15e477984d967879b67d588d24f8d9eed"
+    },
+    "gs_330": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_330.ply",
+      "bytes": 3149456,
+      "sha256": "3fac66673614509b5f187b6f92441583cf8d5cc78487b32347f4be583b60f2b1"
+    },
+    "gs_331": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_331.ply",
+      "bytes": 3125400,
+      "sha256": "b2520685a4ca4d558322db7825713a4f279b65cb421ae562cf60b697012d6408"
+    },
+    "gs_332": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_332.ply",
+      "bytes": 3119200,
+      "sha256": "911944594c9075acd4fabc19212dae6fe5e60c73bbb6941710682263547c14e3"
+    },
+    "gs_333": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_333.ply",
+      "bytes": 3048024,
+      "sha256": "172dbf4ce6db12601c6b9ddf80dc7e0a1d6a2ae47fe0ddb96922d9b64dc374da"
+    },
+    "gs_334": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_334.ply",
+      "bytes": 3052488,
+      "sha256": "7bb14d636d97e4a962e2553add806f3e950443bc3ad2076bd1e78aa4edf708fe"
+    },
+    "gs_335": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_335.ply",
+      "bytes": 3088696,
+      "sha256": "a837437d968f483ad9eb4c70e01c8616ad23707a84b8ef4ff6bf735c9560b62f"
+    },
+    "gs_336": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_336.ply",
+      "bytes": 3125648,
+      "sha256": "e715092829a233f904dfe4a341f704cf076dda8e3a5410fe44a276ae07b62443"
+    },
+    "gs_337": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_337.ply",
+      "bytes": 3149704,
+      "sha256": "ed9b1b9d25cc161a50fe1913a18c99c6fa437516e57298e2db94e03d7308ec2a"
+    },
+    "gs_338": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_338.ply",
+      "bytes": 3061416,
+      "sha256": "8091f6913f1ec5d0c74a1ecf8f224bda83d8ba3e145236dc2bc18bf3e239a490"
+    },
+    "gs_339": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_339.ply",
+      "bytes": 3055960,
+      "sha256": "495f187a9710f122e5083c055677468b4928db78eacf7a154de0fa66ed469904"
+    },
+    "gs_340": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_340.ply",
+      "bytes": 3133336,
+      "sha256": "9e770c224918d93df1e1d9b46be4c6c5cc196c62c1dd811b10df0c9cd9e36b32"
+    },
+    "gs_341": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_341.ply",
+      "bytes": 3048024,
+      "sha256": "adf4032a82edfdabdfa093319ad39066d1650a26b69eff5ca97150fe122bf344"
+    },
+    "gs_342": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_342.ply",
+      "bytes": 3128128,
+      "sha256": "8b9bf4f69492375828d81ea1d22ee521ca278f4e672d6dc953820b94e16e101a"
+    },
+    "gs_343": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_343.ply",
+      "bytes": 3108784,
+      "sha256": "0580ea2c6f4872f6811d77fa062e107688c93664dd58da44a191ed5d9e9d4daf"
+    },
+    "gs_344": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_344.ply",
+      "bytes": 3119448,
+      "sha256": "84599ec99caa064992aad586acfff87e05a9c799ee59a4d5bf4b917a9ee41eb7"
+    },
+    "gs_345": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_345.ply",
+      "bytes": 3127880,
+      "sha256": "03a7c2f1699aa131eaadd946e8328dc301c70016f81e5bbda8536f9c114c678b"
+    },
+    "gs_346": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_346.ply",
+      "bytes": 3009832,
+      "sha256": "d4c1fa461326416b46d42d42ac708c0297299f5ec6b6ed3ebbcc584afca699e7"
+    },
+    "gs_347": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_347.ply",
+      "bytes": 3010824,
+      "sha256": "ee601381121041be2bbb584e9697331af4a2ad1b8f0fe82ebc7fda8c59d91e2f"
+    },
+    "gs_348": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_348.ply",
+      "bytes": 3074808,
+      "sha256": "59d4424aee499c17bbc11084b35a13abb1f1123b445030dc76bbca5e04cb354a"
+    },
+    "gs_349": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_349.ply",
+      "bytes": 3061664,
+      "sha256": "75146e7deee59b943df299dea5a3ee9317e0803bab6f3a355b1d32482a2d78a8"
+    },
+    "gs_350": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_350.ply",
+      "bytes": 3082248,
+      "sha256": "0d79862c1e7d1a873802d61139be751f72712e1e9ce0d64e533c48beaecdbf01"
+    },
+    "gs_351": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_351.ply",
+      "bytes": 2977096,
+      "sha256": "f6aaab8e7227edd2f57b17e0ea810555558d76d19feb99c9c3de385e2c85f039"
+    },
+    "gs_352": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_352.ply",
+      "bytes": 3029672,
+      "sha256": "a3062cc3603787e4a6ea7591244947d88e01371c5b85d637c078ea3020e179e1"
+    },
+    "gs_353": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_353.ply",
+      "bytes": 2973128,
+      "sha256": "72cc8d8447fc7947101b4be164415775de864a750237658e8094223dd8f864b5"
+    },
+    "gs_354": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_354.ply",
+      "bytes": 3024712,
+      "sha256": "2821e93231e818ee02dc91b5c68770ad5bde32ba8658a0a5d992b6bfe381adf9"
+    },
+    "gs_355": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_355.ply",
+      "bytes": 3078032,
+      "sha256": "e5c7c4aa936c3a6e5abe66cf41fd6254b6b2a1c1acef909d252f0ec66e0154f0"
+    },
+    "gs_356": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_356.ply",
+      "bytes": 2988504,
+      "sha256": "01565219ff4a7acc53e31d35493997cf91a22d70ae35f2951bde7ea1e00f2426"
+    },
+    "gs_357": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_357.ply",
+      "bytes": 3082992,
+      "sha256": "4f528eb2b0f52bfaa11917028696c0dacb851ce9b4362cea610274ac71308759"
+    },
+    "gs_358": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_358.ply",
+      "bytes": 3035128,
+      "sha256": "9b7a8ddde5f987a364621b04236fc161aceeb27902acad7eb7a9fe574f301768"
+    },
+    "gs_359": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_359.ply",
+      "bytes": 3057200,
+      "sha256": "07e03785e5043a407b3f326e139c0e2ae6d6341d0eff1dac548f4edc45a31c04"
+    },
+    "gs_360": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_360.ply",
+      "bytes": 3008096,
+      "sha256": "d9e6da8f58a9958f669bf8f7ddc49220ff5f5e07f3ac1a5f59f758665e1b3174"
+    },
+    "gs_361": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_361.ply",
+      "bytes": 3038848,
+      "sha256": "7707cc373de9f62f4e6b76b2111cc783d8d0833ff83a2027c55d93201e8643c2"
+    },
+    "gs_362": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_362.ply",
+      "bytes": 3025704,
+      "sha256": "8af9157aaf0352620f8412a6c635e28ca4046986dd934d3cced7213d79671591"
+    },
+    "gs_363": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_363.ply",
+      "bytes": 3092664,
+      "sha256": "94e3f7f27caf52af77425e3af412816811a904f26c6b846ff9d87c48d775ee91"
+    },
+    "gs_364": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_364.ply",
+      "bytes": 3061912,
+      "sha256": "29a658bcf8f0da2504eb485c77d7b301668fac609fa08f51e1da60c31eb10d8b"
+    },
+    "gs_365": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_365.ply",
+      "bytes": 3044056,
+      "sha256": "827a75f26a7ef6224e3f15aee3687ab070df46a85bc58e63d4aeecebb482fdff"
+    },
+    "gs_366": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_366.ply",
+      "bytes": 3069352,
+      "sha256": "94c00562ef0b6e5cf2bc182ef60a757d95185ee6b9d4d3050f47ed188a32af14"
+    },
+    "gs_367": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_367.ply",
+      "bytes": 2982552,
+      "sha256": "f07cba6bf5f7b03e827d59f041a61a21246bfbfee2be8ccafdd71bbf23d8b0d7"
+    },
+    "gs_368": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_368.ply",
+      "bytes": 3035872,
+      "sha256": "deb95e7d1d9948b30856d8fd4f49eb9f573a0b582c91d7dcef2419e3973f63a7"
+    },
+    "gs_369": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_369.ply",
+      "bytes": 2988008,
+      "sha256": "7bf181bc1bd3ccc9a58392915078e89bb87a7445045fa90742a49fecf990f2c3"
+    },
+    "gs_370": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_370.ply",
+      "bytes": 3060672,
+      "sha256": "59c2041acfe5fc23487002d6fcce977581e5aabfefed5716d85a4803892cc4ba"
+    },
+    "gs_371": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_371.ply",
+      "bytes": 3036616,
+      "sha256": "117209b07cb33a1329fd7f956cc125700b243fe1a7b13dbd1c78bbcedd3d2ae3"
+    },
+    "gs_372": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_372.ply",
+      "bytes": 3132592,
+      "sha256": "1a6b4894367284853ddaa8e851d7a57f1fea30d99a7e7f84b84a57a3f007d1a4"
+    },
+    "gs_373": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_373.ply",
+      "bytes": 3161112,
+      "sha256": "513075441a64bc88b1c8b7607711019a08e30bbb42315fe108255ded6cfe29e8"
+    },
+    "gs_374": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_374.ply",
+      "bytes": 3120192,
+      "sha256": "bb3430c4f23f8262fb337767b2e73a2c856898847b7a4bff1f63c9e392ec8024"
+    },
+    "gs_375": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_375.ply",
+      "bytes": 3096632,
+      "sha256": "6cf59c13e8901d10e684a3fa930067b07297eb82dddd10fd575a7f8d1521d7ad"
+    },
+    "gs_376": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_376.ply",
+      "bytes": 3095640,
+      "sha256": "fb72fe266dbc87ed2d296fbae711d1da1c1009bd060f10de0661fb389d961a13"
+    },
+    "gs_377": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_377.ply",
+      "bytes": 3157888,
+      "sha256": "cc2ff8909fbf9040814873bbbcd0eaf44eeb121c5663b5e599c3c8c9671b177c"
+    },
+    "gs_378": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_378.ply",
+      "bytes": 3130360,
+      "sha256": "1a25934725ccca017f2e9f90233a61a08085e52b65f5c097735f030a6990a255"
+    },
+    "gs_379": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_379.ply",
+      "bytes": 3173016,
+      "sha256": "7829915f6daae2a59332b020fdd400f88b732a902721f7055d46630ac5d36935"
+    },
+    "gs_380": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_380.ply",
+      "bytes": 3178968,
+      "sha256": "08b14b32d6d19aef6eca73905956096c8810ed72252a32e23d2a0f6371474270"
+    },
+    "gs_381": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_381.ply",
+      "bytes": 3194344,
+      "sha256": "3cf498550ca77ebec18064be31e60f4978d2407ae0fa947a2abd3cbae22765b5"
+    },
+    "gs_382": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_382.ply",
+      "bytes": 3180952,
+      "sha256": "9a32013fd5a941bfff26bce7f6f67a7804a93fc4501686bc077de5aca5b0f9ef"
+    },
+    "gs_383": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_383.ply",
+      "bytes": 3210216,
+      "sha256": "c7286fe3c2279629620781f6bd64e90d8b845971abeaa34146048b2780f1e7e4"
+    },
+    "gs_384": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_384.ply",
+      "bytes": 3305696,
+      "sha256": "6ba7900f37a202d7534e2dde9d00bccf38d248aa5963d6835426a16e91e2a99d"
+    },
+    "gs_385": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_385.ply",
+      "bytes": 3300240,
+      "sha256": "a7173c9cb2da04e450f274dcd04558fcd48a3214e93202cfb2bfe2c5ca019a94"
+    },
+    "gs_386": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_386.ply",
+      "bytes": 3298008,
+      "sha256": "1f60ad426eddeee0ffcbc37e7878d54f6fa4b8755d48b6c481adb84859ad5f14"
+    },
+    "gs_387": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_387.ply",
+      "bytes": 3387288,
+      "sha256": "565291d3d825df7c3788e7e066b1280ee8632eeff491f85009d3e181c8fa9a36"
+    },
+    "gs_388": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_388.ply",
+      "bytes": 3281640,
+      "sha256": "32e2ceaf65a3b9375c6b1a0d7d31b038baae182b1e763b8736ac380d0be66741"
+    },
+    "gs_389": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_389.ply",
+      "bytes": 3389520,
+      "sha256": "66c9294b9841a96111c06717764f79f865d3ea363ab2f64cbf87980efe564ab8"
+    },
+    "gs_390": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_390.ply",
+      "bytes": 3367200,
+      "sha256": "d4300f5faad78d69841f094bbc95df20c020962709d3d366ad9040eb63f3a7ae"
+    },
+    "gs_391": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_391.ply",
+      "bytes": 3384064,
+      "sha256": "2bd41712fc65962a435445d8ff5463b6dbcc92901fec220f423bfb95089daf28"
+    },
+    "gs_392": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_392.ply",
+      "bytes": 3405144,
+      "sha256": "01d8090d207d825c9e9ac4b5ff463c1e3bdfb381e93868518fbcc0e8dffcce31"
+    },
+    "gs_393": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_393.ply",
+      "bytes": 3426224,
+      "sha256": "7dda6803b97a47a0c5ba9412adedaea128cc8c7e34a49f77ef98402f3303f697"
+    },
+    "gs_394": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_394.ply",
+      "bytes": 3451024,
+      "sha256": "0882532eb9437141c6c4302903fa7e45b8d4534057b0a41f4b3919690cc2fa00"
+    },
+    "gs_395": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_395.ply",
+      "bytes": 3599576,
+      "sha256": "9f52dd2edfedcb919958a0e88135473cf43ba9ceb1fadd5b790322f0d70581fb"
+    },
+    "gs_396": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_396.ply",
+      "bytes": 3472600,
+      "sha256": "2702db861644ca83623eb49557ce1de67fec25bf740ac33b1771660b09c343fb"
+    },
+    "gs_397": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_397.ply",
+      "bytes": 3474584,
+      "sha256": "5aa46fe86472a73233bd4220ab374cca8d1f9d70d55ecda7a64f80a3abcba804"
+    },
+    "gs_398": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_398.ply",
+      "bytes": 3507816,
+      "sha256": "99a1aeed38ca1610ebeb1c7cd2db1de6f3745f61edbe2bc4e5d26df45ff84345"
+    },
+    "gs_399": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_399.ply",
+      "bytes": 3482520,
+      "sha256": "5e0a0af4c06e3042c9352b357c767130a6a6c05db86a8e48aa532a9411846567"
+    },
+    "gs_400": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_400.ply",
+      "bytes": 3539312,
+      "sha256": "8c7e7ebb12249c2be73dec93635b6266f5bb7b1d81ec25b403478b086f01b146"
+    },
+    "gs_401": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_401.ply",
+      "bytes": 3604784,
+      "sha256": "dd40f3940e5552b9201f8a9a32feea4c8f5793f619fa7784aafe4f2f8e1f2997"
+    },
+    "gs_402": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_402.ply",
+      "bytes": 3606520,
+      "sha256": "5d8094475d8ddfaeeabbd8ca2d022d4426e6b47bf055679b381122ba3c686530"
+    },
+    "gs_403": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_403.ply",
+      "bytes": 3651904,
+      "sha256": "536e976c5aff22574a33591934c81671c50522def644cfa7e81c8ddb24607a7b"
+    },
+    "gs_404": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_404.ply",
+      "bytes": 3648432,
+      "sha256": "7d6ae40323cfe1ba285d68379d57f65f63a34d4b422280b3fdd14a845b86635d"
+    },
+    "gs_405": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_405.ply",
+      "bytes": 3706960,
+      "sha256": "b255c4cfc20e2dc6f5e30357c9857fafce0909b3e46f7804bfc63f9ab21f29b0"
+    },
+    "gs_406": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_406.ply",
+      "bytes": 3720600,
+      "sha256": "90908a522ff771cb6339b39237f1b3e21bc849f62529af3ab6baf9748920eee9"
+    },
+    "gs_407": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_407.ply",
+      "bytes": 3723328,
+      "sha256": "d2e70a3e49ec52ad1c0a2d27166f1a99764aa87427c507eb6c22dec53c8df4fb"
+    },
+    "gs_408": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_408.ply",
+      "bytes": 3825008,
+      "sha256": "2e73a948bd27d4b6ec8650c0f204260fef8d9ed13283074b13ac5748b6cfc1c0"
+    },
+    "gs_409": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_409.ply",
+      "bytes": 3825256,
+      "sha256": "ba8eb7d5e1b33a01c169e0c1af1acd0f413df90abbb93488100282ae593b1172"
+    },
+    "gs_410": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_410.ply",
+      "bytes": 3915776,
+      "sha256": "14e4eefb58073ebbc0caa02e52eb038e812464b70448f8397b5a9ef6d0c2b421"
+    },
+    "gs_411": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_411.ply",
+      "bytes": 3887008,
+      "sha256": "181d89cd4fc4d42d46198de3fa0089d3fdf0ced535c74cdf041685baa8102e8e"
+    },
+    "gs_412": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_412.ply",
+      "bytes": 3872376,
+      "sha256": "b8ae9ff3ac604040e1f7f104ef670e5bd41ddcbb5335e46f6825035a99a5d980"
+    },
+    "gs_413": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_413.ply",
+      "bytes": 3916272,
+      "sha256": "f355b02688835d30fdf40caedaca27d60b40c9abd5ae714a9f2c9615845e7aad"
+    },
+    "gs_414": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_414.ply",
+      "bytes": 3900152,
+      "sha256": "d6e46f74cdcc335e47c9b793198b57c2b2b4583f2edf3495cd572daa635bf2ed"
+    },
+    "gs_415": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_415.ply",
+      "bytes": 3929168,
+      "sha256": "40bb8136937c99aa4cf4569064111d5b4ba4b3b94e7813f326688333b479d96d"
+    },
+    "gs_416": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_416.ply",
+      "bytes": 3888000,
+      "sha256": "75ccea018d790906d83d5e5b14bad13db8d972a77728b3efd4836116df251f5d"
+    },
+    "gs_417": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_417.ply",
+      "bytes": 3926688,
+      "sha256": "e6021065e65ef7c2636f8fb49cb9d631d83c5a791c6383c5e4dd7b7590e6fe96"
+    },
+    "gs_418": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_418.ply",
+      "bytes": 3877336,
+      "sha256": "1733367495109261c369f3ccf388659be892c28d31f6ba9e826c6c07a7abc807"
+    },
+    "gs_419": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_419.ply",
+      "bytes": 3909824,
+      "sha256": "be62a421b56834fd1cb9cad27e7a463a490283017cefa082bfecc25a85705ffa"
+    },
+    "gs_420": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_420.ply",
+      "bytes": 3991416,
+      "sha256": "4cde01bfdea6620269519eb204f29e697f53464d2535b085a4a4000d5c59db7a"
+    },
+    "gs_421": {
+      "path": "processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "member": "splatfacto/splat_421.ply",
+      "bytes": 3898416,
+      "sha256": "dda7d8990db56af32cbd9d39d2598470311c6546b2e251202432440d4f628d1c"
+    }
+  },
+  "gs_point_counts": [
+    23262,
+    16394,
+    16304,
+    16759,
+    16582,
+    16291,
+    16630,
+    16707,
+    16418,
+    16581,
+    16673,
+    16553,
+    16845,
+    17097,
+    16788,
+    17022,
+    16871,
+    16601,
+    16338,
+    16456,
+    16581,
+    16582,
+    16310,
+    16588,
+    16794,
+    16686,
+    16700,
+    16550,
+    16234,
+    16285,
+    16021,
+    16245,
+    16179,
+    16249,
+    15917,
+    16055,
+    16247,
+    15852,
+    15995,
+    15306,
+    15485,
+    15260,
+    15229,
+    15229,
+    15347,
+    15126,
+    14763,
+    14637,
+    14342,
+    14336,
+    14230,
+    14251,
+    14250,
+    14224,
+    14140,
+    13878,
+    14059,
+    13949,
+    13807,
+    13592,
+    14044,
+    13811,
+    13726,
+    13652,
+    13372,
+    13448,
+    13337,
+    13316,
+    13515,
+    13220,
+    13209,
+    13377,
+    13300,
+    13362,
+    13052,
+    12984,
+    12835,
+    12963,
+    12984,
+    12886,
+    12793,
+    13014,
+    12931,
+    12770,
+    13069,
+    12924,
+    12473,
+    12451,
+    12562,
+    12234,
+    12498,
+    12247,
+    12277,
+    12336,
+    12279,
+    12184,
+    12654,
+    12416,
+    12796,
+    12718,
+    12471,
+    12278,
+    12346,
+    12323,
+    12237,
+    12490,
+    12438,
+    12376,
+    12793,
+    12641,
+    12283,
+    12446,
+    12382,
+    12445,
+    12185,
+    12145,
+    11940,
+    12410,
+    12255,
+    12227,
+    12388,
+    12373,
+    12080,
+    12155,
+    12443,
+    12298,
+    12525,
+    12480,
+    12317,
+    12578,
+    12364,
+    12462,
+    12823,
+    12522,
+    12554,
+    12380,
+    12583,
+    12606,
+    12652,
+    12524,
+    12703,
+    12439,
+    12512,
+    12580,
+    12805,
+    12895,
+    12631,
+    12595,
+    12709,
+    12805,
+    12861,
+    12905,
+    12578,
+    12844,
+    12701,
+    12952,
+    13007,
+    12718,
+    12722,
+    12732,
+    12713,
+    12872,
+    12733,
+    12511,
+    12681,
+    12388,
+    12425,
+    12588,
+    12558,
+    12768,
+    12683,
+    12374,
+    12735,
+    12359,
+    12122,
+    12413,
+    12288,
+    12647,
+    12374,
+    12632,
+    12951,
+    12758,
+    12476,
+    12520,
+    12561,
+    12813,
+    12874,
+    12691,
+    12633,
+    12729,
+    12875,
+    12567,
+    13198,
+    12913,
+    12841,
+    12817,
+    13189,
+    12855,
+    12708,
+    12742,
+    12696,
+    12717,
+    12758,
+    13023,
+    13195,
+    12965,
+    12729,
+    12782,
+    12844,
+    12645,
+    12675,
+    12748,
+    12905,
+    12869,
+    12739,
+    12722,
+    13204,
+    12825,
+    12795,
+    12973,
+    12915,
+    12547,
+    12583,
+    12452,
+    12584,
+    12787,
+    12664,
+    12518,
+    13199,
+    12825,
+    12714,
+    12757,
+    12974,
+    13010,
+    12802,
+    12782,
+    12922,
+    12772,
+    12799,
+    12442,
+    12970,
+    13148,
+    12932,
+    12655,
+    12779,
+    13079,
+    12669,
+    12616,
+    12792,
+    12469,
+    12736,
+    12890,
+    12925,
+    13162,
+    12692,
+    12985,
+    12897,
+    12831,
+    13069,
+    12809,
+    12820,
+    12743,
+    12526,
+    12590,
+    12832,
+    12679,
+    12637,
+    12743,
+    12797,
+    12664,
+    12811,
+    12695,
+    12588,
+    12457,
+    12889,
+    12739,
+    12789,
+    12668,
+    12571,
+    12288,
+    12449,
+    12349,
+    12336,
+    12336,
+    12365,
+    12340,
+    12350,
+    12517,
+    12441,
+    12340,
+    12317,
+    12563,
+    11994,
+    12091,
+    12398,
+    12514,
+    12431,
+    12299,
+    12395,
+    12473,
+    12593,
+    12302,
+    12661,
+    12440,
+    12479,
+    12405,
+    12563,
+    12436,
+    12413,
+    12372,
+    12212,
+    12184,
+    12501,
+    12387,
+    12247,
+    12368,
+    12487,
+    12046,
+    12252,
+    12036,
+    12479,
+    12561,
+    12392,
+    12289,
+    12887,
+    12270,
+    12760,
+    12698,
+    12447,
+    12294,
+    12693,
+    12596,
+    12571,
+    12284,
+    12302,
+    12448,
+    12597,
+    12694,
+    12338,
+    12316,
+    12628,
+    12284,
+    12607,
+    12529,
+    12572,
+    12606,
+    12130,
+    12134,
+    12392,
+    12339,
+    12422,
+    11998,
+    12210,
+    11982,
+    12190,
+    12405,
+    12044,
+    12425,
+    12232,
+    12321,
+    12123,
+    12247,
+    12194,
+    12464,
+    12340,
+    12268,
+    12370,
+    12020,
+    12235,
+    12042,
+    12335,
+    12238,
+    12625,
+    12740,
+    12575,
+    12480,
+    12476,
+    12727,
+    12616,
+    12788,
+    12812,
+    12874,
+    12820,
+    12938,
+    13323,
+    13301,
+    13292,
+    13652,
+    13226,
+    13661,
+    13571,
+    13639,
+    13724,
+    13809,
+    13909,
+    14508,
+    13996,
+    14004,
+    14138,
+    14036,
+    14265,
+    14529,
+    14536,
+    14719,
+    14705,
+    14941,
+    14996,
+    15007,
+    15417,
+    15418,
+    15783,
+    15667,
+    15608,
+    15785,
+    15720,
+    15837,
+    15671,
+    15827,
+    15628,
+    15759,
+    16088,
+    15713
+  ],
+  "protocol_sha256": "791e8eae4c21374714b9e8ec0ceb594510bbd2ec1da47b667713ae85d74f09c9",
+  "scripts_sha256": {
+    "rebuild.py": "62f8b1cffc3a07acb5fd5576f426f21f5a2de3eb5add29debef151d5b7b7f2b9",
+    "validate.py": "934a88b794b751d4af8314c7ca1dea62cc911717472c7efbcfa9c309802a3625"
+  },
+  "output_files": {
+    "controller.npz": "4c23c0264d91c5607edc89713b227ff15ee863d25992d4d3743d737ac5866d28",
+    "gs/frame_000000.npz": "9ef054f71f0e492edf976efcfb0aef780269fe3c581efca8489f57ec0a57c993",
+    "gs/frame_000001.npz": "a04f38ad2f80ab431f07954611c0c5aa3277009f9ca3bfb54eede759d7fcaeb6",
+    "gs/frame_000002.npz": "f0794d2597bdafc881047afc265f18170cb9a2a617379604582939c7337ebe1d",
+    "gs/frame_000003.npz": "8ab871fbb5c6773f27cfe497e331d94bf1904e6d8b10a3559de7faa97078ab27",
+    "gs/frame_000004.npz": "1d41552b7f620b060342cece045de8e41b3e68f0cdb517d69c31d8096c0931a9",
+    "gs/frame_000005.npz": "ecb824da7e66f3f4f429a92d366bb8217e76edec30019e86792d4144e28bdb84",
+    "gs/frame_000006.npz": "656385493241a1c5b07852aead21c65d88c482e3e80df811fa39d43113f1eb81",
+    "gs/frame_000007.npz": "54d31f6d1dfe2c5a762659df99dc2e9831526c71483350db3a6776bec32b80b9",
+    "gs/frame_000008.npz": "2c53776c9434cb81360e66a1b9164bf095d6ff9e4903adbb5341e9f086463a35",
+    "gs/frame_000009.npz": "3d575ff11fd338ea008414343c7746c7ac7e4d1b7f65a197dd1ec0ba93cf95d6",
+    "gs/frame_000010.npz": "5a84b8e00c81f7401641e25e700276843502d13addd4b6670fa134df179126af",
+    "gs/frame_000011.npz": "bc73b1bb2901694aa3e3bc80222dcd1c404d6c6d1118f68594dab2842075c0e8",
+    "gs/frame_000012.npz": "10d951d7b3cf81b9dd195532e51590a53781646c5bd255dbf91a5ee2d3835962",
+    "gs/frame_000013.npz": "5ebabbdb7cf720747a18957f3987c53f329c4cff4a1b5f2b45fe78f3dab414a1",
+    "gs/frame_000014.npz": "116fe3e6775c19a27498d27bc3bf6a2348efffbdf08b4a7efd431142c40c0d4d",
+    "gs/frame_000015.npz": "195f80e7fd5c8b9e034d413f8d7b9e02ff14a8b7da49575e285ca370b7f8abc9",
+    "gs/frame_000016.npz": "e9df2c62078eb5b3e2068d7539669a6e038881835051ac8e54e608dffca7f1f3",
+    "gs/frame_000017.npz": "a693c0260ea86dcac3ff0e07f432b2bd6e5d9b124a008e873f52a475301bd7da",
+    "gs/frame_000018.npz": "110540d9e933dc13f0283a89a61348ecaefaf0bafd83b196792066a608cfbcf5",
+    "gs/frame_000019.npz": "fb7e248fc3a3ba5f4d42aeec4314b343163e03912451fd3cb0bed6686ca11138",
+    "gs/frame_000020.npz": "60fed2f93721aa19713b294f1a5345a7f096659975f029c244bfc4194d2d2988",
+    "gs/frame_000021.npz": "90083e6c4e118480abc53fe231cc8058dcd4048080fc04dda97140ca49b06ffa",
+    "gs/frame_000022.npz": "9ca57ced6eded316f3df4c27a4c06463669b29104397e639aeaf5e6276807018",
+    "gs/frame_000023.npz": "7e6dc21ec34fc22352c9550e09976eac9d15a7cd27a90c06fcd0faff69cc5307",
+    "gs/frame_000024.npz": "0c2c05b7ff8ce88ac29e4c8f75536ebf0e8ab439bb539d3be31831f057a36661",
+    "gs/frame_000025.npz": "73007fc711dd0ee09848e88b9f98ee678b75418ff366ecaa71a8e903c6f272df",
+    "gs/frame_000026.npz": "88fb177ff11d0a530c1370d7a2230be41f07f50c9d48dc1fb7582022e76720d5",
+    "gs/frame_000027.npz": "216db3cd153cedbb970539bbe48de9f0e5abe503411b3785b1955b9ea7d812a1",
+    "gs/frame_000028.npz": "3d947af91d85ddce873295581f366ddb5ca56bfa1e82d1d213bacae01aa1d5a3",
+    "gs/frame_000029.npz": "3f56ddb504dd520e7fae28b081c420014d5bfb293afa9b1158096cc6f3131d25",
+    "gs/frame_000030.npz": "d1cd064e772f246ef96cc22a040e46b4df0fd336141436b106e0df97e5cfb37e",
+    "gs/frame_000031.npz": "953c17d83e2e06c417d49c27428e229495b19022627a1f2dce7aad252d2c10fe",
+    "gs/frame_000032.npz": "bc263de1bcd96dec2be960fde28f4af47b4b8d85ea16b123816a64d71e0d136a",
+    "gs/frame_000033.npz": "a96440ad186964ad93fe45a7df531c4761fe174024d75cdb7fcfb6fc8f27e239",
+    "gs/frame_000034.npz": "64ecf419bc864d769c34239aa9c2d037d79f25635c14d4d3dfc09828437cf2a9",
+    "gs/frame_000035.npz": "024a6dfab4deadff19834d8c7c1b22e8a3b3cdbba92e80f2e8751eee7125900d",
+    "gs/frame_000036.npz": "4f132aef64adafc231eef2f77b4d8a6d2ac005a03861b0e01cb4dad4709cfaaf",
+    "gs/frame_000037.npz": "ee27784f7d04b2e77b8afdc452f4b1db324c5ad24cca8ff8d81d9128b60ee205",
+    "gs/frame_000038.npz": "faab955e1286415e50d312f1982f771c291e0dcfb4e6993d36e21ef9104946b5",
+    "gs/frame_000039.npz": "6bf079ae0da7318c93a7dc24ab7bc0b54539350dcbc56aed6dd4d5b35d090c53",
+    "gs/frame_000040.npz": "8f48e785391a145937b1bbf142f7d207d4753b67c7ed6aa5855694b647dd8a16",
+    "gs/frame_000041.npz": "db787aa84092e6dabe6ae1e662ae0d694802f13c8391a6ad9333ae628767de93",
+    "gs/frame_000042.npz": "8d016cb7a2b51a044e35d1d025783592b9c6dd78d3f79f057c1f27aff438cd2d",
+    "gs/frame_000043.npz": "912e02cd5aaf8013e32a433e82f251dc25735412a0bd130d1cbbdbd2c7d2b879",
+    "gs/frame_000044.npz": "2d6dff2d79524b6ed476a872da34ddefae9b1f56308cdff72d17bd05212c3675",
+    "gs/frame_000045.npz": "5072d29c87a03ba6b2955fb7ad36dd3d5f23c06b3d25eb5dd7d699de1013c9e2",
+    "gs/frame_000046.npz": "b6f1c146a6cc8077197e4e55bffa9e19bdf5d032985928d49a0c54ad4766d39a",
+    "gs/frame_000047.npz": "c2a764a49b60d21e81f61581fe4241a86382b56642bd2785a4fecef16e3297c6",
+    "gs/frame_000048.npz": "30c6b50160132c7b2e46f95da4847dad27d7e43f00eee6b4f03c86fa8fbe29da",
+    "gs/frame_000049.npz": "8d75cd3d5c06da967ba21ffdbc4de611fb11acb676ad94f476cfac82bb4b35d2",
+    "gs/frame_000050.npz": "381d2ff0ab72d5f3d515ff1464e3e9bbd197bb819c631c8ac57729b4f3bbf319",
+    "gs/frame_000051.npz": "5b5a9d4c97c975f150239aeff4b39ea07c9fdda07147ed29cae835a23ef8b00f",
+    "gs/frame_000052.npz": "5d068ffbf729b7ed29a958c867dc6ee489934732b9c5925e43af2da62272a4bf",
+    "gs/frame_000053.npz": "867d889c3f7138c45a6710b1d4befd52427535e21504a3fe8fbbdb2267b1e91a",
+    "gs/frame_000054.npz": "70ca560b5be136c7a0df97a8005ce37c729ae822e9356dd240ac77917c19fd4e",
+    "gs/frame_000055.npz": "53a90f6f17968841ee86ab8bbd0c0af84d01f6bf825152dfd6ae42524714855e",
+    "gs/frame_000056.npz": "291d90c53d58d219f36b55cc5ef451f374b56e396c5e1670067b3cdac06ac186",
+    "gs/frame_000057.npz": "cf9378519f344bbfd8a0c4484053a180a538db0dd2862f8f38fe5bace21eed74",
+    "gs/frame_000058.npz": "de3ac5608fe165406572826a50bfa3945c6aafc4cffc7cfc9b41e0b5cfac6dae",
+    "gs/frame_000059.npz": "e1bc6d030ab356dd198c770442de2a14bd34fff923739d0ee3688e56159e25e2",
+    "gs/frame_000060.npz": "2712a92c985ca7806a3c32673f2da439a1383461d9b7f8990e0ead5e87135bee",
+    "gs/frame_000061.npz": "4c12022d199997cde27eebb2879f51c6bcaee221a3fe5daf4ecdaf65f99a513f",
+    "gs/frame_000062.npz": "9b575e0f0d4a4ff8526a28982f2fe5c5b99198ffac4a3e2e47a1db3939c3cd2f",
+    "gs/frame_000063.npz": "d82c5b81d316b4a456def7628237746c89243660f2ab2cdfab6c4b882696e9d8",
+    "gs/frame_000064.npz": "a5b6c92f26ddcba6ff1e4fcd0d2fcbfda1f345cd9bc46bb9a9ecaeb946244eb5",
+    "gs/frame_000065.npz": "d45e561febae2d7cc89a0d75fa70f5627af812d9fb5a16fb2fb8f4b3ff9bd692",
+    "gs/frame_000066.npz": "7bb85a0b2fbe371cff45f382527b4ac0383ee1c098bb81c205e0e6ad17405b33",
+    "gs/frame_000067.npz": "2a5215a623afb298f3d4d75f0babcd979a0290b296a5c2dd83527ca65c739c7f",
+    "gs/frame_000068.npz": "fb18a95b333c423c52f44dd3317dcacd1ce0d716b3406277a7f79d2cace10f6b",
+    "gs/frame_000069.npz": "faa23b2d9a322421ec26418e2ec7a46e413cbc8cc9759c1eafe89370721088d2",
+    "gs/frame_000070.npz": "40a723e00d516ce14762e95506dea38246b5b7e12345f78ea8914bf2124df956",
+    "gs/frame_000071.npz": "2cdb0b9841a9ac40e4b2a0af5fe6cd5d94bc2862f8a117db8746652f96abbf9b",
+    "gs/frame_000072.npz": "487a6ce95d2a0f3694092ecec746760c83177e924c88ee6f6692cf5672a59276",
+    "gs/frame_000073.npz": "29219ba218f8f4070079c43542789e44d3cc2df3bd702cb0e9f82be42037df57",
+    "gs/frame_000074.npz": "b31eedaf393ffd51125463aedb0139be94bb137f7ca228753a90eea459bf6ca1",
+    "gs/frame_000075.npz": "3a0ffcecc03e592619cf0f8ca9da6dddc6a8ea4c7ff6fef54decc9e61ce4cb29",
+    "gs/frame_000076.npz": "1aa6c99c33fda5f930c7b2713f6bc3c7962913d1ccf44df4b888bc5c2a97b07c",
+    "gs/frame_000077.npz": "f226862a8c93d9501ee10adcc6b023a0ac947d541dc05903b2a2b86aff0f9b60",
+    "gs/frame_000078.npz": "0d37fb6630c2cfab8a8f6e6d440a13e3b44ed7de663a74b4ad89f3ddb438334d",
+    "gs/frame_000079.npz": "7058ba1e0dcebd7dcc84935a3c3207380a18831184fc9b644f9c8ebba5536075",
+    "gs/frame_000080.npz": "ababa5141f0261a03a880bc35707f14ab7e29bbc9e04efa780cca859be030a96",
+    "gs/frame_000081.npz": "1da2753f947725f9078a2697940d3b18d7187c28ea9fe75789ed0dcceb06960a",
+    "gs/frame_000082.npz": "c0694341a950094ab22be05406c314941113005a0550432b59f05e6da9167fde",
+    "gs/frame_000083.npz": "571454c8e4f0e7b96aa5e968bae9c3c7a3db9d269951b91fa87c28b6b74cd2a4",
+    "gs/frame_000084.npz": "a702c05b180e00c32d6b0aabf2dedf4409318ce3cfe7b6ce7b555283251de51b",
+    "gs/frame_000085.npz": "76b3e3a1d7a77aa499853ed6ba0ea04067068a32a564102cf0153c63e3315cb0",
+    "gs/frame_000086.npz": "e0e77dcfaed160b436ad211c39df3b1bc63d8f34c4bb98ccc1e881d3136daaad",
+    "gs/frame_000087.npz": "c5d8f82ed7925ebb2a2ae5bf65b7fa066c65c5e5fd2ec97e31803a6618d571c8",
+    "gs/frame_000088.npz": "d2237f9ad8e28e6b10cc3a00e12c6533d21609e9053b93bf2ffac263b5ec8c65",
+    "gs/frame_000089.npz": "b0a177bc3d03681bb83dd062302d76db534da5dbe6adcf1501cb5b66b644be3f",
+    "gs/frame_000090.npz": "2eca6f06c1ae9114d8f47f4df8d81775376c81584ef2a829bc715cbc9a9b176a",
+    "gs/frame_000091.npz": "8afef548626f51f3e4d1d6960aa29e469e23a98dd1f2949f388790cca176df5a",
+    "gs/frame_000092.npz": "fc4a288c8963de6407205ab3fa86834de9183c756f52f2dd6d1dd715feb34060",
+    "gs/frame_000093.npz": "a59d313fc0cc9711943b461b5d070c6508ac27a8525e7317e33f90a7fca54816",
+    "gs/frame_000094.npz": "439c8287663059a1a7313ccc114b1ec24cb0677d7af64dd4593b0cdc088ed315",
+    "gs/frame_000095.npz": "47cc02382c738bf5b5675c05cd57ef17841c1dde209096036d5f325f9a285fb7",
+    "gs/frame_000096.npz": "07a062105dc426ff3d32bff0497b862aa1a891055090f6b4aab405fd65a58f5c",
+    "gs/frame_000097.npz": "e69e493ed1ee5bff02fb51bd8bd29f9f4abe4e4e29251c3e85623f91797e85fc",
+    "gs/frame_000098.npz": "743395827d361e3a2a519950feaad77c39cdbc845bd46d051f87aa24e21652d6",
+    "gs/frame_000099.npz": "3a2f5150805fc757430cbe072df916754b18a60d062de0f2cb8c8af2ce789f00",
+    "gs/frame_000100.npz": "5dc03c2513dd4580699a89ae25dd9dde2d81a6b986bf3bef3804cfda9fe1ca72",
+    "gs/frame_000101.npz": "1813bc562a3a40c92190a96bf776e7fcac076779dfb7c3dbb0286a63e5fc3ff3",
+    "gs/frame_000102.npz": "43505338123fa3d42b7b21b940d74e6b87347729d8c33f658191e1503445792f",
+    "gs/frame_000103.npz": "a541d5ba6848a23e936fd4d946bb7724d8d2e6942072fb51403efa1009961647",
+    "gs/frame_000104.npz": "a351d0456111e5da4bad9fce9d89a639d0299d2f5581484f310839603cbf3823",
+    "gs/frame_000105.npz": "0ddd240c18812dbad4187b6be55f0c4b88af465131f96949adac2b825507bc0b",
+    "gs/frame_000106.npz": "e2214af1a2c8243a69dfe5c6144794cd5bbed13c6891ba1920d748eebb8f4f85",
+    "gs/frame_000107.npz": "ff2ecaec3483adafe3daefbb8f1bfccf148e5dc73ec4913cbb71aa7085d56fa6",
+    "gs/frame_000108.npz": "8edebba7931970e8fdf45dde525846df439e662f1ce2d9346d9908bd533440da",
+    "gs/frame_000109.npz": "a33fa7cd33cb1b87028277089f125bc6325f8e43214ba179983ca6d303e01b86",
+    "gs/frame_000110.npz": "c18a031e32ca15e46c0b7a28525bd605a63f9f506fa1d5095ec25a56ca62cb95",
+    "gs/frame_000111.npz": "2eb5e5a4b37ba6913abd4bea97bca0ec496ae4f576f050e6913def602844a608",
+    "gs/frame_000112.npz": "38242763760c28d232e02a983e9d83c5dbc9d780247eb062ae9017c52a3472d0",
+    "gs/frame_000113.npz": "a8781e72153b4b3ab83371f0a7e46f25abcffd337e585be82dde05ed50fb2fac",
+    "gs/frame_000114.npz": "59324f45ce27a79d4737745596efec51d481ff78af6f4e32e3383d56694b0dd4",
+    "gs/frame_000115.npz": "e286403f05ac1753eb8d3e1b8711188f5e8bf539bd797d543eee296e11d7e03a",
+    "gs/frame_000116.npz": "036101e315dfd1a0aa856a49766ff56b4b9302a7998c19c2f45cb3b8356738ce",
+    "gs/frame_000117.npz": "db8bccfd05958efb8a90ea9961c89cb155e6a021ce3109d772a51fdbede4f8e0",
+    "gs/frame_000118.npz": "9cf5c1c33fd7f70c1c51720fd22a8c111988993e9d1e74cf824649da74752ba6",
+    "gs/frame_000119.npz": "3409989d8a124f373e7447ee40e6c7506cdbc4031e5ce2b1b7633dcdab927673",
+    "gs/frame_000120.npz": "91ea7acee90232fd37c737cf59a941ba1dbda08ed2711ff4556960c096891a69",
+    "gs/frame_000121.npz": "cf86a9d74d81975ae9719f8b15a2aaf90f4dbb2ce0c34bfb48272b0662968cd2",
+    "gs/frame_000122.npz": "0983561507176a2b77e4b9e756c99eb5889686e0481e677c1360e1272e908859",
+    "gs/frame_000123.npz": "31ccf59b1bea8226d65861a56d815e6abb1864ce2d85c35ab90c668d6500e45b",
+    "gs/frame_000124.npz": "f9a815f99d82dd26c819b0444744f54779d695b9bfc1bc2c0c52f4bff404ebf2",
+    "gs/frame_000125.npz": "8c8e34c142fb9bb75a1712bab2794ac066ca39e714e58fbccec7330b9987853a",
+    "gs/frame_000126.npz": "e1360ad9b92e51ce2145befed0c00677e0091e95cd6c358b5607cbc35e5deaab",
+    "gs/frame_000127.npz": "63b6283a1be2637b9d304a780d0ffe678910329a4dafdd356ecccc491f31c1ca",
+    "gs/frame_000128.npz": "ff3cd925ff13a3df29ee344c6575ea1ca090893ee02e0dc0945d625ff85c35d9",
+    "gs/frame_000129.npz": "63faced667c7c6f6ad93d44c94ed455587ef07147404fd1cd870030610ad901f",
+    "gs/frame_000130.npz": "c65249b54858d8c6116b44a33717396589a94063318e0311dea496225d2487e8",
+    "gs/frame_000131.npz": "11907bec05069e3b6536bebb633cf97b6b7b8c662358244c34e31ea299203ba7",
+    "gs/frame_000132.npz": "3755415139bb5e0d43cec5505c18062dcfbc42445e7e407294ee73d9685cbb14",
+    "gs/frame_000133.npz": "79abe6ffc153ec9e39a388ca01a46adcae2b28a0b15cd8b913fdb594a472d4b9",
+    "gs/frame_000134.npz": "19023ff2fd6381a3af085769fc9b5b12c40c2758441a1ad332632e42f7e3fa48",
+    "gs/frame_000135.npz": "598cfe931cd3976ac0799ce2fd670906f887931608e778d4a7cf88b61fa1d18e",
+    "gs/frame_000136.npz": "0e811fa87c6edc9fad9004e71d2995d9aad6ca22adb22830594a5a58aae53bac",
+    "gs/frame_000137.npz": "5b8dc4b336a5f61a3ebd2aa5ec2bf9a03b9776ecbeb0020176f6da61ee075906",
+    "gs/frame_000138.npz": "6443282a5aab66b9dbf73f0615b2cf7aef5734e740e354c01b3739af2ea33f8f",
+    "gs/frame_000139.npz": "10aea68c0442d346e21c914e76c6f2984b807302f2116c52788d9c5f38515dd8",
+    "gs/frame_000140.npz": "3d884e5f4105540ad26fce80492147ad33bcfbd11a27c6e05e3f26168455c7cd",
+    "gs/frame_000141.npz": "06c3a1631b3d6dac5fb9db1912379a72cce61f630e0a2e2177f7d6c2a1f24d64",
+    "gs/frame_000142.npz": "644ab831ba0b3c946a96c340a69cdee3a13e185f26c258e9df068b08ef82934d",
+    "gs/frame_000143.npz": "84525f7a71b25bf469c184fd71e3a7b977db84aa97f311c679245419810201d9",
+    "gs/frame_000144.npz": "21d132c27303074115ed418d85c135ce644e0982ae8b0f86cc031e30013b3408",
+    "gs/frame_000145.npz": "4ba561f2386a4459026327290f1e50928251e82792d53096ae13512bc05e9aef",
+    "gs/frame_000146.npz": "68d653ab658affdf93b106c0a1bc97c67baeed53f55835fb40bb335f063c9dd0",
+    "gs/frame_000147.npz": "9389a9b742ca037d3f929267007f17d3cae1b3a44a635dcef1b32f7d4f93113f",
+    "gs/frame_000148.npz": "e42f2f39d666a1d4dbe941e81b61a3fee255f00079a57ad6d6f2061d2480d951",
+    "gs/frame_000149.npz": "1754d6c4c90c9108b77298cd58490ed73727fcbc47ea055b1f8b32b95a13ca4a",
+    "gs/frame_000150.npz": "1ab47784c839c3206f61b31a1ee9a6556d6c7a3bc008867f076242af068158c4",
+    "gs/frame_000151.npz": "f66c29668f67cb5c5cbb7f7d8b1dec3a0a276306d2947aa160313fe35011124b",
+    "gs/frame_000152.npz": "016be3bf80e36d6cf2d164f964127cbe2a0b581fc03e182eafafb78ba1a6a5e9",
+    "gs/frame_000153.npz": "75f67584e7e99a4d025e97937cb3b32881bdf08a0f11b89c109bd94b7f54a80c",
+    "gs/frame_000154.npz": "f76d15dea4662299ede05995727930a977e2b214e25484fca616f4bc6c8d78e3",
+    "gs/frame_000155.npz": "5c80be1cd9b60f82f923f98bb541ec85ffc4c00c5c3d6631cd3020115308e8f3",
+    "gs/frame_000156.npz": "58c6071d8ef2d9ea151ec1ce8a630a66417104ec23947ea15caa172d9f695aba",
+    "gs/frame_000157.npz": "89f32bd9d0245c20e0ef5c80803fa1417cffe303352c212fe59d66f41a345bcc",
+    "gs/frame_000158.npz": "d7e3846bffe06014e0035fdf83ab9900febb4234a3e5fa1c114221adf17ec18d",
+    "gs/frame_000159.npz": "b293d4297eb3e0b9729649aeef959cae82027a8a4d5ae04caf6ead81b759e1f4",
+    "gs/frame_000160.npz": "cb5fbde60ca43a6444d744b0e0d3b91f04c34ef9bb2a2c212567199bd866c6b1",
+    "gs/frame_000161.npz": "421241a74c0ed5e7af83881257f14d633d3be28c495411fc46de456be6a41713",
+    "gs/frame_000162.npz": "155e28a8aeed94357b2466981032d9f8d370db6ecd719021191fdffc9f4e000a",
+    "gs/frame_000163.npz": "b443031b93cceaf1fde23b5b978180bfd3c8151224b80103dc8ff7b585f905ae",
+    "gs/frame_000164.npz": "4911c2267eacbd8b7aea6aae6aa9e3390a29d7a2f51ea30dc03d55538bc40999",
+    "gs/frame_000165.npz": "796adb3af01f5150355432b3af2275829802291034f2aea34cc1561a09f4b503",
+    "gs/frame_000166.npz": "096be114985bc0d8f54b35d4af49111cd47f4e3edbe6a50f96e522584618f9d6",
+    "gs/frame_000167.npz": "d4ed242cedb4c1df704935efa9849b6ecfd4287f67e08a677a9fcc2cff2e222f",
+    "gs/frame_000168.npz": "03a554ca4969fecec0d0be248b45d527aeaf3b5ccfbf3c58b11da6ab0d71324b",
+    "gs/frame_000169.npz": "85e01c187054661fa2477ca356569f3bb891ba1d9672f79c665e16fad85f6db0",
+    "gs/frame_000170.npz": "0ba882e8bec21020fa84e704c1943963c6778e518c39c65ec17278bad4bab6ea",
+    "gs/frame_000171.npz": "a59713888bf3a6837409db52308bff4038d1a3ac9b3ec2ad4f29c5c34d7e5293",
+    "gs/frame_000172.npz": "2a1992727cf25483dce207acc38a5dae57306433cf386d4b7488218f4c6c20d0",
+    "gs/frame_000173.npz": "18a6b71c33244fbf168b2651f32601f90e209e60b32698ced3989c0214c4128d",
+    "gs/frame_000174.npz": "7b28a575e7bd81a84ac21aa541a6016aedade70191ef74d30b18e202c2ff80b3",
+    "gs/frame_000175.npz": "779f17ee30361051d091962e59f5c7d886817b1507bc22330835197bfedd96f8",
+    "gs/frame_000176.npz": "4984c415606126f6bc75efe3c48486c763e58720a5220de299e96bf119873b41",
+    "gs/frame_000177.npz": "45559c2c8eea7dc21dc38fb497886130b71baa6b369ce9c35bc067f467db87b0",
+    "gs/frame_000178.npz": "b3fe3a3bddebd3064394c03ee7a23003591561b35680cbf6971a0bb9ff85ce66",
+    "gs/frame_000179.npz": "e5c1674ea676a8c729d0e5049744f48534c68a371da872e6d3f9f6a79bf98fff",
+    "gs/frame_000180.npz": "991b901849ed2c2c356baa03586ac2a9a8fe8eddce1cba681684c2448c32f53f",
+    "gs/frame_000181.npz": "b035ecc9aa2c97b49473498605365f809442366bcf201c7ff77f27ba8eddf942",
+    "gs/frame_000182.npz": "c4c3be260e08776b7ee7dd81234cfeb8d05b063b2f9928af34edf6a8b13df0e2",
+    "gs/frame_000183.npz": "9df590b6ce9c6aae58407920add1bc1d3c596cd7c6b86abb4d2e11523cba07e1",
+    "gs/frame_000184.npz": "74743532e0d6bb685172f0c6c38588c44041443165f7b4b4c1b00eebb7a31a20",
+    "gs/frame_000185.npz": "ba5244a1a892272900010f83f0d3bb3ecdad8a5d01f3a85b0ac329cc5a3e6728",
+    "gs/frame_000186.npz": "32cd2eea3f725c972d75cbe985d6cf472f643117882249db5d39f3ae6f7e1790",
+    "gs/frame_000187.npz": "cb73e0fc7b4066d57c9d446092044030670b7bf8f25e98ee20e6ca5c31ad40d6",
+    "gs/frame_000188.npz": "6ddea0ff2e2327953481e37f2b8aef486627afd00cb3e32b76582db867e1f822",
+    "gs/frame_000189.npz": "8663822c01cded45ff9e1d07d313002c2420549d51de3d20a0afd8d420c2ac8a",
+    "gs/frame_000190.npz": "164f693ef3c2716e54cb8fd59108077334b3f7006b4604b37e65c234f0792c60",
+    "gs/frame_000191.npz": "63368fdde2a23e63309f941b8b15ebc77fdd12335087cc11f7f93c466cf18ae3",
+    "gs/frame_000192.npz": "0299585e9c21afba7f257093177d9f51c77c063efa16d6dc4b090ff0e9433e3b",
+    "gs/frame_000193.npz": "fb583a4244ee5c05eedfd274c0130e8cb6b3f2f892040254411db5b9f98469b2",
+    "gs/frame_000194.npz": "140025424ce2d54009f3550734d566413bdbaf9a6696de601f140ac9a65d39f7",
+    "gs/frame_000195.npz": "7ae1102c5da5d8bb74f9b43f852676b94a2774e19b6c0faac16c7278453414ba",
+    "gs/frame_000196.npz": "e7a60c5c2b45879af15b8d2c3a104c237e2f1739c9d195f24f3c24666aa7a95b",
+    "gs/frame_000197.npz": "840b09ead42c011eed9084deb46a2e6f174d16105257e8e90ec4c50039ded720",
+    "gs/frame_000198.npz": "5cac520fb33d4a7aea51f8b8787a2153c98efa9b221fcd19deadced4bca1c047",
+    "gs/frame_000199.npz": "32cd886c62ff90b06913510bbb19dc6092f8d359ee80ac45bea9cf6f1edd0abd",
+    "gs/frame_000200.npz": "8221925664266a6500d8387802404a204f118d4e5cf87c4020e2856e4294addf",
+    "gs/frame_000201.npz": "2a9096ff537ec99df371f3caf4443c5ca8269138645f03bb1a75461ac84a183c",
+    "gs/frame_000202.npz": "c1b2912d0f74af4cddc8ba8a7db5bbc66a4c6f37b202c0063a26f5de65a23e7b",
+    "gs/frame_000203.npz": "03ef0e4aaed41647465a40cd53aa4f81202489d52ace32de35e85cbdedf8fdf6",
+    "gs/frame_000204.npz": "3ccf07e34cd31f6c03d9b6529595cbf18335c333e0936016918fe7d430f71c91",
+    "gs/frame_000205.npz": "685e5cc61e7f81601fb936fa58e6ff68d7ecbb6f813b2b073f38870bbefa2ecf",
+    "gs/frame_000206.npz": "a69f991bd8f196abea98443084b49a085f71862590afb46466b86de05f173cf9",
+    "gs/frame_000207.npz": "bdfd4c7a1b75ba5dd6a17648f06671f9e2ee0fea4739719cc5e02deabaad942e",
+    "gs/frame_000208.npz": "86f0d049f691134c7a13c32ac8a4af05f79103a31cbf7f4119d1dae80f22dd7e",
+    "gs/frame_000209.npz": "b872fd60e485f1d930c5f750ff12a3ebc2efd40a1804f6f093e383c5484ab036",
+    "gs/frame_000210.npz": "58387e99a8f156a7eec9030ab68cc22598e555c3f5ee644206b4b3bdb27fa3cd",
+    "gs/frame_000211.npz": "9057ddc83e3a8f44f6eb0d0d431fd7f881e80a4f9fd204a5902c2a47eee43ed4",
+    "gs/frame_000212.npz": "7572a946a09ce092b432a5d5747a2ee2db858450e4515fc3334439b750810193",
+    "gs/frame_000213.npz": "9553216dec8e391ea84b475eda7789cf3e27cfd2df30b22f7658042b732687d6",
+    "gs/frame_000214.npz": "290c0bdaf7890d875a7c63cda7331785ed1807d284340b6cf3774d35900336c4",
+    "gs/frame_000215.npz": "8b118edf12c37869c40d10f6894505f2db0f94aca097949e18ff6f702c3fa1c3",
+    "gs/frame_000216.npz": "0d4a7741968b2803842d34ad2c31340c7ed915015cd5a871af110f64ba1e8329",
+    "gs/frame_000217.npz": "5149b3ece21ee23808a33e225b0934e98890a74660f82b25cd5b4f3e9e3a9392",
+    "gs/frame_000218.npz": "936d3b2953ee8666cc3b91b216647b1e169ee40c586c5ef83e99eaebc97c2c21",
+    "gs/frame_000219.npz": "760956a8cce05d1f66e5c26065ddc9233617a109e4ae5f0e8c16cd0c496384ca",
+    "gs/frame_000220.npz": "934aff19dd697565b1385bb2e3ed324d43fc06c8f49594fb054d060b995bcc56",
+    "gs/frame_000221.npz": "95155b712febbb87494ea79366e8540dff5f4045e6dd0ba6bedda98d512aa57a",
+    "gs/frame_000222.npz": "8a01e4af763c2d08b854103770e5a58c460743d06babd2ff1cd4a7a8a7b9384f",
+    "gs/frame_000223.npz": "dae26b186679303dc4db3a86fba3b2f951c15e622cad2d98d7097a78254e8575",
+    "gs/frame_000224.npz": "954e3358b0249337d5060d4e1655a38f63d9a6487db0c89d44c1c0be91d7b6d7",
+    "gs/frame_000225.npz": "cef35d0b33f6109327af8672d3d446da76a2c9078f4af10a8878492cd70f180c",
+    "gs/frame_000226.npz": "b48e38639493515c0e9a1ee2958950b937adbedea45b34ee28f89952cca123a6",
+    "gs/frame_000227.npz": "618bed42562cceb483e8c0ab5af71524581fce1190b14ad0b721dcfa2031b0ce",
+    "gs/frame_000228.npz": "01e6d7e41581d060954157c24731abc65382fe4ab5a4fc2addde9c8cc1e58502",
+    "gs/frame_000229.npz": "29ae2900dae1c794c17383b93d372b9b72adf6b88ba327c05a6434bc9036383d",
+    "gs/frame_000230.npz": "bf224d68ff666fcf582b7c6d3c722db882bbed23b44bba282c28f54a3bfa09f9",
+    "gs/frame_000231.npz": "b96ace11181829541a8c127defe598eb28ed57527bd19a8160c776d28b0ed34c",
+    "gs/frame_000232.npz": "c6f64822a669296bd2319a97fb14b8e0e9bad830f5963e98e6df3bfa6e54d73d",
+    "gs/frame_000233.npz": "49b2ebbd705acdae55364db42e006a9f8c84647a73a6d671a7f8df2332918bbd",
+    "gs/frame_000234.npz": "f9c0bd369d25af1b3b2b83c8ee53763849f4532f2a309349c148ca99a02246c0",
+    "gs/frame_000235.npz": "a495165ef9a23a893b8751bad296a43fc1c4ea8da07a07c974afc96e77c894c6",
+    "gs/frame_000236.npz": "f117e934f5a9e0cc06f93602ea654fa3ad47b0a2a10d1fbf9c11d7ec39bc3913",
+    "gs/frame_000237.npz": "396baccd695e4229ca1774179600d5325ce67ed15396f22934147325fd5b4e44",
+    "gs/frame_000238.npz": "ccbf22219c486eb0b8b36f09d855b462383713caeb609703452768988879cfbf",
+    "gs/frame_000239.npz": "f9261aaf092882b50f3e26352c6b527d3ce1377d05ee1ca626428bf91ba6adfb",
+    "gs/frame_000240.npz": "149204b903914237178f8d39f4b4f47a4b88a85283a23f316159bd49efadb96e",
+    "gs/frame_000241.npz": "8c21673d27acd1572b7bd9b7c22d72d463b88b9757d666931be4094fbe6a71b1",
+    "gs/frame_000242.npz": "38b6f8df5abe563cd6b142df6cf6a119be453d306c4284a321ce9c77a4c257b4",
+    "gs/frame_000243.npz": "439626973afcb48f86facb2cdd802e9296d17c16adefd8fec0dee610deedf7df",
+    "gs/frame_000244.npz": "3496490c68738ba6ddf6f69e811af912149d5766d62e5e6794154085ea69e230",
+    "gs/frame_000245.npz": "9e6f1bb3f85e9225eb3bcbf9a5139a598f66415e9a748df85f7b992c3a8a8794",
+    "gs/frame_000246.npz": "84d26aee892c54324098ba020509e645c3e338243f0835812232ed4b174143d6",
+    "gs/frame_000247.npz": "ec60d45deb5b37a6f67f13d5aaa7e895361cade9edcdae40f8fba101ab5ba441",
+    "gs/frame_000248.npz": "0980d551152fbc3c50b33611ff65fe05d0a1c1eb52646991a8dbec57421b2958",
+    "gs/frame_000249.npz": "8cbca6d0678d516465d4cb5ce16df2245d2350cd023686b74bf80c3e87e85347",
+    "gs/frame_000250.npz": "5de6879049911d2b51b02aa70e6f5aef8a82c281c5e2811f5b7eb0e4bc4f30e5",
+    "gs/frame_000251.npz": "63705dc22e3ce903ee28c426b3a9f5b388db1c9074adfd5f4615d47d0dadd1e7",
+    "gs/frame_000252.npz": "e401af38832c61bdba14a50999de7739d580b04f112c808892b46f0d43f5a2fc",
+    "gs/frame_000253.npz": "048f7a6a4cef6de7f02498866c454c4bd85eb80bc2f01731833a7833b9090b83",
+    "gs/frame_000254.npz": "630c06b7975a9424c5a661d8903325e249178d161dec0db92e73fc6bded20ea1",
+    "gs/frame_000255.npz": "5e9520237d589625f4eca2df556c840c5ac8869f6ad4a50c80b1e71e7e3d2cab",
+    "gs/frame_000256.npz": "0fc8b48d22a8f39589f5d976d8360cf2c21955042e5d057b1d9a56d4b4e1e0e4",
+    "gs/frame_000257.npz": "1dd8b53f2f179cccc271330a3ad95844d789c9ec2335310ce8c7d7f7dd402174",
+    "gs/frame_000258.npz": "9f9652fc8c75553d0b279bbd57dbe9d1f22319bf566ef634b4f3b68c08b2ce78",
+    "gs/frame_000259.npz": "27570106d8291180bd19c00538189c7d8f1d054668a9c08a57b8c790b879df5a",
+    "gs/frame_000260.npz": "cdb3ae744f32c355faa5b15fa9de1f2aed537294a6a32fe6a89af27b93e464c3",
+    "gs/frame_000261.npz": "bde9fe105c97f00c846c05b31581ebf4dec28b19364c69f79b4545c7a9bbe84b",
+    "gs/frame_000262.npz": "3a36cd9e6931b0f278c92a7925fb6d8b56ef15d6146fcac0e4675724630efe68",
+    "gs/frame_000263.npz": "b835905537feb5a5b4ea4c78b04f4711ff98f3eb7453625883a2ff689690eeb3",
+    "gs/frame_000264.npz": "b6749a5fda7199e91d08e72701b85850af81faeaf7e06bc8fd120c5911ca881e",
+    "gs/frame_000265.npz": "abe60e6e515e7f41e376e3c0547b43c9ab30bfec93ae5c839fc65065bda92ae7",
+    "gs/frame_000266.npz": "6f3d70e9dfe0df89dfe7d52e8222c5813fb8865018b8a40c64194a3c3f0a9c48",
+    "gs/frame_000267.npz": "5a2f522b2a1fa76dd76d06c65a9e4b7dff4dd6c10474377ec3721bd099bf7134",
+    "gs/frame_000268.npz": "6a389e72153d619901563368704a406dd9a573ac74baf0e22e759beb686689f8",
+    "gs/frame_000269.npz": "932eddfd060f6ad873bb93772207f9d8e78f3a909207a13f0d4fb8d15a836788",
+    "gs/frame_000270.npz": "9bea7fbf13ea670ece2bb9fe3565e568e8ed0e45b7aa0f16ed0cc7ea0ba4ba4e",
+    "gs/frame_000271.npz": "05ab6807eac01b7b3c750d213e435b9f61e46876e7a8ad38bd220acc24835e46",
+    "gs/frame_000272.npz": "3676493ffe1d195929b1123573febf1f147908fee0c6cb36a9b88d67a01529f1",
+    "gs/frame_000273.npz": "bc47c0e3cc68b747942cd75f54c29d8113a0ae400ef9038eee0ea4e5b321b9a2",
+    "gs/frame_000274.npz": "996d5d3918e651f64c0e834ce998b51583b98ded8875c32c584b3132beda1d22",
+    "gs/frame_000275.npz": "e32b3d4746e4174b2753802ce18cea5442fb69face9055f72e14cc2fb69fc9f9",
+    "gs/frame_000276.npz": "b98b758524a61f2f59be38a8180ccb2e9a7cb6932f8f486dd641ff3e7697a71d",
+    "gs/frame_000277.npz": "657ef52250212dd28499063e7c46c1a4c669ea0b85f7f71bacc566929f5a74e3",
+    "gs/frame_000278.npz": "4635b41e01e55d31e77628f1a017f6af1d2d34850626ef8e5aaa162f8128b1c5",
+    "gs/frame_000279.npz": "4ec6b791f4c8264f3bc3c94e5a20fc96e1dd3e6b56ce906ac3d455fae741afe7",
+    "gs/frame_000280.npz": "3801838b44de395ae9a92cb7bb0e193ac55c8bce4d085b42a689a00f614af056",
+    "gs/frame_000281.npz": "865b40cdf015ba6cc63a7e71a580ea49c981a8994349842d8b3423533f5924fd",
+    "gs/frame_000282.npz": "bf3cbfcc42c5b07111708f34991d6005dbcd651372f79666a818b6d4ffad62ee",
+    "gs/frame_000283.npz": "46673d43a91e42fac25fbee918236f8a9dd1e91478e0b441ffad76f461f482f5",
+    "gs/frame_000284.npz": "80d8bfd696571c6cd308e7a02822ffd45d87bb6801acd69f4cfc69b188b038ee",
+    "gs/frame_000285.npz": "4a33dc38f301042e5eb63792ce6ce7cce440fafea4831d1ffa0ca6b0e78207e2",
+    "gs/frame_000286.npz": "bf4c7f78d83e71ada3773dbc0d87a9bf82fdb6ec5a11ce12c3adbe46136f8f51",
+    "gs/frame_000287.npz": "b164fe4eff05bd5b108d8d2ac6967983e11a08843c44baa47fe1ab65bdd764ea",
+    "gs/frame_000288.npz": "8cb40fbfcd881ea4b6b206c7f2732d5c5182cd97398b926a1f36054ebf7ba2e2",
+    "gs/frame_000289.npz": "87931c0ed3e3414705dda98c89b23f42d3ad2d4c8ffb4bf4c06763d1603970b1",
+    "gs/frame_000290.npz": "de8124cb04283a7d6714367687fa8c1ae64b6480263dfd4faa0b657e8d174794",
+    "gs/frame_000291.npz": "7ced744671f38a8a81b94b3081b01f18c3131dd954422b601401d2b5c11b88e1",
+    "gs/frame_000292.npz": "d6d9894cc731d5f03689d0d5ccf38b782f00c4a474fb83d50ff3c7e9fd53979e",
+    "gs/frame_000293.npz": "81ce674d85c23633bc70f98054673428bf9a694d24d71c24662e0aca4087e4f0",
+    "gs/frame_000294.npz": "b3f28b195d42791eeb9b9ad5778aacc1b741f5115948ec461edf7141b779d5fd",
+    "gs/frame_000295.npz": "c2dae5606985c0912495b423444ec6b42ffa21065e87fdab26477482f76bbf89",
+    "gs/frame_000296.npz": "54069a602ddb52ae7446148466e10b65a1024eee9c1257dbb607175167f04081",
+    "gs/frame_000297.npz": "f949134876bd2931afe5fe7e35286f07083da47b1622ec5a695bf6130969ffc9",
+    "gs/frame_000298.npz": "0d7655fc0017e147df3060351cfab4e61b409c4ac6ef3d8053e0adf764989f5b",
+    "gs/frame_000299.npz": "3e39b13840c3e259b6bdefa0fb47ed150e0aa1c709eba3a1bf961bd7f6c96502",
+    "gs/frame_000300.npz": "44aeac973afd03912919d22feb9e72a6f7e31431abeffa9a983b757362f4005e",
+    "gs/frame_000301.npz": "cb0a53bbfeabaa800e832c80deea33e611f373097501b1d2789b055b88685bf4",
+    "gs/frame_000302.npz": "ac57a28b1d04d1589659c742cef24166f4acc2d8cd5bd60a23bf1aea60277066",
+    "gs/frame_000303.npz": "1b9cffa8c6628232630b1b57637076fb477bba3a114370397cfa3afa1f531976",
+    "gs/frame_000304.npz": "3e03916f2af7a9098ed6e786041759eae3ad29628225ad390fde36d746dc2ede",
+    "gs/frame_000305.npz": "ee983b3d03c590b7a1e04f1cbd7bcb3391ecfcf707f45a0f91e55f16132f4c75",
+    "gs/frame_000306.npz": "58c325e2b52a25eb6ea552ecd420c5905fbcf55612dfbc25a828b162bb839536",
+    "gs/frame_000307.npz": "3aa99d654ace1764ea16310f3666abcf794f9c963766dc930cb13afe95516f0b",
+    "gs/frame_000308.npz": "e07a71f1d64db52e90a0c4e6bcf027c353971a4a4c07bae0d4b680839c029806",
+    "gs/frame_000309.npz": "0a61eede6094c36f9dad047d9d2604252f7310eb4bca22a63e56041b4d7de674",
+    "gs/frame_000310.npz": "488e59b9053bcfd6dc9f0b47ef8334561be72fa5e938b2a23ab725913f9e36bf",
+    "gs/frame_000311.npz": "27f620fd878e667076dec4d27dc94f708425a4552df2211eda40f60be0262519",
+    "gs/frame_000312.npz": "d5f5e3b3147d1736ebe06c6c988b1298fd3a9500f206548908b3fd42c9b9a060",
+    "gs/frame_000313.npz": "bf5698dab560c8eb2bc04df64aa6b94276db2504f2b9932ae13ec7a7d49da1ad",
+    "gs/frame_000314.npz": "781dbffb0b60b7c11cc573d4cfee81c3c50f59ab1947b429c8e3e2afa1df603e",
+    "gs/frame_000315.npz": "7c39cfc56a30a78f28dafb69257f46948186b97947ecfce7e27322498a73e47d",
+    "gs/frame_000316.npz": "e5b97c3c6ceb8d5124bbd2d7e73293619d33104e1eb313bba9e26edc4db686d3",
+    "gs/frame_000317.npz": "295a26b3d311efb6df5a10517280a8dcbc861f4f44fefc867606b181616b8d14",
+    "gs/frame_000318.npz": "ed8ca4345286f33fd72347fd2ec43a541362289cc6c295fed7b6e05217e69d7a",
+    "gs/frame_000319.npz": "031c2fd1dbbd3afd33c16b2a585c593978fcc9a9dc5cc2b2a0cb5b2edbe97362",
+    "gs/frame_000320.npz": "b23d1402945a473b71fc277116fb6657187802273dbd43ce23ded5bd1e89659f",
+    "gs/frame_000321.npz": "cdeb9f37c98026f4ff287ed470aaef3c2b86f9b76e87e5d87766bc19384cfe48",
+    "gs/frame_000322.npz": "d953b97c9730dfd60c4ca4b43339788ecb757ca06df98a9b905748a47e8f5807",
+    "gs/frame_000323.npz": "cd0406bb0080b6f814996aa7bc76d6867f17b64d28c00d0e7ec2598926dbf65d",
+    "gs/frame_000324.npz": "9a25f110334cb6e3c161c421bab6a57b921b831d7a8038f1c787aab9aedec1b4",
+    "gs/frame_000325.npz": "25ba955da8b97db8f13c8ed1ec0c063b3cf41f06d5ef54c59deb531d1dc83c43",
+    "gs/frame_000326.npz": "309878d9060bd4c95c0210610a22602b2c65e73b26d57685787d2f2d761eeb5e",
+    "gs/frame_000327.npz": "32c9b5ab1df9040b4a156fa2d0ddc6f3d136f5698487a75773a218e0f72ef6c6",
+    "gs/frame_000328.npz": "8b101e98ca828a67c66b2ad20e832a7ddd15a79b8d6f1176ad8dea0d5ac819ae",
+    "gs/frame_000329.npz": "9e56262cdcd72ff94652d405f12dc6090f26a1cbb810ccd97f1f44eb39388534",
+    "gs/frame_000330.npz": "fb06a8f0d8227475f0492d10a29ddae6d6458208d485be18cbc1e250def72802",
+    "gs/frame_000331.npz": "2d4f2b50875eafda4553bcea21d0bd1562953a41a9adb854c58f50b4b135587c",
+    "gs/frame_000332.npz": "77cebf8b753f889c071b9c245974100d9367c80e91743afcffc0086a294f82ec",
+    "gs/frame_000333.npz": "cbdd12c72105cea26b4ad3a7d03e372a7e41fa3a45cb12e64fdc11a80763b929",
+    "gs/frame_000334.npz": "45d2e12d7d6d6a27e1c32b0ba713c54d17bee7d35e813e98c5ba697f1cb0ecca",
+    "gs/frame_000335.npz": "ddd5ebd4927d32f8812d906408d4a4b64396d0486d3c3164dee1f31293ffb56c",
+    "gs/frame_000336.npz": "0d9e920e193399e4435cf66b964595a3854b1ace94f42f4a9cf18c9c70b12438",
+    "gs/frame_000337.npz": "26c9c930b8e60571dab8f78febf8c56e1a1e22e2d63d0c2c4c7fbf0b6015bb0e",
+    "gs/frame_000338.npz": "8c7593149f8be4504cb8645a9843a6fd227d690ead37dd0fc853e748caf308dc",
+    "gs/frame_000339.npz": "fe49485b144f669d7c6994d741dc182c3681e51b1f1f57b5a3155d658007c29b",
+    "gs/frame_000340.npz": "d10106985e892efd13c0be590af7c966dc285e3e50d3199c22ac573131774f6e",
+    "gs/frame_000341.npz": "f1ccfcba336f7de2c1953f7ac53c77e855a21eae6db05e4ae2beef24acec5e4d",
+    "gs/frame_000342.npz": "fba2fe70d3f5ab00d2ad493985a4c91f4d7c9809b5dbeb7c6408fc6f9da919c7",
+    "gs/frame_000343.npz": "2d53121ee80195820db25a240d1d3be2b07d30cbc472dd3c34af281ae91e23c0",
+    "gs/frame_000344.npz": "b59f92de2e407d64338b2df3833fd40d24f31497ed8fe6aca7547b96ac2e85c9",
+    "gs/frame_000345.npz": "659b5b8869b8dd216f889f59365065419ac0006bc462b1c4adc868b9e6615f48",
+    "gs/frame_000346.npz": "b47e1c02786c9893ca12f3987206830a671386b96e4639c83626da18d1a242b8",
+    "gs/frame_000347.npz": "fc842572fa2c510078a81198fe48624d628a20951f5de326e2cb9d5f1a278402",
+    "gs/frame_000348.npz": "78effde793bf19ab22d007728a405646cff2ca87d7289bae89a1afc7f726af6f",
+    "gs/frame_000349.npz": "9b29c099e5c4125c0b543b9c8257074ac2e5bd701ecbfacc93e6cf5c88ff174d",
+    "gs/frame_000350.npz": "e27666e77a8649dfe6154f4ab39ad145f7f4c8ac1706a3bf12e5a8edd8521d56",
+    "gs/frame_000351.npz": "3370966c9a821bb0aa7c31c1d755d0e5fc962754aaeb088b5b288f7e064cc830",
+    "gs/frame_000352.npz": "6684db90f30f54031029da660eb031cd1e88914ce5ed69f9471922ab9335321a",
+    "gs/frame_000353.npz": "e66fba773928070d9bbc2cc5fc05b0a4cb50ede7e63d39574b0a899e6ce52a18",
+    "gs/frame_000354.npz": "2098db5d680d483eedfa42a0e186afa051ae5de924505a2518afc115a2416806",
+    "gs/frame_000355.npz": "92f093910a13cc36a723a53b53470693e55508b31cf5171e2af54dbf526fb8be",
+    "gs/frame_000356.npz": "b63698f45d7405497f44a1abfeb84ca793bbd64bd5fe7ac136d61b6e511081ec",
+    "gs/frame_000357.npz": "ebd961229754568737db4c1dbd3e45383bef2e30b2e028de2b75be5377dcd2a6",
+    "gs/frame_000358.npz": "17dbf89bd2e5ab970607275bd8c596140612baee01097159c84ba442e888430b",
+    "gs/frame_000359.npz": "daedd4b9c1e31266aa532ea1353d5299c8db4088fb3cf2638b81f68617050e26",
+    "gs/frame_000360.npz": "faa1bbead8e6236fd6031dababac7c64303aadac317b02fb0b78d992e4e74d99",
+    "gs/frame_000361.npz": "25b1258d23cd7df74b2fb6b3d2d6b0d916904f0b0776ae09cd09fce28c9801fa",
+    "gs/frame_000362.npz": "3d057f8246fb5ba2ae315d90f69beb3b458e24db1f36047397efd57d148eb9df",
+    "gs/frame_000363.npz": "e40f9b520c3ed63162fc29cd0f8782660a334c0602392b0fdddffb8cdf941d86",
+    "gs/frame_000364.npz": "1ccbb45f2d0c10cafba57220c08afbc751b4d796c4719361c2c25f912b704627",
+    "gs/frame_000365.npz": "ad17d437f9ac16b0214139f48ab3719a70ad2458713c1d1d4d6b2b108eda4c7e",
+    "gs/frame_000366.npz": "349400ed14a33e484f9d6f59e13dfc430cff80dffe239bb1e2a32d026b042c41",
+    "gs/frame_000367.npz": "9e5aa5894ac91528b960052ed9e8e7c6a5391b08b482f2a53a6ea4242ba079ce",
+    "gs/frame_000368.npz": "592b8da3643b2c8b9d8a6e567bee9ec511a50d8a51b9a32b0dd746ff8737d88c",
+    "gs/frame_000369.npz": "f3f0372991a4ce94aaf9fad0341a55f704b55253a1c5d892b97a785b25d5f601",
+    "gs/frame_000370.npz": "0ded1e54bc62e1f21b3e25a50a184ae3af8c70e5a9ee883a96bf073ecc5894b7",
+    "gs/frame_000371.npz": "b6f383613526d1636f0d02415838ab589fc700a2d74218af830f891c49195ee2",
+    "gs/frame_000372.npz": "18320da1ef72ed6f453d0ec812be5d3e26c488b34ed6743383827ba33a5ae202",
+    "gs/frame_000373.npz": "eafb4b7407230d3236e5a496c61eb61e66176f050748e3554175187d9d7b42bf",
+    "gs/frame_000374.npz": "c77c36f055bafa587ed0ffdb1cb82d956d8a3353ae30d801652966b160b0199b",
+    "gs/frame_000375.npz": "fa7f1fcf627f98387c9bfe08b90393f7d3a5fbaf9241db4165d4aa46d27f50e7",
+    "gs/frame_000376.npz": "4c361901d892978cdf7899d904f6519131c43bae150802ba4bae4959ca9f9cbe",
+    "gs/frame_000377.npz": "945e8b222cf3cf355558f798554030f2c6d2a265d9585bbd9f5f5e1ccca50376",
+    "gs/frame_000378.npz": "d068d2e437801a5fc6755774953b510454d1aa36ff5eae8b7990190dc96231ba",
+    "gs/frame_000379.npz": "7c986a735a65872f16a5dd7a44609ccce43a438fcb0c6fc3ecb855aa7db3bed6",
+    "gs/frame_000380.npz": "791685971c9cea23e8defa839f91c0b43fc2713885e2e8a91566a922575e9f01",
+    "gs/frame_000381.npz": "b7a1b13cc407758cde0367b918c4c8e0685de3e7ca65d0ceb40b998e4797a204",
+    "gs/frame_000382.npz": "29b3b0a97ff3ecf1f25b2923465b2c9fdffa77fef0c92bd173d9f1616d722e5f",
+    "gs/frame_000383.npz": "6a8958acfbe1a170382f89481b7141019888b8fd5579b079293aa8463fc1c734",
+    "gs/frame_000384.npz": "d1013991e23370334de162098a8a933f942f4816e6614436a37c215a2590f453",
+    "gs/frame_000385.npz": "d91ab731286da8fac4cb638e58c23bed6cb32aab91a35e4a5c672429fabc003b",
+    "gs/frame_000386.npz": "01a8498db3302f6d55d8ae33f9d193bc12194b6f201376b8d980e42015e3a858",
+    "gs/frame_000387.npz": "5eb50c1a0c2cd9f6e8a2624c68020eea5d3763ec5d4404e814c408227078f22a",
+    "gs/frame_000388.npz": "5f0c6521acb230ffa4bc84a6d96a4eb38f67a4aabcd451975d091ca6a196ab7d",
+    "gs/frame_000389.npz": "c2d7b4342a35fdd8c1d8520afdb9b2c8884f460b7d49f95dfb01a4880355ddcd",
+    "gs/frame_000390.npz": "8947b0b25b6998443c88def1062f98371fdcd2e606f2af2eb921b2d886abd4a4",
+    "gs/frame_000391.npz": "40451fafa2f69f5e6a02916e88c144175c5d0022ed4571e7bf6da823e896b5b7",
+    "gs/frame_000392.npz": "6531e74f5c668655f14f3f1b456c730cf4c3aa0c32f9408a09711704e6ae2f15",
+    "gs/frame_000393.npz": "2fb825c42167311d8d465aacb4f9dd40c5b12780d9d3ca7d77b6ba118f6ff454",
+    "gs/frame_000394.npz": "1997087c0a2c681a1b657d01c2947834110809dd93aa7674d5badb1dbcd2ee92",
+    "gs/frame_000395.npz": "157ac0bd562165b9ee0c80a16928d986b14fc8ec577ecf9179de7db6fddc1ee3",
+    "gs/frame_000396.npz": "822074fe824501455a88742a99b681ab51c88a907ffe46aa3a2f619607c90d57",
+    "gs/frame_000397.npz": "4683fbaf2d0e9116e28ab374e854cc83a5ecb5afc217194e778a4a24d33e9a8a",
+    "gs/frame_000398.npz": "58edd011498ec11b25c5539153efadbba397dd0da1d121738b368073971ec4c4",
+    "gs/frame_000399.npz": "56737df7ad36663c5b9eac7016fb617847e56d539e622b575f3d6f94e248cb60",
+    "gs/frame_000400.npz": "4c51c98b98ebd81fb174ff0fde1812e426f1c4766bc2b9a5ffde73e1a2b5a8a7",
+    "gs/frame_000401.npz": "42a3360a9729f0af5f700f5a9861efc0240f04d5327cd6f39808d4abc416e7ed",
+    "gs/frame_000402.npz": "bb9230af15f766e58cc6e6e98f29646e4304d96e10982cca6c8559127fb5ea31",
+    "gs/frame_000403.npz": "68d0615574418635b67f39fa740afa965da3cdd7b66d471e48235a05e504fb85",
+    "gs/frame_000404.npz": "3ed01e6f122f2b06a2893a2c1360017664aa1eba4e4e131995010b43bca6db61",
+    "gs/frame_000405.npz": "c7857b2fb4d410f391f998ea3e3fc81035dfd990d0045526b2b27842d890b5ce",
+    "gs/frame_000406.npz": "911874bd7cfe0d36917dade876600c344dcde7d595c63c022ade46907d0c5420",
+    "gs/frame_000407.npz": "0efac986008a027e4eb3a36c0bf4e33c288dd1b1efa386983e534d4196222831",
+    "gs/frame_000408.npz": "ff82ff123e307e28a1d47475c1d72aeedd91e49c5dba06aaace877c5b363cbfd",
+    "gs/frame_000409.npz": "5d824252ebfaab07fffb6ad18e98dd107b27c85064a38b99890fb7d585b58435",
+    "gs/frame_000410.npz": "d92bc55919f0e6d6ed0c2e2162d54e9b52da712aa356a22a7d87f6ea20263e68",
+    "gs/frame_000411.npz": "0c34e15761e22f9439bafe8817db01ad93daed71b3095440e51ccdf5f653dfd9",
+    "gs/frame_000412.npz": "7a9847143369e1dbc2c5c4643f2d2938e184465999d1081f97747c1283f597db",
+    "gs/frame_000413.npz": "b321f7d4add710763f20c7a282e2a32366c1bba70f3dd2ecffa6b727d996c679",
+    "gs/frame_000414.npz": "ef5953297e2d212b3c047f48b10356d9ff301aeb41c01ac9fa8ed8c2cba6c94e",
+    "gs/frame_000415.npz": "1296ad35de42b56374ae3bf5aaea620acdc7d80da25d386963dc068a1f1a6816",
+    "gs/frame_000416.npz": "f7e0501e719a14c0e09a6be85932bd93b609266b2c6313667cd17b639cd264ad",
+    "gs/frame_000417.npz": "11e0dfb5c0b741d926d85dbc26e821d2c95a173ebb681263ed41362b3ed805fa",
+    "gs/frame_000418.npz": "3f0fa979fe7ca4896052a559b856ae95ade9c5daff5a13a7196bfdfd2963584e",
+    "gs/frame_000419.npz": "7273da7ad55772c5f2dcb3072a8d1283833ca7cb6132b4b61a761673b0c8c127",
+    "gs/frame_000420.npz": "a6398851c378ef48f17cfd7d07558f22dc5065add4576a9e02fae81dad8bcd73",
+    "gs/frame_000421.npz": "f4c6effaaa74daea05473406a23f6a4cfcad2933434840f73d329749b45eaa47",
+    "tactile.npz": "a208cde075489f1b690daaaa2ab9a5d9fcc7a4861640776bde8684b8ffec6c59",
+    "timestamps.npz": "b7ea92b978ece6a5e1e41dc1bc801001b85cdbc2121f89e8230cc5ae595c0c33"
+  },
+  "summary": {
+    "tactile_valid_elements": 627192,
+    "controller_valid_points": 12660,
+    "opening_clipped_hand_frames": 113
+  }
+}

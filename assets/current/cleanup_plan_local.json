@@ -1,0 +1,1072 @@
+{
+  "schema": "touch4d-cleanup-proposal-v1",
+  "state": "PROPOSED_NOT_APPLIED",
+  "allowed_roots": [
+    "D:\\Amax\\Projects\\touch4d",
+    "D:\\Amax\\Projects\\touch4d-worktrees",
+    "D:\\Amax\\Projects\\touch4d-experiments"
+  ],
+  "preserve": [
+    "D:/Amax/Projects/touch4d/.git",
+    "D:/Amax/Projects/touch4d-worktrees/core-demo-v1",
+    "D:/Amax/Projects/touch4d-experiments/soma-g5-008-demo-001/comparison.html"
+  ],
+  "primary_source_action": "Replace via reviewed Git adoption, after preserving pre-existing dirty files; never recursive-delete the primary repository or .git.",
+  "candidates": [
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\g5-local-response-prototype-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 790126,
+        "files": 66
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "?? scripts/experiments/local_response/\n?? scripts/tests/test_local_response_correction.py\n?? scripts/tests/test_local_response_head.py\n",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p2-condition-identifiability-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 812029,
+        "files": 69
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": " M docs/proposals/P2_CONDITION_IDENTIFIABILITY_V1.md\n M scripts/experiments/condition_identifiability/report.py\n",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p2-tool-anchor-b-h15-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 833854,
+        "files": 69
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p3-p4-debug-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1032545,
+        "files": 91
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p3-p4-spatial-dynamics-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 871214,
+        "files": 73
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-001-h10-e8",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 949087,
+        "files": 81
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-001-h15-e8",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 867411,
+        "files": 79
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-action-identifiability-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 937880,
+        "files": 82
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-action-loss-comparison-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 971033,
+        "files": 86
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-anchor-interaction-ablation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 932030,
+        "files": 85
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-attention-gradient-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1017705,
+        "files": 93
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-contact-audit-ep1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 903370,
+        "files": 82
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-contact-manual-labeling-001",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 949903,
+        "files": 90
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-contact-optimization-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 938561,
+        "files": 87
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-controller-object-signed-motion-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1010180,
+        "files": 105
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-d0-oracle-capacity-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 918120,
+        "files": 89
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g4-frozen-attribution-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 990723,
+        "files": 100
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g4-global-motion-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 952714,
+        "files": 93
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-arap-iso-ablation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1441933,
+        "files": 137
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-cross-necessity-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1371055,
+        "files": 130
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": " A scripts/experiments/v4_g5_cross_necessity/PROTOCOL.txt\n A scripts/experiments/v4_g5_cross_necessity/__init__.py\n A scripts/experiments/v4_g5_cross_necessity/gates.py\n A scripts/experiments/v4_g5_cross_necessity/interventions.py\n A scripts/experiments/v4_g5_cross_necessity/metrics.py\n A scripts/experiments/v4_g5_cross_necessity/report.py\n A scripts/experiments/v4_g5_cross_necessity/responses.py\n A scripts/experiments/v4_g5_cross_necessity/run.py\n A scripts/experiments/v4_g5_cross_necessity/run.sbatch\n A scripts/tests/training/test_v4_g5_cross_gates.py\n A scripts/tests/training/test_v4_g5_cross_interventions.py\n A scripts/tests/training/test_v4_g5_cross_report.py\n A scripts/tests/training/test_v4_g5_cross_responses.py\n A scripts/tests/training/test_v4_g5_cross_runner.py\n",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1192946,
+        "files": 119
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": " M scripts/data_process/processor.py\n M scripts/dataloader/dataset.py\n?? scripts/experiments/v4_g5_signed_local/cloth008.py\n?? scripts/experiments/v4_g5_signed_local/cloth008_smoke.sbatch\n?? scripts/experiments/v4_g5_signed_local/cloth008_train.py\n",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-e16-continuation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1193482,
+        "files": 120
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-h15-delta4-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1174141,
+        "files": 117
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-stride4-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1202469,
+        "files": 123
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-frozen-attention-routing-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1401945,
+        "files": 141
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-frozen-condition-attribution-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1498813,
+        "files": 150
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-frozen-cross-attention-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1310931,
+        "files": 132
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-frozen-motion-attribution-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1242229,
+        "files": 124
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-geo-joint-scratch-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1314084,
+        "files": 139
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-geometry-decoder-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1270546,
+        "files": 131
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-runner-integration-smoke-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1168994,
+        "files": 116
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-signed-local-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1433116,
+        "files": 135
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-struct-state-ablation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 1422912,
+        "files": 137
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-h15-condition-ablation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 917240,
+        "files": 87
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-normal-oracle-motion-field-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 960205,
+        "files": 97
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-squared-chamfer-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 947201,
+        "files": 91
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-stage1-smoke",
+      "root": "D:\\Amax\\Projects\\touch4d-worktrees",
+      "kind": "directory",
+      "size": {
+        "bytes": 20874170,
+        "files": 91
+      },
+      "operation": "git_worktree_remove_after_review",
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\008-episode-action-review-20261118-001",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 6181902,
+        "files": 22
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\008-pink-cloth-episode0-split.html",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "file",
+      "size": {
+        "bytes": 13452297,
+        "files": 1
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\contact-audit-ep1-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 33687731,
+        "files": 821
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\contact-boundaries-001-frozen-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 2641356,
+        "files": 12
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\contact-manual-labeling-001-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 464850680,
+        "files": 8141
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\p2-condition-identifiability-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 80828621,
+        "files": 757
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\p2-tool-anchor-b-h15-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 83783843,
+        "files": 1146
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\p3-p4-debug-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 277876130,
+        "files": 2241
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\p3-p4-spatial-dynamics-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 1699850160,
+        "files": 14055
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-008-stage1-gap10-visual-001",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 14340522,
+        "files": 4
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-008-stage1-stage2-rerun-001",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 19289,
+        "files": 4
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-g5-008-cross-episode-strong-001",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 82249391,
+        "files": 557
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-g5-008-h15-compare-001",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 26399330,
+        "files": 436
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-001-h10-e8-visual-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 321757277,
+        "files": 4328
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-001-h15-best-visual-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 402735650,
+        "files": 5454
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-action-identifiability-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 80473089,
+        "files": 40
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-action-loss-comparison-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 99838707,
+        "files": 39
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-anchor-interaction-ablation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 1026201696,
+        "files": 9686
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-anchor-interaction-ablation-v1-review-package",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 277541034,
+        "files": 320
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-attention-gradient-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 63467132,
+        "files": 102
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-contact-optimization-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 855289902,
+        "files": 9700
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-contact-optimization-v1-review-package",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 256099981,
+        "files": 311
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-controller-object-signed-motion-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 11804323,
+        "files": 39
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-d0-oracle-capacity-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 32719731,
+        "files": 520
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g0-g4-g5-h15-best-visual-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 697464968,
+        "files": 13570
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-frozen-attribution-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 34617918,
+        "files": 43
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-global-motion-v1-integration",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 12354,
+        "files": 4
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-global-motion-v1-smoke",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 153802,
+        "files": 9
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-global-motion-v1-training",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 21269138,
+        "files": 69
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g4-global-motion-v1-training-protocol",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 338061,
+        "files": 8
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-arap-iso-ablation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 508838,
+        "files": 14
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-cross-necessity-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 496623,
+        "files": 9
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-008-all-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 560925550,
+        "files": 1973
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-008-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 823765205,
+        "files": 72
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-e16-continuation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 524683,
+        "files": 6
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-geo-h15-visual-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 182927985,
+        "files": 3325
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-h15-delta4-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 230975,
+        "files": 4
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-soma-001-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 17152802,
+        "files": 130
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-direct-stride4-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 143656,
+        "files": 6
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-formal-training-readiness-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 1383394,
+        "files": 14
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-frozen-attention-routing-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 1620409317,
+        "files": 1150
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-frozen-condition-attribution-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 1894406742,
+        "files": 573
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-frozen-cross-attention-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 249866439,
+        "files": 1027
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-frozen-motion-attribution-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 269256646,
+        "files": 965
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-geo-joint-scratch-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 18408,
+        "files": 7
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-geometry-decoder-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 23707751,
+        "files": 268
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-geometry-decoder-v1-training",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 17017608,
+        "files": 18
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-paired-h15-launch-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 919014,
+        "files": 4
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-runner-integration-smoke-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 1504234,
+        "files": 15
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-signed-local-v1-implementation",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 70366,
+        "files": 9
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-signed-local-v1-smoke",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 28846082,
+        "files": 124
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-g5-struct-state-ablation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 1400525,
+        "files": 11
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-h10-single-window-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 102665114,
+        "files": 1612
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-h15-condition-ablation-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 121953039,
+        "files": 418
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-h15-condition-ablation-v1-review-parts",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 118996347,
+        "files": 2
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-h15-condition-ablation-v1-review.verification.json",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "file",
+      "size": {
+        "bytes": 355,
+        "files": 1
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-normal-oracle-motion-field-audit-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 39731053,
+        "files": 69
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-experiments\\v4-squared-chamfer-v1",
+      "root": "D:\\Amax\\Projects\\touch4d-experiments",
+      "kind": "directory",
+      "size": {
+        "bytes": 141557150,
+        "files": 47
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d\\audit",
+      "root": "D:\\Amax\\Projects\\touch4d",
+      "kind": "directory",
+      "size": {
+        "bytes": 5908186999,
+        "files": 49563
+      },
+      "operation": "remove_after_validation"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d\\visual",
+      "root": "D:\\Amax\\Projects\\touch4d",
+      "kind": "directory",
+      "size": {
+        "bytes": 2070570546,
+        "files": 6382
+      },
+      "operation": "remove_after_validation"
+    }
+  ],
+  "blockers": [
+    "Current-task commit/sync/adoption approval not granted; AGENTS requires explicit approval",
+    "Pre-existing dirty and untracked files in original local/server worktrees must be preserved before switching or removing them",
+    "Primary local/server branches differ; do not blindly fast-forward or overwrite"
+  ],
+  "candidate_bytes": 21227106358,
+  "candidate_count": 97,
+  "verification": {
+    "full_source_and_real_checkpoint_cpu": "PASS Job35356",
+    "final_suite_preflight_and_packaging": "PASS Job35373"
+  }
+}

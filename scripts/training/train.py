@@ -1,32 +1,20 @@
-"""Train one scene; python -B -m scripts.training.train --help.
+"""Shared numerical training/metric helpers and trusted PositionPredictor checkpoint compatibility.
 
-Run only in the server's GPU allocation. No downloads or dependency installs.
-For a tiny fixed-window overfit use --overfit-windows 2 --single-epochs 0.
-Resume is at completed epoch boundaries; repeat the original training options,
-adding --resume .../last.pt and optionally increasing --epochs.
+Use scripts.training.cloth_train for the retained training command. The old
+P0/P1/P2 CLI and fixed400 dispatch are explicitly retired.
 """
 
-import argparse
-from datetime import datetime, timezone
 from itertools import islice
 import json
 import math
 import os
 from pathlib import Path
 import random
-import subprocess
-import uuid
 
 import torch
-from torch.utils.data import DataLoader, Subset
 
-from ..data_process import DataProcessor, SUPPORTED_SCENES
-from ..dataloader.collate import collate_fn
-from ..dataloader.dataset import DEFAULT_ROOT
-from ..dataloader.loader import make_dataloader
-from ..dataloader.splits import SPLITS
+from ..data_process import DataProcessor
 from .losses import objective
-from .model import PositionPredictor
 from .rendering import DepthRenderer, GaussianRenderer
 
 VERSION = "touch4d-gs-v7"
@@ -108,31 +96,8 @@ def atomic_checkpoint(path, state):
     os.replace(temporary, path)
 
 
-def choose_cameras(scene, depth_root, requested=None):
-    # Camera availability only; neither target geometry nor test metrics is used.
-    common = None
-    for episode in sorted({e for group in SPLITS[scene].values() for e in group}):
-        meta = json.loads((Path(depth_root) / scene / f"episode_{episode}" / "metadata.json").read_text())
-        cameras = set(meta["cameras"])
-        common = cameras if common is None else common & cameras
-    chosen = list(requested) if requested else sorted(common)[:2]
-    if not chosen or len(chosen) != len(set(chosen)) or not set(chosen) <= common:
-        raise ValueError("Camera subset must be nonempty, unique and available across the scene")
-    return chosen
 
 
-def build_loader(config, split, epoch=0, stage="all"):
-    loader = make_dataloader(config["scene"], split, root=config["root"], stage=stage,
-        batch_size=config["batch_size"], num_workers=config["workers"], seed=config["seed"]+epoch,
-        with_depth=True, depth_root=config["depth_root"], depth_cameras=config["depth_cameras"],
-        horizon=config.get("horizon", 5))
-    if split == "train" and config["overfit_windows"]:
-        n = config["overfit_windows"]
-        if n > len(loader.dataset):
-            raise ValueError("--overfit-windows exceeds the number of training windows")
-        loader = DataLoader(Subset(loader.dataset, range(n)), batch_size=config["batch_size"],
-                            shuffle=False, num_workers=0, collate_fn=collate_fn)
-    return loader
 
 
 class EpisodeMetrics:
@@ -578,183 +543,7 @@ def restore_training(state, model, optimizer):
         torch.cuda.set_rng_state_all(state["cuda_rng"])
 
 
-def parser():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--protocol", choices=("epochs", "fixed400"), default="epochs",
-                   help="fixed400: Roadmap P0 exact windows, alternating updates and fit selection")
-    p.add_argument("--fit-contract", help="Reviewed P0 JSON tolerances; required for a new fixed400 run")
-    p.add_argument("--fit-diagnostic", action="store_true",
-                   help="fixed400 baseline without acceptance thresholds; retain all evaluation checkpoints")
-    p.add_argument("--horizon", type=int, default=None, help="Prediction horizon; default 5, supports 10/15; resume inherits")
-    p.add_argument("--window-manifest", help="Frozen GT-only window manifest required for extended fixed400 horizons")
-    p.add_argument("--scene", required=True, choices=SUPPORTED_SCENES)
-    p.add_argument("--root", default=str(DEFAULT_ROOT))
-    p.add_argument("--depth-root")
-    p.add_argument("--depth-cameras", nargs="+")
-    p.add_argument("--run-id", help="New run directory name; default UTC timestamp plus unique suffix")
-    p.add_argument("--resume", help="Trusted last.pt; repeat original training options")
-    p.add_argument("--epochs", type=int, default=20)
-    p.add_argument("--single-epochs", type=int, default=1, help="Initial single-hand epochs; 0 disables this stage")
-    p.add_argument("--batch-size", type=int, default=1)
-    p.add_argument("--workers", type=int, default=0)
-    p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--lr", type=float, default=1e-4)
-    p.add_argument("--weight-decay", type=float, default=1e-4)
-    p.add_argument("--depth-weight", type=float, default=0.,
-                   help="Position mode: optional depth loss; GS mode: keep 0, depth is diagnostic only")
-    p.add_argument("--width", type=int, default=128)
-    p.add_argument("--heads", type=int, default=4)
-    p.add_argument("--layers", type=int, default=2)
-    p.add_argument("--controller-features", type=int, choices=(3, 7), default=None,
-                   help="Fresh runs default to 7; resume inherits checkpoint (legacy: 3)")
-    p.add_argument("--prediction-mode", choices=("independent", "autoregressive"), default=None,
-                   help="Fresh runs default to autoregressive; resume inherits checkpoint")
-    p.add_argument("--output-mode", choices=("position", "gs_geometry"), default=None,
-                   help="Fresh runs default to gs_geometry; legacy resume keeps position output")
-    p.add_argument("--gs-local-attention", choices=("none", "knn"), default=None,
-                   help="Fresh runs default to knn; resume inherits checkpoint (legacy: none)")
-    p.add_argument("--gs-local-k", type=int, default=None,
-                   help="Initial GS neighbors including self; fresh default 16; supports e.g. 32")
-    p.add_argument("--gs-decoder", choices=("free", "anchors", "anchors_anisotropic"), default=None,
-                   help="free; P1a anchors; P1a.5 anchors_anisotropic with an initial-only learnable metric")
-    p.add_argument("--gs-structure", choices=("none", "anchor_attention"), default=None,
-                   help="P2 two-layer structural anchor attention; default none; resume inherits")
-    p.add_argument("--anchor-count", type=int, default=None,
-                   help="P1a initial FPS anchor cap; fresh default 128; resume inherits")
-    p.add_argument("--anchor-pool-k", type=int, default=None,
-                   help="P1a local features pooled per anchor; fresh default 16; resume inherits")
-    p.add_argument("--anchor-bandwidth", type=float, default=None,
-                   help="Positive P1a RBF bandwidth factor; fresh default 1; resume inherits")
-    for name, default in LOSS_DEFAULTS.items():
-        if name == "chamfer_weight":
-            p.add_argument("--chamfer-weight", type=float, default=None,
-                           help="GS only: fresh default .1; resume inherits checkpoint (legacy: 0)")
-        else:
-            p.add_argument("--"+name.replace("_", "-"), type=float, default=default)
-    p.add_argument("--chamfer-chunk", type=int, default=512)
-    p.add_argument("--max-train-batches", type=int, default=0, help="0 means full epoch")
-    p.add_argument("--max-val-batches", type=int, default=0, help="0 means full validation")
-    p.add_argument("--overfit-windows", type=int, default=0, help="Fixed first N training windows; requires --single-epochs 0")
-    p.add_argument("--device", default="cuda")
-    return p
 
 
-def main(argv=None):
-    p = parser()
-    args = p.parse_args(argv)
-    if args.protocol == "fixed400":
-        from ..experiments.fixed_window.fixed_fit import run
-        return run(args)
-    if args.fit_contract or args.fit_diagnostic or args.window_manifest:
-        p.error("Fit options require --protocol fixed400")
-    if (min(args.epochs, args.batch_size, args.chamfer_chunk) < 1 or args.single_epochs < 0
-            or args.single_epochs > args.epochs or min(args.workers, args.seed, args.max_train_batches,
-                args.max_val_batches, args.overfit_windows) < 0):
-        p.error("Invalid epoch, batch, worker, seed or sampling limits")
-    if args.overfit_windows and args.single_epochs:
-        p.error("Fixed-window overfit requires --single-epochs 0")
-    if args.resume and args.run_id:
-        p.error("--resume uses the existing run directory; do not also specify --run-id")
-    if any(not math.isfinite(v) or v < 0 for v in (args.lr, args.weight_decay, args.depth_weight,
-            args.rgb_weight, args.alpha_weight, args.scale_weight)) or args.lr == 0:
-        p.error("Learning rate must be positive; weights must be finite and nonnegative")
-    device = torch.device(args.device)
-    if device.type != "cuda" or not torch.cuda.is_available():
-        p.error("Real training requires a server CUDA allocation; CPU unit tests are separate")
-    torch.manual_seed(args.seed)
-    random.seed(args.seed)
-    state = None
-    if args.resume:
-        if Path(args.resume).name != "last.pt":
-            p.error("Resume from last.pt to preserve the completed-epoch history; best.pt is for evaluation")
-        state = read_checkpoint(args.resume)
-        if state["config"].get("protocol") == "fixed400":
-            p.error("A fixed400 checkpoint must resume with --protocol fixed400")
-    args.horizon = resolve_horizon(args.horizon, state)
-    args.controller_features = resolve_controller_features(args.controller_features, state)
-    args.prediction_mode = resolve_prediction_mode(args.prediction_mode, state)
-    args.output_mode = resolve_output_mode(args.output_mode, state)
-    args.chamfer_weight = resolve_chamfer_weight(args.chamfer_weight, args.output_mode, state)
-    args.gs_local_attention, args.gs_local_k = resolve_local_attention(
-        args.gs_local_attention, args.gs_local_k, state)
-    for key, value in resolve_decoder(args.gs_decoder, args.anchor_count, args.anchor_pool_k,
-                                     args.anchor_bandwidth, state).items():
-        setattr(args, key, value)
-    validate_decoder_config(vars(args))
-    args.gs_structure = resolve_structure(args.gs_structure, state)
-    validate_structure_config(vars(args))
-    if args.output_mode == "gs_geometry" and (args.prediction_mode != "autoregressive"
-            or args.depth_weight != 0 or args.rgb_weight <= 0):
-        p.error("GS geometry requires autoregressive, positive RGB weight and --depth-weight 0")
-    root = Path(args.root).resolve()
-    depth_root = Path(args.depth_root).resolve() if args.depth_root else root.parent / "touch4d-depth-v1"
-    config = vars(args).copy()
-    for key in ("run_id", "resume", "device", "protocol", "fit_contract", "fit_diagnostic", "window_manifest"):
-        config.pop(key)
-    requested_cameras = args.depth_cameras
-    if requested_cameras is None:
-        requested_cameras = (state["config"]["depth_cameras"] if state is not None else
-                             GS_CAMERAS[args.scene] if args.output_mode == "gs_geometry" else None)
-    config.update(root=str(root), depth_root=str(depth_root),
-                  depth_cameras=choose_cameras(args.scene, depth_root, requested_cameras),
-                  gs_convention=GS_CONVENTION if args.output_mode == "gs_geometry" else None,
-                  render_settings=gs_render_settings() if args.output_mode == "gs_geometry" else None)
-    processor = DataProcessor(args.scene)
-    model = PositionPredictor(args.width, args.heads, args.layers,
-                              controller_features=args.controller_features,
-                              prediction_mode=args.prediction_mode, output_mode=args.output_mode,
-                              gs_local_attention=args.gs_local_attention, gs_local_k=args.gs_local_k,
-                              gs_structure=args.gs_structure, horizon=args.horizon,
-                              **{key: getattr(args, key) for key in DECODER_DEFAULTS}).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    renderer = make_renderer(config)
-    # Fail before creating a run when the renderer dependency is absent.
-    import gsplat
-    start, best, history = 0, float("inf"), []
-    if args.resume:
-        changes = [k for k in config if k != "epochs" and config[k] != state["config"].get(k)]
-        if changes:
-            raise ValueError(f"Resume options differ from checkpoint: {changes}")
-        start, best, history = state["epoch"]+1, state["best"], state["history"]
-        if start >= args.epochs:
-            raise ValueError("--epochs must exceed the number of completed epochs")
-        run = Path(args.resume).resolve().parent
-        best = recover_best_score(state, run)
-        restore_training(state, model, optimizer)
-    else:
-        run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ-") + uuid.uuid4().hex[:8]
-        if not run_id or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_" for c in run_id):
-            p.error("--run-id must contain only ASCII letters, digits, hyphens and underscores")
-        run = PROJECT / "runs" / args.scene / run_id
-        print(f"Creating {run}: config.json, metrics.json, best.pt, last.pt (atomic .tmp staging)", flush=True)
-        run.mkdir(parents=True, exist_ok=False)
-    print(f"Run directory: {run}", flush=True)
-    try:
-        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PROJECT, text=True).strip()
-    except (OSError, subprocess.CalledProcessError):
-        commit = None
-    atomic_json(run / "config.json", dict(training=config, processor=processor.state_dict(),
-                renderer=renderer.settings, torch=torch.__version__, gsplat=gsplat.__version__, commit=commit))
-    val = build_loader(config, "val")
-    for epoch in range(start, args.epochs):
-        stage = "single" if epoch < args.single_epochs else "all"
-        train = build_loader(config, "train", epoch=epoch, stage=stage)
-        training = train_epoch(model, optimizer, train, processor, renderer, config, device)
-        validation = evaluate_loader(model, val, processor, renderer, config, device, args.max_val_batches)
-        row = dict(epoch=epoch, stage=stage, training=training, validation=validation,
-                   partial_train=bool(args.max_train_batches or args.overfit_windows),
-                   partial_validation=bool(args.max_val_batches))
-        history.append(row)
-        score = validation["model"]["objective"]
-        improved = score < best
-        best = min(best, score)
-        state = checkpoint_state(model, optimizer, processor, config, epoch, best, history)
-        # Keep the previous completed-epoch last.pt intact until all work succeeds.
-        publish_checkpoints(run, state, improved)
-        atomic_json(run / "metrics.json", history)
-        print(json.dumps(row, allow_nan=False), flush=True)
-    return 0
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())

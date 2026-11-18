@@ -1,0 +1,544 @@
+{
+  "schema_version": "touch4d-depth-v1",
+  "script_version": "1.0.0",
+  "scene": "008-pink-cloth",
+  "episode": 0,
+  "frames": 357,
+  "cameras": [
+    "brics-odroid-001_cam0",
+    "brics-odroid-001_cam1",
+    "brics-odroid-002_cam0",
+    "brics-odroid-006_cam0",
+    "brics-odroid-007_cam0",
+    "brics-odroid-007_cam1",
+    "brics-odroid-008_cam0",
+    "brics-odroid-008_cam1",
+    "brics-odroid-009_cam0",
+    "brics-odroid-009_cam1",
+    "brics-odroid-010_cam0",
+    "brics-odroid-010_cam1",
+    "brics-odroid-011_cam0",
+    "brics-odroid-012_cam0",
+    "brics-odroid-012_cam1",
+    "brics-odroid-013_cam0",
+    "brics-odroid-013_cam1",
+    "brics-odroid-014_cam1",
+    "brics-odroid-015_cam0",
+    "brics-odroid-015_cam1",
+    "brics-odroid-016_cam0",
+    "brics-odroid-017_cam0",
+    "brics-odroid-017_cam1",
+    "brics-odroid-019_cam1",
+    "brics-odroid-021_cam0",
+    "brics-odroid-021_cam1",
+    "brics-odroid-022_cam0",
+    "brics-odroid-022_cam1",
+    "brics-odroid-023_cam0",
+    "brics-odroid-024_cam0",
+    "brics-odroid-024_cam1",
+    "brics-odroid-025_cam0",
+    "brics-odroid-025_cam1",
+    "brics-odroid-027_cam0",
+    "brics-odroid-027_cam1",
+    "brics-odroid-028_cam0"
+  ],
+  "height": 720,
+  "width": 1280,
+  "depth_unit": "mm",
+  "invalid_value": 0,
+  "depth_kind": "camera_z_expected",
+  "extrinsics_convention": "camera_to_world",
+  "coordinate_system": "native_world_metres",
+  "core_binding": {
+    "metadata_sha256": "e7179d622176bf0e41960699c425003c9bd9d6d7d0b66af486b3b7816cd124e1",
+    "timestamps_sha256": "b228b64dd7fc631421ad0b56a4816fc09bc64b4291ae26775340d0b4a3737ee0"
+  },
+  "source_root": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360",
+  "source_episode_directory": "processed/008-pink-cloth/episode_0",
+  "source_files": {
+    "episode_metadata": {
+      "path": "processed/008-pink-cloth/episode_0/metadata.json",
+      "member": null,
+      "bytes": 4017,
+      "sha256": "2ba974cfa331b59d201774fbfc864ee4e4c1c72d76a2b51d469d646067648608"
+    },
+    "extrinsics": {
+      "path": "raw/008-pink-cloth/calibration_refined/extrinsics.npy",
+      "member": null,
+      "bytes": 11858,
+      "sha256": "a590d8f0fc371c757c1ce8ab6d0f6926dbc043dae6db177c229f4b354bb178b1"
+    },
+    "camera_timestamps_brics-odroid-001_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-001_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-001_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-001_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-002_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-002_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-006_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-006_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-007_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-007_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-007_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-007_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-008_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-008_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-008_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-008_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-009_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-009_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-009_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-009_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-010_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-010_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-010_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-010_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-011_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-011_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-012_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-012_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-012_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-012_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-013_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-013_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-013_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-013_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-014_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-014_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-015_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-015_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-015_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-015_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-016_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-016_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-017_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-017_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-017_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-017_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-019_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-019_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-021_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-021_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-021_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-021_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-022_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-022_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-022_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-022_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-023_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-023_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-024_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-024_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-024_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-024_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-025_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-025_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-025_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-025_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-027_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-027_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-027_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-027_cam1/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "camera_timestamps_brics-odroid-028_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-028_cam0/aligned_timestamps.txt",
+      "bytes": 12852,
+      "sha256": "be7beacde49ddf75c3181e112d881d6888b338c3a6d5f5dfd2df4ac83fbd8935"
+    },
+    "depth_brics-odroid-001_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-001_cam0/rendered_depth.h5",
+      "bytes": 16310028,
+      "sha256": "34c0645bcd5ca1685bd8fa069c7ea09a110716bce8749045aefd74d55f09f43b"
+    },
+    "depth_brics-odroid-001_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-001_cam1/rendered_depth.h5",
+      "bytes": 13899668,
+      "sha256": "fd276830635fc2fee73dd8f8f98f0f5bd9a75013e1181666c358c4c11c26118c"
+    },
+    "depth_brics-odroid-002_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-002_cam0/rendered_depth.h5",
+      "bytes": 3579403,
+      "sha256": "92faf5aad235be699749ce9cf54110d8eab5f7314b31c511ed0ddc9b69a454d6"
+    },
+    "depth_brics-odroid-006_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-006_cam0/rendered_depth.h5",
+      "bytes": 7163217,
+      "sha256": "9226b520b538a9250f73c7ee8198c89ed625b8a062818051f78515f5664a0f32"
+    },
+    "depth_brics-odroid-007_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-007_cam0/rendered_depth.h5",
+      "bytes": 11639487,
+      "sha256": "477534e3879cd87e4657fb65f4a4979146541763b6dcb6615330b4b67cbbe1b2"
+    },
+    "depth_brics-odroid-007_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-007_cam1/rendered_depth.h5",
+      "bytes": 5845544,
+      "sha256": "e54dbc9fb86a8d7804ca307269df1aba22d12fa07535b9fd8cd1c9280ae9c84e"
+    },
+    "depth_brics-odroid-008_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-008_cam0/rendered_depth.h5",
+      "bytes": 14196662,
+      "sha256": "30625bd9bbd79890caaf9473d5e7828d6325d181631099cbb03b8d2d4cd1f01d"
+    },
+    "depth_brics-odroid-008_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-008_cam1/rendered_depth.h5",
+      "bytes": 20226939,
+      "sha256": "29edb741b3165e87662101af3c97df4982f5e0ed23bc34f33a629fcd1b9be81c"
+    },
+    "depth_brics-odroid-009_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-009_cam0/rendered_depth.h5",
+      "bytes": 11108706,
+      "sha256": "845efbfb87baaddfcc545f2b73a927d202996d979083d64fdb8c48013486a0fd"
+    },
+    "depth_brics-odroid-009_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-009_cam1/rendered_depth.h5",
+      "bytes": 13779508,
+      "sha256": "0a427fe612aeb6fc426402ea4ed9fdf66ea7af2fece6524d03ce239d85986eb8"
+    },
+    "depth_brics-odroid-010_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-010_cam0/rendered_depth.h5",
+      "bytes": 9133972,
+      "sha256": "afad7e0244eff5c8b6c48b364d24f2e00cf7086acae881f8141947be629145ec"
+    },
+    "depth_brics-odroid-010_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-010_cam1/rendered_depth.h5",
+      "bytes": 11208315,
+      "sha256": "93541ea843e4a4badcd9ae69388b01f02b3f48af18b3002937aa9cf060dd3714"
+    },
+    "depth_brics-odroid-011_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-011_cam0/rendered_depth.h5",
+      "bytes": 11412477,
+      "sha256": "2418250748cedb59a703d0ce7fd16566f1b40f94e01e2539e707a385fb1e4cd8"
+    },
+    "depth_brics-odroid-012_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-012_cam0/rendered_depth.h5",
+      "bytes": 6097930,
+      "sha256": "673573faf83adc164dad68142384468b779c80909c359e20ae8434145fb0a9f1"
+    },
+    "depth_brics-odroid-012_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-012_cam1/rendered_depth.h5",
+      "bytes": 2450240,
+      "sha256": "b11a0a730a4ca610a16ff1de6d42a1f958041a5968d6b8bdbcafce7d5858c671"
+    },
+    "depth_brics-odroid-013_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-013_cam0/rendered_depth.h5",
+      "bytes": 23057188,
+      "sha256": "fbd20fc5f22560d74e1d0d5cb1ee07b081b07e04a8473ce6dcc33b0f423139fc"
+    },
+    "depth_brics-odroid-013_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-013_cam1/rendered_depth.h5",
+      "bytes": 18376277,
+      "sha256": "aeed80a8f21e412e4a8614f4a3e9272f2eeddfd9b4df0bdfcb9526ec2a63ed07"
+    },
+    "depth_brics-odroid-014_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-014_cam1/rendered_depth.h5",
+      "bytes": 14045356,
+      "sha256": "265fc8b83a46d73090c10f42601e4ea28d07ab0a44f73cf685a9d24c00541cec"
+    },
+    "depth_brics-odroid-015_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-015_cam0/rendered_depth.h5",
+      "bytes": 16054520,
+      "sha256": "3a0b131a74783f3b6c28fd0c247818585715acd5ab753f0c6a60d07526685c86"
+    },
+    "depth_brics-odroid-015_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-015_cam1/rendered_depth.h5",
+      "bytes": 12932718,
+      "sha256": "fe9c5a24f2da2a03126f07e0c8441264b5362d3a78c1b574c4b2fd12c8dc59b7"
+    },
+    "depth_brics-odroid-016_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-016_cam0/rendered_depth.h5",
+      "bytes": 672301,
+      "sha256": "9c73fd881fd198463d15b4f98c463bbe0ace4ed084175e1a1e8a0307634f9677"
+    },
+    "depth_brics-odroid-017_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-017_cam0/rendered_depth.h5",
+      "bytes": 14490643,
+      "sha256": "bb74f39c414ea10b51c8fa317b0f91e30f18fc730d8e178838507a09bb27ec0a"
+    },
+    "depth_brics-odroid-017_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-017_cam1/rendered_depth.h5",
+      "bytes": 12683401,
+      "sha256": "6cc0d2e059a5d86f3440316a036b912c97d5489072aca63f8e26344d3fc5f5e2"
+    },
+    "depth_brics-odroid-019_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-019_cam1/rendered_depth.h5",
+      "bytes": 15850236,
+      "sha256": "1343c179594b0187d7360be99927318f70d8816a934513bc7ced31dae73ad335"
+    },
+    "depth_brics-odroid-021_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-021_cam0/rendered_depth.h5",
+      "bytes": 16191638,
+      "sha256": "532592729599227b9161b0ec5b4f04258c7515d7e85523fbee9405c4dcc87ee1"
+    },
+    "depth_brics-odroid-021_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-021_cam1/rendered_depth.h5",
+      "bytes": 14961598,
+      "sha256": "01ec38be7468a761f48fbd8584c88fddea81e58ac1157b83487c55397c36da8a"
+    },
+    "depth_brics-odroid-022_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-022_cam0/rendered_depth.h5",
+      "bytes": 15890473,
+      "sha256": "1869461b78f8a73f0f553b5bf51395899412e9fc92a8d9b0cd56c3fa3358d23a"
+    },
+    "depth_brics-odroid-022_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-022_cam1/rendered_depth.h5",
+      "bytes": 17777292,
+      "sha256": "819de1aa0e77f286f1382439a4bc9f812c6629358f4340888c82461ae3030dfb"
+    },
+    "depth_brics-odroid-023_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-023_cam0/rendered_depth.h5",
+      "bytes": 15530774,
+      "sha256": "2cf19604ece4fb73df111bb3a05ffb64968e2afeeeecc8f059ebb410ec7d440c"
+    },
+    "depth_brics-odroid-024_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-024_cam0/rendered_depth.h5",
+      "bytes": 9536966,
+      "sha256": "9cedb93629376cda77e79bbd592d410aab634aea9526262d9a45cee962491426"
+    },
+    "depth_brics-odroid-024_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-024_cam1/rendered_depth.h5",
+      "bytes": 13460263,
+      "sha256": "7dab78aea06469d0d0f55508694d885d1041b08008450289b3ea68d37c066202"
+    },
+    "depth_brics-odroid-025_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-025_cam0/rendered_depth.h5",
+      "bytes": 8622354,
+      "sha256": "72da5cb308e2f5bb861a47de4d85356c8f58ed5fbca4526c5dcd899cabcf7e0a"
+    },
+    "depth_brics-odroid-025_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-025_cam1/rendered_depth.h5",
+      "bytes": 8295109,
+      "sha256": "818091c12aa91965647b1ee42dd5c0d800b2844e5aecf695a01a11ef9c39b5d4"
+    },
+    "depth_brics-odroid-027_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-027_cam0/rendered_depth.h5",
+      "bytes": 18422217,
+      "sha256": "e37ccc6deec999e190ed0624d11521927be7798db784bfa624610c47a6ae995c"
+    },
+    "depth_brics-odroid-027_cam1": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-027_cam1/rendered_depth.h5",
+      "bytes": 36251512,
+      "sha256": "1a99ab62c51517e1edc7d1e29266b126afa5bc2ac12ba6e49b345d24eff2a3b6"
+    },
+    "depth_brics-odroid-028_cam0": {
+      "path": "processed/008-pink-cloth/episode_0/cameras.tar",
+      "member": "brics-odroid-028_cam0/rendered_depth.h5",
+      "bytes": 15292117,
+      "sha256": "bc04846166781cf22c9f577a540a2c6abed2c1bd116412883b6acd02071647a8"
+    }
+  },
+  "output_files": {
+    "brics-odroid-001_cam0/rendered_depth.h5": "34c0645bcd5ca1685bd8fa069c7ea09a110716bce8749045aefd74d55f09f43b",
+    "brics-odroid-001_cam1/rendered_depth.h5": "fd276830635fc2fee73dd8f8f98f0f5bd9a75013e1181666c358c4c11c26118c",
+    "brics-odroid-002_cam0/rendered_depth.h5": "92faf5aad235be699749ce9cf54110d8eab5f7314b31c511ed0ddc9b69a454d6",
+    "brics-odroid-006_cam0/rendered_depth.h5": "9226b520b538a9250f73c7ee8198c89ed625b8a062818051f78515f5664a0f32",
+    "brics-odroid-007_cam0/rendered_depth.h5": "477534e3879cd87e4657fb65f4a4979146541763b6dcb6615330b4b67cbbe1b2",
+    "brics-odroid-007_cam1/rendered_depth.h5": "e54dbc9fb86a8d7804ca307269df1aba22d12fa07535b9fd8cd1c9280ae9c84e",
+    "brics-odroid-008_cam0/rendered_depth.h5": "30625bd9bbd79890caaf9473d5e7828d6325d181631099cbb03b8d2d4cd1f01d",
+    "brics-odroid-008_cam1/rendered_depth.h5": "29edb741b3165e87662101af3c97df4982f5e0ed23bc34f33a629fcd1b9be81c",
+    "brics-odroid-009_cam0/rendered_depth.h5": "845efbfb87baaddfcc545f2b73a927d202996d979083d64fdb8c48013486a0fd",
+    "brics-odroid-009_cam1/rendered_depth.h5": "0a427fe612aeb6fc426402ea4ed9fdf66ea7af2fece6524d03ce239d85986eb8",
+    "brics-odroid-010_cam0/rendered_depth.h5": "afad7e0244eff5c8b6c48b364d24f2e00cf7086acae881f8141947be629145ec",
+    "brics-odroid-010_cam1/rendered_depth.h5": "93541ea843e4a4badcd9ae69388b01f02b3f48af18b3002937aa9cf060dd3714",
+    "brics-odroid-011_cam0/rendered_depth.h5": "2418250748cedb59a703d0ce7fd16566f1b40f94e01e2539e707a385fb1e4cd8",
+    "brics-odroid-012_cam0/rendered_depth.h5": "673573faf83adc164dad68142384468b779c80909c359e20ae8434145fb0a9f1",
+    "brics-odroid-012_cam1/rendered_depth.h5": "b11a0a730a4ca610a16ff1de6d42a1f958041a5968d6b8bdbcafce7d5858c671",
+    "brics-odroid-013_cam0/rendered_depth.h5": "fbd20fc5f22560d74e1d0d5cb1ee07b081b07e04a8473ce6dcc33b0f423139fc",
+    "brics-odroid-013_cam1/rendered_depth.h5": "aeed80a8f21e412e4a8614f4a3e9272f2eeddfd9b4df0bdfcb9526ec2a63ed07",
+    "brics-odroid-014_cam1/rendered_depth.h5": "265fc8b83a46d73090c10f42601e4ea28d07ab0a44f73cf685a9d24c00541cec",
+    "brics-odroid-015_cam0/rendered_depth.h5": "3a0b131a74783f3b6c28fd0c247818585715acd5ab753f0c6a60d07526685c86",
+    "brics-odroid-015_cam1/rendered_depth.h5": "fe9c5a24f2da2a03126f07e0c8441264b5362d3a78c1b574c4b2fd12c8dc59b7",
+    "brics-odroid-016_cam0/rendered_depth.h5": "9c73fd881fd198463d15b4f98c463bbe0ace4ed084175e1a1e8a0307634f9677",
+    "brics-odroid-017_cam0/rendered_depth.h5": "bb74f39c414ea10b51c8fa317b0f91e30f18fc730d8e178838507a09bb27ec0a",
+    "brics-odroid-017_cam1/rendered_depth.h5": "6cc0d2e059a5d86f3440316a036b912c97d5489072aca63f8e26344d3fc5f5e2",
+    "brics-odroid-019_cam1/rendered_depth.h5": "1343c179594b0187d7360be99927318f70d8816a934513bc7ced31dae73ad335",
+    "brics-odroid-021_cam0/rendered_depth.h5": "532592729599227b9161b0ec5b4f04258c7515d7e85523fbee9405c4dcc87ee1",
+    "brics-odroid-021_cam1/rendered_depth.h5": "01ec38be7468a761f48fbd8584c88fddea81e58ac1157b83487c55397c36da8a",
+    "brics-odroid-022_cam0/rendered_depth.h5": "1869461b78f8a73f0f553b5bf51395899412e9fc92a8d9b0cd56c3fa3358d23a",
+    "brics-odroid-022_cam1/rendered_depth.h5": "819de1aa0e77f286f1382439a4bc9f812c6629358f4340888c82461ae3030dfb",
+    "brics-odroid-023_cam0/rendered_depth.h5": "2cf19604ece4fb73df111bb3a05ffb64968e2afeeeecc8f059ebb410ec7d440c",
+    "brics-odroid-024_cam0/rendered_depth.h5": "9cedb93629376cda77e79bbd592d410aab634aea9526262d9a45cee962491426",
+    "brics-odroid-024_cam1/rendered_depth.h5": "7dab78aea06469d0d0f55508694d885d1041b08008450289b3ea68d37c066202",
+    "brics-odroid-025_cam0/rendered_depth.h5": "72da5cb308e2f5bb861a47de4d85356c8f58ed5fbca4526c5dcd899cabcf7e0a",
+    "brics-odroid-025_cam1/rendered_depth.h5": "818091c12aa91965647b1ee42dd5c0d800b2844e5aecf695a01a11ef9c39b5d4",
+    "brics-odroid-027_cam0/rendered_depth.h5": "e37ccc6deec999e190ed0624d11521927be7798db784bfa624610c47a6ae995c",
+    "brics-odroid-027_cam1/rendered_depth.h5": "1a99ab62c51517e1edc7d1e29266b126afa5bc2ac12ba6e49b345d24eff2a3b6",
+    "brics-odroid-028_cam0/rendered_depth.h5": "bc04846166781cf22c9f577a540a2c6abed2c1bd116412883b6acd02071647a8",
+    "camera_parameters.npz": "dcbe574d16ad7bd6007bd762d610db7a36c93bd8cb54e31aa9313db03a3fcd88"
+  },
+  "created_utc": "2026-10-23T12:15:37.209134+00:00"
+}

@@ -1,0 +1,72 @@
+{
+  "weights/g5_e8.pt": {
+    "source": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1/formal-001/result/epoch_08.pt",
+    "resolved_source": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1/formal-001/result/epoch_08.pt",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/weights/g5_e8.pt",
+    "bytes": 7649861,
+    "sha256": "00fe8922bde7356e7290125813c2f0ca456604df03eafa2143158afd30073e57"
+  },
+  "weights/soma_e10.pth": {
+    "source": "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-stage2-rerun-001/stage2/epoch_10.pth",
+    "resolved_source": "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-stage2-rerun-001/stage2/epoch_10.pth",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/weights/soma_e10.pth",
+    "bytes": 30039037,
+    "sha256": "f8b2387eb5e240f63f95bd213920947d697e3d1371ef926c8c28b6e71dce339b"
+  },
+  "provenance/g5_source.sha256": {
+    "source": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1/smoke-001/source/source.sha256",
+    "resolved_source": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1/smoke-001/source/source.sha256",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/provenance/g5_source.sha256",
+    "bytes": 406,
+    "sha256": "0e6dc18d5b527d07147a8592755cc8ef16592096b6441f7ca80ae00e2e07701a"
+  },
+  "provenance/g5_completion.json": {
+    "source": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1/formal-001/result/completion.json",
+    "resolved_source": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1/formal-001/result/completion.json",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/provenance/g5_completion.json",
+    "bytes": 10948,
+    "sha256": "464f3b615a8be63b8971e77d1ce62acc77470682e811a502b099d844bf1fdf18"
+  },
+  "provenance/soma_training_report.json": {
+    "source": "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-stage2-rerun-001/control_stage2/training_report.json",
+    "resolved_source": "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-stage2-rerun-001/control_stage2/training_report.json",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/provenance/soma_training_report.json",
+    "bytes": 80985,
+    "sha256": "d77344a0dadad6d0447a1333062604a2495d7e3adfc2bc14d1aceb02be443c70"
+  },
+  "baseline/config_a_2cam/scene_interface.json": {
+    "source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/config_a_2cam/scene_interface.json",
+    "resolved_source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/config_a_2cam/scene_interface.json",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/baseline/config_a_2cam/scene_interface.json",
+    "bytes": 2750,
+    "sha256": "3fcc0a397e5bff314c52fa6045fcfe5afeb491a8b7fe529cfa9d093ac08dd95e"
+  },
+  "baseline/config_a_2cam/track_process_data.pkl": {
+    "source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/config_a_2cam/track_process_data.pkl",
+    "resolved_source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/shared/track_process_data.pkl",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/baseline/config_a_2cam/track_process_data.pkl",
+    "bytes": 70026,
+    "sha256": "8f51ed85109e5ed4b97d29263b7576470dca290f9ab7723bb7fb1795ef7ce37a"
+  },
+  "baseline/config_a_2cam/controller_mask/dis_split/controller_dis_splitnl_2_nc_10_downsample_rate_0d5_track_process_data.pkl": {
+    "source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/config_a_2cam/controller_mask/dis_split/controller_dis_splitnl_2_nc_10_downsample_rate_0d5_track_process_data.pkl",
+    "resolved_source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/config_a_2cam/controller_mask/dis_split/controller_dis_splitnl_2_nc_10_downsample_rate_0d5_track_process_data.pkl",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/baseline/config_a_2cam/controller_mask/dis_split/controller_dis_splitnl_2_nc_10_downsample_rate_0d5_track_process_data.pkl",
+    "bytes": 590,
+    "sha256": "cdcd460bb6cbc27a8f4e8b16f4581963ec7e2b87373f800f7c062aefc34f6cb2"
+  },
+  "baseline/config_a_2cam/cluster_mask/dis_split/dis_splitnl_2_downsample_rate_0d02_downsample_rate_0d2_cluster_mask.pkl": {
+    "source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/config_a_2cam/cluster_mask/dis_split/dis_splitnl_2_downsample_rate_0d02_downsample_rate_0d2_cluster_mask.pkl",
+    "resolved_source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/config_a_2cam/cluster_mask/dis_split/dis_splitnl_2_downsample_rate_0d02_downsample_rate_0d2_cluster_mask.pkl",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/baseline/config_a_2cam/cluster_mask/dis_split/dis_splitnl_2_downsample_rate_0d02_downsample_rate_0d2_cluster_mask.pkl",
+    "bytes": 108335,
+    "sha256": "dc9484e072ab547f76c106c1b22f94579e9f8efd65a94714132d49e348d0830e"
+  },
+  "baseline/config_a_2cam/pi3/gs/point_cloud/iteration_10000/point_cloud.ply": {
+    "source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/t17_scene_packages/pink_cloth_episode_0/config_a_2cam/pi3/gs/point_cloud/iteration_10000/point_cloud.ply",
+    "resolved_source": "/data1/userdata/tcweng/projects/tcgs/datasets/deform360/derived/008-pink-cloth/episode_0/t16_5_sh0/splat_113_sh0.ply",
+    "path": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/baseline/config_a_2cam/pi3/gs/point_cloud/iteration_10000/point_cloud.ply",
+    "bytes": 875025,
+    "sha256": "fd79797c7b7da6ba5db02a4de5fe3c5e463cb7db1eabbe6a6a57bc283e51f7de"
+  }
+}

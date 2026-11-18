@@ -1,0 +1,213 @@
+{
+  "schema": "touch4d-history-archive-v1",
+  "created_at": "2026-11-18T14:52:54.216211+00:00",
+  "purpose": "One active main branch, historical code retained by archive tags; old experiments are not merged into the adopted core tree",
+  "snapshots": [
+    {
+      "path": "D:\\Amax\\Projects\\touch4d",
+      "before": "9142704df41875895afe61a1a119bbe83e2f7c65",
+      "commit": "34d013fedea978ca53aeef9e66d7b2924c63460c",
+      "tag": "archive/20261118/snapshot/touch4d",
+      "saved_status": "M docs/MODEL_ROADMAP.md\n?? docs/DYNAMICS_REPRESENTATION_DESIGN.md\n?? docs/GS_SUPERVISION_DESIGN.md\n?? docs/MODEL_ITERATIONS.md\n?? docs/TASK_FORMULATION.md\n?? docs/TOUCH4D_V4_STAGE1_ARCHITECTURE_DRAFT.md\n?? docs/proposals/P2_CONDITION_ENCODER_HAND_MODE_AUDIT.md\n?? docs/proposals/P3_TWO_FRAME_H10.md\n?? scripts/experiments/tactile_mapping/information_comparison.py\n?? scripts/experiments/tactile_mapping/visualize.py"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\g5-local-response-prototype-v1",
+      "before": "64b1320d3718e7d05d590ce854b8aeb05f14236f",
+      "commit": "20c71f1806f8d68cd230cb99aef63bc106327093",
+      "tag": "archive/20261118/snapshot/g5-local-response-prototype-v1",
+      "saved_status": "?? scripts/experiments/local_response/__init__.py\n?? scripts/experiments/local_response/correction.py\n?? scripts/experiments/local_response/head.py\n?? scripts/experiments/local_response/protocol.json\n?? scripts/tests/test_local_response_correction.py\n?? scripts/tests/test_local_response_head.py"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\p2-condition-identifiability-v1",
+      "before": "265d28a22d25590f9434bd0804dc06745cf93565",
+      "commit": "8861643e597f28ece9b1561512fa7b5066751715",
+      "tag": "archive/20261118/snapshot/p2-condition-identifiability-v1",
+      "saved_status": "M docs/proposals/P2_CONDITION_IDENTIFIABILITY_V1.md\n M scripts/experiments/condition_identifiability/report.py"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-cross-necessity-v1",
+      "before": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+      "commit": "92ee65ae2d1bdce250c39e2bb4b200008632d80d",
+      "tag": "archive/20261118/snapshot/v4-g5-cross-necessity-v1",
+      "saved_status": "A scripts/experiments/v4_g5_cross_necessity/PROTOCOL.txt\n A scripts/experiments/v4_g5_cross_necessity/__init__.py\n A scripts/experiments/v4_g5_cross_necessity/gates.py\n A scripts/experiments/v4_g5_cross_necessity/interventions.py\n A scripts/experiments/v4_g5_cross_necessity/metrics.py\n A scripts/experiments/v4_g5_cross_necessity/report.py\n A scripts/experiments/v4_g5_cross_necessity/responses.py\n A scripts/experiments/v4_g5_cross_necessity/run.py\n A scripts/experiments/v4_g5_cross_necessity/run.sbatch\n A scripts/tests/training/test_v4_g5_cross_gates.py\n A scripts/tests/training/test_v4_g5_cross_interventions.py\n A scripts/tests/training/test_v4_g5_cross_report.py\n A scripts/tests/training/test_v4_g5_cross_responses.py\n A scripts/tests/training/test_v4_g5_cross_runner.py"
+    },
+    {
+      "path": "D:\\Amax\\Projects\\touch4d-worktrees\\v4-g5-direct-008-v1",
+      "before": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+      "commit": "dc9c66c543dbbb343248deddb7b11c033ca21f4e",
+      "tag": "archive/20261118/snapshot/v4-g5-direct-008-v1",
+      "saved_status": "M scripts/data_process/processor.py\n M scripts/dataloader/dataset.py\n?? scripts/experiments/v4_g5_signed_local/cloth008.py\n?? scripts/experiments/v4_g5_signed_local/cloth008_smoke.sbatch\n?? scripts/experiments/v4_g5_signed_local/cloth008_train.py"
+    }
+  ],
+  "local_branches": {
+    "codex/g5-local-response-prototype-v1": {
+      "sha": "20c71f1806f8d68cd230cb99aef63bc106327093",
+      "tag": "archive/20261118/local/codex/g5-local-response-prototype-v1"
+    },
+    "codex/p2-001-h15-e8": {
+      "sha": "b9771780956c2182de47a1377baeeaba50c3c5f1",
+      "tag": "archive/20261118/local/codex/p2-001-h15-e8"
+    },
+    "codex/p2-condition-fusion-v1": {
+      "sha": "34d013fedea978ca53aeef9e66d7b2924c63460c",
+      "tag": "archive/20261118/local/codex/p2-condition-fusion-v1"
+    },
+    "codex/p2-condition-identifiability-v1": {
+      "sha": "8861643e597f28ece9b1561512fa7b5066751715",
+      "tag": "archive/20261118/local/codex/p2-condition-identifiability-v1"
+    },
+    "codex/p2-tool-anchor-b-h15-v1": {
+      "sha": "90626de6dd98c5eef9069ccdb69ba97ab98bee86",
+      "tag": "archive/20261118/local/codex/p2-tool-anchor-b-h15-v1"
+    },
+    "codex/p3-p4-debug-audit-v1": {
+      "sha": "065f4ecb2e73a3b9e7a166fcd7f8e2d84eccd9cd",
+      "tag": "archive/20261118/local/codex/p3-p4-debug-audit-v1"
+    },
+    "codex/p3-p4-spatial-dynamics-v1": {
+      "sha": "400b4c389325efe18d4d9a54eb5412e722ab22cc",
+      "tag": "archive/20261118/local/codex/p3-p4-spatial-dynamics-v1"
+    },
+    "codex/p3-two-frame-h10": {
+      "sha": "391188acf3ed62dfceb91d3b402012c16929b42b",
+      "tag": "archive/20261118/local/codex/p3-two-frame-h10"
+    },
+    "codex/refactor-scripts-p2": {
+      "sha": "678b9be455ca8968f633da97e4d060139a3840fd",
+      "tag": "archive/20261118/local/codex/refactor-scripts-p2"
+    },
+    "codex/structural-gs-h15": {
+      "sha": "fdd4013c7f166daae12379f4ee020b4da5724965",
+      "tag": "archive/20261118/local/codex/structural-gs-h15"
+    },
+    "codex/v4-001-h10-e8": {
+      "sha": "2e8afae7a74a1a4138f45e49dc8add83df6b579e",
+      "tag": "archive/20261118/local/codex/v4-001-h10-e8"
+    },
+    "codex/v4-001-h15-e8": {
+      "sha": "60b7e6044a139a92bf7fdad29c262bde437ae2f9",
+      "tag": "archive/20261118/local/codex/v4-001-h15-e8"
+    },
+    "codex/v4-action-identifiability-v1": {
+      "sha": "c9a74d2e9a2beae0f4d1b5a9afb76d94a9d74854",
+      "tag": "archive/20261118/local/codex/v4-action-identifiability-v1"
+    },
+    "codex/v4-action-loss-comparison-v1": {
+      "sha": "e32933f730590c2a0507a64689a43e5853a13576",
+      "tag": "archive/20261118/local/codex/v4-action-loss-comparison-v1"
+    },
+    "codex/v4-anchor-interaction-ablation-v1": {
+      "sha": "d81d04544ccfd68f548ed3406342c6bb11e95bf9",
+      "tag": "archive/20261118/local/codex/v4-anchor-interaction-ablation-v1"
+    },
+    "codex/v4-attention-gradient-audit-v1": {
+      "sha": "0934d8c488ce1da86ddc91a95300a3bb36ffd736",
+      "tag": "archive/20261118/local/codex/v4-attention-gradient-audit-v1"
+    },
+    "codex/v4-contact-audit-ep1": {
+      "sha": "55815145ab5762360222d8b57dcbe223c6c390e7",
+      "tag": "archive/20261118/local/codex/v4-contact-audit-ep1"
+    },
+    "codex/v4-contact-manual-labeling-001": {
+      "sha": "e41fa2f5f39b9bcf980f595ec1df19f59b58272c",
+      "tag": "archive/20261118/local/codex/v4-contact-manual-labeling-001"
+    },
+    "codex/v4-contact-optimization-v1": {
+      "sha": "5615912c70b5644f1783234975b1112f5e4e0aea",
+      "tag": "archive/20261118/local/codex/v4-contact-optimization-v1"
+    },
+    "codex/v4-controller-object-signed-motion-audit-v1": {
+      "sha": "b15e4d3d4f6c5e440ba2688f76f2c0686a7b1ae6",
+      "tag": "archive/20261118/local/codex/v4-controller-object-signed-motion-audit-v1"
+    },
+    "codex/v4-d0-oracle-capacity-v1": {
+      "sha": "753aaacb545b05e979d9b41b9f82200d5ca52d2f",
+      "tag": "archive/20261118/local/codex/v4-d0-oracle-capacity-v1"
+    },
+    "codex/v4-g4-frozen-attribution-v1": {
+      "sha": "c6ecb27b1b4bc3f83f7c7aa622d4929c6803c4d3",
+      "tag": "archive/20261118/local/codex/v4-g4-frozen-attribution-v1"
+    },
+    "codex/v4-g4-global-motion-v1": {
+      "sha": "8cba442736b81d05e9785a5963345d3fe2c35131",
+      "tag": "archive/20261118/local/codex/v4-g4-global-motion-v1"
+    },
+    "codex/v4-g5-arap-iso-ablation-v1": {
+      "sha": "01d3b610180556ed1bf730462d0d711f5d821be6",
+      "tag": "archive/20261118/local/codex/v4-g5-arap-iso-ablation-v1"
+    },
+    "codex/v4-g5-direct-008-v1": {
+      "sha": "dc9c66c543dbbb343248deddb7b11c033ca21f4e",
+      "tag": "archive/20261118/local/codex/v4-g5-direct-008-v1"
+    },
+    "codex/v4-g5-direct-e16-continuation-v1": {
+      "sha": "4734e3e9aa3a920c7cf5a84e6cc045738cc7c5a5",
+      "tag": "archive/20261118/local/codex/v4-g5-direct-e16-continuation-v1"
+    },
+    "codex/v4-g5-direct-h15-delta4-v1": {
+      "sha": "2d0a299d11a84b75babc56992975462c94674a01",
+      "tag": "archive/20261118/local/codex/v4-g5-direct-h15-delta4-v1"
+    },
+    "codex/v4-g5-direct-stride4-v1": {
+      "sha": "f4198fa373b729d170541dbe6ece54ef66b74eff",
+      "tag": "archive/20261118/local/codex/v4-g5-direct-stride4-v1"
+    },
+    "codex/v4-g5-frozen-attention-routing-v1": {
+      "sha": "2100d95851c041b85343eb4ff5898fccbaf87f46",
+      "tag": "archive/20261118/local/codex/v4-g5-frozen-attention-routing-v1"
+    },
+    "codex/v4-g5-frozen-condition-attribution-v1": {
+      "sha": "21bae1ee6e8a4e3a3fd17d8baedd2071ef1589c1",
+      "tag": "archive/20261118/local/codex/v4-g5-frozen-condition-attribution-v1"
+    },
+    "codex/v4-g5-frozen-cross-attention-audit-v1": {
+      "sha": "8052a54c613e3333c0116b45800788ef7394ec71",
+      "tag": "archive/20261118/local/codex/v4-g5-frozen-cross-attention-audit-v1"
+    },
+    "codex/v4-g5-frozen-motion-attribution-v1": {
+      "sha": "18704f4d54f16ea8a584fcc7ddc4f9a07251fbaf",
+      "tag": "archive/20261118/local/codex/v4-g5-frozen-motion-attribution-v1"
+    },
+    "codex/v4-g5-geo-joint-scratch-v1": {
+      "sha": "6f29c94b1042131f1ad516bef7fcf347d2e2a39e",
+      "tag": "archive/20261118/local/codex/v4-g5-geo-joint-scratch-v1"
+    },
+    "codex/v4-g5-geometry-decoder-v1": {
+      "sha": "5d0e632c75a3742b2a9c56f298edbb01200788d2",
+      "tag": "archive/20261118/local/codex/v4-g5-geometry-decoder-v1"
+    },
+    "codex/v4-g5-runner-integration-smoke-v1": {
+      "sha": "f978e0a29b6f0f0b6097c40684b949797a2f5d7b",
+      "tag": "archive/20261118/local/codex/v4-g5-runner-integration-smoke-v1"
+    },
+    "codex/v4-g5-signed-local-v1": {
+      "sha": "03fce059c6d6cf2f547c06cdff8434c8af2ffce6",
+      "tag": "archive/20261118/local/codex/v4-g5-signed-local-v1"
+    },
+    "codex/v4-g5-struct-state-ablation-v1": {
+      "sha": "25d7de055782725c37ef276544d59e9ebd581b17",
+      "tag": "archive/20261118/local/codex/v4-g5-struct-state-ablation-v1"
+    },
+    "codex/v4-h15-condition-ablation-v1": {
+      "sha": "3994b716215c932a24d5b6f324df8cdd1154809e",
+      "tag": "archive/20261118/local/codex/v4-h15-condition-ablation-v1"
+    },
+    "codex/v4-normal-oracle-motion-field-audit-v1": {
+      "sha": "eed58d859bdeb60dfdcf33c268c56bc8410cf653",
+      "tag": "archive/20261118/local/codex/v4-normal-oracle-motion-field-audit-v1"
+    },
+    "codex/v4-squared-chamfer-v1": {
+      "sha": "acfe977fd6a734f1507d6423fd2147983f5e423f",
+      "tag": "archive/20261118/local/codex/v4-squared-chamfer-v1"
+    },
+    "codex/v4-stage1-smoke": {
+      "sha": "991713649850c557caa58c6c7cd62cf4096e6ed6",
+      "tag": "archive/20261118/local/codex/v4-stage1-smoke"
+    },
+    "main": {
+      "sha": "64b1320d3718e7d05d590ce854b8aeb05f14236f",
+      "tag": "archive/20261118/local/main"
+    }
+  },
+  "adopted_core_source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5"
+}

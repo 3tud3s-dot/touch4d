@@ -1,0 +1,211 @@
+{
+  "status": "implementation_cpu_verified_gpu_unverified",
+  "files": [
+    "scripts/training/cloth_evaluate.py",
+    "scripts/training/soma_adapter.py",
+    "scripts/tests/test_core_evaluate.py",
+    "configs/evaluation.json",
+    "scripts/visualization/pack_results.py",
+    "scripts/tests/test_core_presentation.py",
+    "scripts/visualization/build_demo.py"
+  ],
+  "entrypoint": "python -B -m scripts.training.cloth_evaluate --runtime-root <runtime-root> --output <new-output>",
+  "cpu_preflight": "Add --preflight: checks frozen checkpoint/input identities without GPU/rendering; actual retained-server data preflight has not been executed by this agent.",
+  "model_modes": {
+    "frozen-demo": "Default; immutable original single-Episode E8 SHA and SoMA E10 SHA gates.",
+    "completed-run": "Explicit --completion from new cloth_train; checks status, exact source bundle, actual checkpoint hash, 8x140 window/update ledger, model/normalization/training math and heldout coverage. No silent fallback."
+  },
+  "source_reference": {
+    "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-g5-008-h15-compare-001\\evaluate.py",
+    "sha256": "f4b7f87455e8943ca8a295e8e38da71d0c47a2a4f652da1be20deb714d0324d5",
+    "native_functions_moved_verbatim": {
+      "pairs_from_centers": "7d00cdeefb4137d76d48cf82cf35359e8d4cf09783288c60fa6f28a01ead2853",
+      "prepare_soma_rollout": "cfe7399a9d3ca99d281c733332dd5d8f0546358d611f717da1425150a1f91e9c",
+      "soma_predict": "6dff1e9ec83f5b7f3bc2940062d800d71a02e76470e4ccb181c36a04a256ee3e",
+      "native_parity": "0dd171c8774fe92270f4f00a2952fb26eeda6778ae8a96c7f654ef4f8ce0f488",
+      "load_pkl": "62f0d8f290e8847a0e57f110847c7a129fa861838bc925817cb5e8fbe0c0f423"
+    },
+    "cross_episode_source": "assets/current/reference_sources/infer_v3.py"
+  },
+  "protocol": {
+    "cases": [
+      {
+        "episode": 0,
+        "start": 189
+      },
+      {
+        "episode": 0,
+        "start": 225
+      },
+      {
+        "episode": 0,
+        "start": 241
+      },
+      {
+        "episode": 1,
+        "start": 181
+      },
+      {
+        "episode": 1,
+        "start": 260
+      }
+    ],
+    "horizon": 15,
+    "delta": 1,
+    "train_normalization": {
+      "center": [
+        0.21795742779917135,
+        0.010968994921301998,
+        0.14623293373089752
+      ],
+      "scale": 0.20123094573217368,
+      "refit": false
+    },
+    "current_conditions": "t..t+14 observed actions and tactile; nearest nonfuture tactile/masks inherited from data processor",
+    "soma_conditions": "t..t+15 recorded destination controls; no tactile",
+    "soma_timing": {
+      "real_dt": 0.06666666666666667,
+      "env_dt": 0.03333333333333333,
+      "model_dt": 0.06666666666666667,
+      "gravity_scale": 4,
+      "frame_gap": 10
+    },
+    "caveat": "Selected same-cloth windows, different condition availability and training budgets; not a matched-budget causal architecture ablation."
+  },
+  "outputs": {
+    "metrics.csv": "episode,start,frame,h,model,cd_mm,rgb_mae,alpha_mae,psnr_db,target_copy_cd_mm,covariance_nonpositive",
+    "predictions/ep{ep}_start{start}.npz": "Initial GS attributes and g5_xyz/soma_xyz/soma_covariance H1..15; no target point correspondence assumed.",
+    "comparison_assets/ep{ep}_start{start}_cam{camera}_h{h:02d}.webp": "GT/SoMA/G5; original top RGB y=40, then Alpha. One GT-only ROI per case/camera across all H1..15.",
+    "protocol.json": "Actual code, data, weights and settings identities; GPU job/step/UUID recorded on real execution.",
+    "evaluation_complete.json": "Only written after all five rollouts and immutable state/input verification."
+  },
+  "required_runtime_assets": {
+    "data": [
+      "datasets/touch4d-v1/008-pink-cloth/episode_0",
+      "datasets/touch4d-v1/008-pink-cloth/episode_1",
+      "datasets/touch4d-depth-v1/008-pink-cloth/episode_0",
+      "datasets/touch4d-depth-v1/008-pink-cloth/episode_1"
+    ],
+    "weights": [
+      "weights/g5_e8.pt",
+      "weights/soma_e10.pth"
+    ],
+    "source_manifest": "provenance/g5_source.sha256 (original frozen manifest; new run mode must override with its matching new source manifest)",
+    "soma_package": [
+      "scene_interface.json",
+      "track_process_data.pkl",
+      "controller_mask/dis_split/controller_dis_split*.pkl",
+      "cluster_mask/dis_split/dis_split*.pkl",
+      "pi3/gs/point_cloud/iteration_10000/point_cloud.ply"
+    ],
+    "project_source": [
+      "third_party/soma/mmgs",
+      "third_party/soma/configs",
+      "third_party/soma/gaussian-splatting"
+    ],
+    "compiled_runtime": [
+      "Original SoMA environment including mmcv, DGL, pytorch3d, simple_knn, diff_gaussian_rasterization",
+      "torch2.7.1+cu128; original gsplat package and audited extension binary or equivalent rebuilt extension"
+    ],
+    "stage1_prediction_cache": {
+      "required": false,
+      "reason": "Native continuous constructor returns via raw observed Gaussian initialization before segmented pred_stage1 cache loading."
+    },
+    "soma_configuration_files": [
+      "third_party/soma/configs/_base_/schedules/adam_hood.py",
+      "third_party/soma/configs/_base_/default_runtime.py",
+      "third_party/soma/configs/SoMA/deform360_v0_stage2.py"
+    ]
+  },
+  "checks": {
+    "local_cpu_unittest": "23 evaluation tests passed, 0 failed, 0 skipped.",
+    "covered": [
+      "Independent-variable-count unsquared Chamfer and original KNN path",
+      "Equal-camera target-mask RGB/Alpha/PSNR",
+      "Causal t..t+14 framing and timestamps",
+      "H10 own-prediction template/history refresh",
+      "NaN rejection without dropping cases",
+      "45 WebP RGB/Alpha exports",
+      "Explicit completed-run acceptance and malformed hash/source/math/ledger rejection"
+    ],
+    "cli_help": "passed",
+    "gpu_evaluation": "not run",
+    "actual_checkpoint_strict_restore": "not executed by this agent; remains required before deletion",
+    "source_and_input_gates": "Frozen SHA lock unchanged; explicit completed-run source/hash/math/window checks plus actual Ep0 train-data fingerprints; no implicit completion fallback",
+    "presentation_cpu_unittest": "16 presentation tests passed, 0 failed, 0 skipped; no fabricated research metrics.",
+    "presentation_gate": {
+      "default": "Fresh source requires real evaluation_complete.json with five windows, two models, zero optimizer updates and all native/state/input completion gates.",
+      "historical_cache": "Only explicit --verified-cache-manifest permits the original train legacy and cross modern proof pairs. All consumed cache inputs and both original proof pairs must be within the SHA closure.",
+      "legacy_status": "The historical resimulation proof remains unmodified: no invented status or normalizer-completion fields.",
+      "npz_identity": "Integer scalar frame_id==start; raw XYZ and log_scales/quaternions/opacity_logits/sh_dc exact dtype+value against V1; track shape exactly H15 with initial point count.",
+      "provenance": "source_acceptance includes proof paths, SHA256 and original completion records; cache mode fresh_inference=False and model_updates=0."
+    },
+    "native_constructor_cache_bypass": "Executed the exact vendored Stage-2 _init_scene_init_pos_cov method with CPU filesystem spies: continuous mode loads observed Gaussian and returns before pred_stage1; segmented negative control triggers the forbidden cache-read spy.",
+    "runtime_relocation": "Model data_dir, scene geometry and train/val/test env roots are relocated before build_simulator; time/gravity/model math retained. SoMA runtime overrides are written into evaluation protocol.",
+    "html_canonical_bytes": {
+      "encoding": "UTF-8",
+      "newline": "CRLF",
+      "platform_dependent_text_write": false,
+      "original_sha256": "87376114bf45a32de4535ff9ddcfcde397adc5f0d1c10a7e67791fb4ef715d0c",
+      "bytes": 39677108,
+      "crlf_lines": 390,
+      "golden_bundle_rebuild": "passed; no rendering or inference"
+    }
+  },
+  "implementation_hashes": {
+    "scripts/training/cloth_evaluate.py": "9785f9da432c668ba26b6a1ebfa341ac33555c54531044c98a899775817e7795",
+    "scripts/training/soma_adapter.py": "f58a3c1948089214856ae2f54ec959c4fe3d59ff5da825584a2bf416b4ec53f8",
+    "scripts/tests/test_core_evaluate.py": "23f136c9709e927d8713f55073331b57b15cae9dba94d7d99ac70c945fc414fc",
+    "configs/evaluation.json": "af06975df562f6ab5e8d78d43789b83c34a5564e66cb4672bec74483519ed8c4",
+    "scripts/visualization/pack_results.py": "c3c9469e6e9a632abba9264f3aceaaaa54f04f275191acd1d98e7f18f1580133",
+    "scripts/tests/test_core_presentation.py": "ed29b6e415ca58bbd83cffba89940998d17e57a2cd7a2be19f3c301415f0c378",
+    "scripts/visualization/build_demo.py": "bd3e653161036fb58f7c34040f83cdb253d0f3958f00f8b3de136ddb2effd8ed"
+  },
+  "source_line_endings": "LF; current reviewed source identities are in source_manifest.json. Historical producer/source hashes remain unchanged.",
+  "verified_cache_manifest_schema": {
+    "schema": "touch4d-verified-cache-v1",
+    "files_sha256": {
+      "<every consumed relative input and original completion/protocol file>": "<full sha256>"
+    },
+    "source_completion_proofs": [
+      {
+        "role": "resimulation",
+        "schema": "legacy-h15-v1",
+        "completion": "source_proofs/train_completion.json",
+        "protocol": "source_proofs/train_protocol.json"
+      },
+      {
+        "role": "generalization",
+        "schema": "cross-h15-v3",
+        "completion": "source_proofs/cross_completion.json",
+        "protocol": "source_proofs/cross_protocol.json"
+      }
+    ]
+  },
+  "current_acceptance": {
+    "local_suite": {
+      "tests_run": 249,
+      "passed": 222,
+      "skipped": 27,
+      "failures": 0,
+      "errors": 0,
+      "reason": "25 h5py-dependent tests unavailable locally; 2 explicit CUDA backward checks not run"
+    },
+    "server_suite": {
+      "job": 35373,
+      "source_snapshot": "source-005",
+      "source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "tests_run": 249,
+      "passed": 247,
+      "skipped": 2,
+      "skipped_reason": "Two explicit real gsplat CUDA backward tests; this cleanup runs CPU only.",
+      "new_training_updates": 0,
+      "gpu_requested": 0,
+      "preflight_proof": "verification/provenance/package-35373/evaluation-preflight/preflight.json"
+    },
+    "full_source_and_real_e8_cpu_regression_job": 35356,
+    "gpu_reinference_performed": false
+  }
+}

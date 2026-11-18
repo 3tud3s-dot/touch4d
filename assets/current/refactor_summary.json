@@ -1,0 +1,233 @@
+{
+  "schema": "touch4d-core-refactor-review-v1",
+  "status": "READY_FOR_REVIEW_CLEANUP_NOT_APPLIED",
+  "created_at": "2026-11-18T13:15:16.690797+00:00",
+  "candidate_root": "D:\\Amax\\Projects\\touch4d-worktrees\\core-demo-v1",
+  "branch": "codex/core-demo-v1",
+  "base_commit": "64b1320d3718e7d05d590ce854b8aeb05f14236f",
+  "source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
+  "source_files": 218,
+  "current_task_git_commits": 0,
+  "original_directories_deleted": 0,
+  "original_user_dirty_files_modified": 0,
+  "target_html": {
+    "path": "D:\\Amax\\Projects\\touch4d-experiments\\soma-g5-008-demo-001\\comparison.html",
+    "bytes": 39677108,
+    "sha256": "87376114bf45a32de4535ff9ddcfcde397adc5f0d1c10a7e67791fb4ef715d0c",
+    "standalone_rebuild_byte_exact": true,
+    "rgb_window_camera_and_frame_controls_retained": true,
+    "gaussian_3d_controls_and_gt_overlay_retained": true
+  },
+  "kept_pipeline": [
+    "Historical producer V1 conversion and full-source validation",
+    "Depth extension conversion and validation",
+    "Causal conditions and fixed training-derived normalization",
+    "Original Direct model and original 8x140 training ledger",
+    "Frozen E8 and SoMA E10 evaluation plus explicit new-completed-run evaluation",
+    "Verified result packaging and standalone HTML build"
+  ],
+  "data_units": {
+    "scene": "008-pink-cloth",
+    "episodes": [
+      0,
+      1
+    ],
+    "frames": [
+      357,
+      422
+    ],
+    "raw_source_inputs": 29,
+    "raw_source_logical_gib": 5.38,
+    "minimum_unit": "Complete episodes and original metadata/provenance remain intact; no slicing or relabeling"
+  },
+  "weights": {
+    "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1/formal-001/result/epoch_08.pt": "00fe8922bde7356e7290125813c2f0ca456604df03eafa2143158afd30073e57",
+    "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-stage2-rerun-001/stage2/epoch_10.pth": "f8b2387eb5e240f63f95bd213920947d697e3d1371ef926c8c28b6e71dce339b"
+  },
+  "verification": {
+    "local": {
+      "tests_run": 249,
+      "passed": 222,
+      "failures": 0,
+      "errors": 0,
+      "skipped": [
+        {
+          "test": "test_all_three_scenes_future_offsets_units_masks_and_camera_order (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_all_three_scenes_future_offsets_units_masks_and_camera_order)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_batch_check_rejects_nonfinite_depth_bad_mask_and_nonrigid_calibration (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_batch_check_rejects_nonfinite_depth_bad_mask_and_nonrigid_calibration)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_collate_preserves_depth_and_rejects_mixed_or_partial_fields (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_collate_preserves_depth_and_rejects_mixed_or_partial_fields)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_default_camera_selection_uses_common_ordered_subset_and_lazy_reads (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_default_camera_selection_uses_common_ordered_subset_and_lazy_reads)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_depth_samples_are_independent_and_dataset_pickle_has_no_open_h5 (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_depth_samples_are_independent_and_dataset_pickle_has_no_open_h5)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_depth_schema_binding_and_calibration_failures_are_detected (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_depth_schema_binding_and_calibration_failures_are_detected)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_h10_h15_depth_covers_each_future_frame_with_matching_calibration (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_h10_h15_depth_covers_each_future_frame_with_matching_calibration)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_invalid_camera_options_and_missing_extension_fail_explicitly (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_invalid_camera_options_and_missing_extension_fail_explicitly)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_invalid_h5_dtype_shape_and_payload_fail_on_read (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_invalid_h5_dtype_shape_and_payload_fail_on_read)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_loader_and_read_only_cli_forward_depth_options (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_loader_and_read_only_cli_forward_depth_options)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_old_mode_does_not_open_or_require_depth (scripts.tests.dataloader.test_dataloader.DepthDatasetTests.test_old_mode_does_not_open_or_require_depth)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_camera_tar_rejects_traversal_duplicates_and_links_before_copy (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_camera_tar_rejects_traversal_duplicates_and_links_before_copy)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_camera_tar_stream_preserves_selected_member_bytes_and_hash (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_camera_tar_stream_preserves_selected_member_bytes_and_hash)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_changed_recorded_tar_bytes_fail_even_with_correct_loose_copies (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_changed_recorded_tar_bytes_fail_even_with_correct_loose_copies)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_cleanup_failure_does_not_fail_publication_or_next_default_skip (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_cleanup_failure_does_not_fail_publication_or_next_default_skip)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_default_skip_validates_without_copying_sources_or_creating_output (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_default_skip_validates_without_copying_sources_or_creating_output)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_depth_root_cannot_overlap_core_or_source (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_depth_root_cannot_overlap_core_or_source)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_first_depth_layout_keeps_core_tar_timestamps_with_loose_copies (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_first_depth_layout_keeps_core_tar_timestamps_with_loose_copies)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_full_depth_validation_reads_only_depth_calibration_and_core_binding (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_full_depth_validation_reads_only_depth_calibration_and_core_binding)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_missing_recorded_tar_source_or_member_never_falls_back_to_loose (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_missing_recorded_tar_source_or_member_never_falls_back_to_loose)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_output_and_source_hashes_are_independently_verified (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_output_and_source_hashes_are_independently_verified)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_overwrite_publication_failure_restores_old_directory (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_overwrite_publication_failure_restores_old_directory)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_recorded_tar_depth_validates_and_skips_despite_added_loose_copies (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_recorded_tar_depth_validates_and_skips_despite_added_loose_copies)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_structure_only_still_checks_h5_and_exact_copy_provenance (scripts.tests.dataloader.test_dataloader.DepthValidationTests.test_structure_only_still_checks_h5_and_exact_copy_provenance)",
+          "reason": "Optional depth tests require h5py"
+        },
+        {
+          "test": "test_real_hdf5_memory_reader (scripts.tests.test_core_data_depth.CoreDepthTests.test_real_hdf5_memory_reader)",
+          "reason": "h5py absent: real HDF5 I/O remains unverified locally"
+        },
+        {
+          "test": "test_real_gsplat_depth_backward (scripts.tests.training.test_training.TrainingTests.test_real_gsplat_depth_backward)",
+          "reason": "Real gsplat CUDA backward test requires explicit server GPU run"
+        },
+        {
+          "test": "test_real_gsplat_rgb_alpha_geometry_backward (scripts.tests.training.test_training.TrainingTests.test_real_gsplat_rgb_alpha_geometry_backward)",
+          "reason": "Real gsplat CUDA backward test requires explicit server GPU run"
+        }
+      ],
+      "elapsed_seconds": 76.53972005844116,
+      "source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5"
+    },
+    "server": {
+      "job": 35373,
+      "source_snapshot": "source-005",
+      "source_manifest_sha256": "0b46f87392ec8e703d70b8a20b37240eed7c603157122d8651d4f2169acdc8e5",
+      "state": "COMPLETED",
+      "exit_code": "0:0",
+      "tests_run": 249,
+      "passed": 247,
+      "skipped": 2,
+      "skipped_reason": "Two explicit real gsplat CUDA backward tests; this cleanup runs CPU only.",
+      "new_training_updates": 0,
+      "gpu_requested": 0,
+      "preflight_proof": "verification/provenance/package-35373/evaluation-preflight/preflight.json"
+    },
+    "real_e8_cpu_relocation": {
+      "job": 35356,
+      "status": "PASS",
+      "window": "Ep0/start225/H15",
+      "complete_14d_prediction_exact": true,
+      "key_state_trace_exact": true,
+      "shared_field_exact": true,
+      "checkpoint_unchanged": true,
+      "optimizer_steps": 0
+    },
+    "full_source": {
+      "job": 35356,
+      "v1_frames": 779,
+      "depth_cameras_per_episode": 36,
+      "status": "PASS"
+    },
+    "failed_intermediate_attempt": {
+      "job": 35372,
+      "reason": "Mechanical depth test/helper namespace migration and Python AST version serialization; corrected without weakening assertions",
+      "logs_retained": "verification/provenance/package-35372-failed"
+    },
+    "native_soma_stage1_cache": "Not required in continuous mode; executed native CPU path test and segmented negative control",
+    "limits": [
+      "No fresh GPU inference or rendering was performed for this directory refactor",
+      "Reused historical cached inference for presentation packaging; not new scientific results",
+      "Two CUDA backward integration tests remain unexecuted in this CPU-only task"
+    ]
+  },
+  "cleanup_proposals": {
+    "local": {
+      "file": "assets/current/cleanup_plan_local.json",
+      "paths": 97,
+      "logical_bytes": 21227106358
+    },
+    "server": {
+      "file": "assets/current/cleanup_plan_server.json",
+      "paths": 323
+    }
+  },
+  "proposed_final_layout": {
+    "local_code": "D:/Amax/Projects/touch4d/{scripts,configs,docs,third_party,assets/current}",
+    "local_demo": "D:\\Amax\\Projects\\touch4d-experiments\\soma-g5-008-demo-001\\comparison.html",
+    "server_code": "/data1/userdata/tcweng/projects/touch4d",
+    "server_data": "/data1/userdata/tcweng/projects/touch4d/datasets/{deform360,touch4d-v1,touch4d-depth-v1}: retained 008 Ep0/Ep1 inputs only",
+    "server_runtime": "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1/{weights,baseline,presentation,provenance}",
+    "environments": "Preserve actual .venv, SoMA conda environment and audited native extension cache; environments outside requested roots not cleaned",
+    "historical_code": "Retain Git objects/refs; remove physical obsolete worktree directories after dirty files are preserved"
+  },
+  "next_authorized_scope_needed": [
+    "Commit reviewed codex/core-demo-v1 source and synchronize approved server reference",
+    "Preserve original uncommitted user changes in explicitly approved Git history before adopting new checkout",
+    "Adopt candidate as current local/server working source, then apply already enumerated local/server cleanup paths after final job/hash/path/ownership checks"
+  ]
+}

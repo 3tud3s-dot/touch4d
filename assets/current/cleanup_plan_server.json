@@ -1,0 +1,2918 @@
+{
+  "schema": "touch4d-cleanup-proposal-v1",
+  "state": "PROPOSED_NOT_APPLIED",
+  "allowed_roots": [
+    "/data1/userdata/tcweng/projects/touch4d",
+    "/data1/userdata/tcweng/projects/touch4d-worktrees",
+    "/data1/userdata/tcweng/experiments/touch4d"
+  ],
+  "preserved_directories": [
+    "/data1/userdata/tcweng/experiments/touch4d/core-demo-v1",
+    "/data1/userdata/tcweng/projects/touch4d/.cache/torch_extensions/gsplat_cuda",
+    "/data1/userdata/tcweng/projects/touch4d/.git",
+    "/data1/userdata/tcweng/projects/touch4d/.venv",
+    "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_0",
+    "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_1",
+    "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_0",
+    "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_1"
+  ],
+  "preserved_raw_files": [
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/cameras.tar",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/cameras.tar",
+      "bytes": 1453363200
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/metadata.json",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/metadata.json",
+      "bytes": 4017
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/robot/robot.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/robot/robot.npy",
+      "bytes": 91909
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/splatfacto.tar",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/splatfacto.tar",
+      "bytes": 1210542080
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/cameras.tar",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/cameras.tar",
+      "bytes": 1713704960
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/metadata.json",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/metadata.json",
+      "bytes": 4017
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/robot/robot.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/robot/robot.npy",
+      "bytes": 108549
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/splatfacto.tar",
+      "bytes": 1390346240
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008304848174.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008304848174.npy",
+      "bytes": 722944
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008304848174.txt",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008304848174.txt",
+      "bytes": 14120
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.npy",
+      "bytes": 851968
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.txt",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.txt",
+      "bytes": 16640
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/median_1766008210055310.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/median_1766008210055310.npy",
+      "bytes": 4224
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008304850576.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008304850576.npy",
+      "bytes": 722944
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008304850576.txt",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008304850576.txt",
+      "bytes": 14120
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008323854084.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008323854084.npy",
+      "bytes": 851968
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008323854084.txt",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008323854084.txt",
+      "bytes": 16640
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/median_1766008210670051.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/median_1766008210670051.npy",
+      "bytes": 4224
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008304855937.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008304855937.npy",
+      "bytes": 720896
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008304855937.txt",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008304855937.txt",
+      "bytes": 14080
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008323830589.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008323830589.npy",
+      "bytes": 851968
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008323830589.txt",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008323830589.txt",
+      "bytes": 16640
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/median_1766008207995074.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/median_1766008207995074.npy",
+      "bytes": 4224
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008304852143.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008304852143.npy",
+      "bytes": 720896
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008304852143.txt",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008304852143.txt",
+      "bytes": 14080
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008323828972.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008323828972.npy",
+      "bytes": 851968
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008323828972.txt",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008323828972.txt",
+      "bytes": 16640
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/median_1766008209026018.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/median_1766008209026018.npy",
+      "bytes": 4224
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/calibration_refined/extrinsics.npy",
+      "exists": true,
+      "symlink": false,
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/calibration_refined/extrinsics.npy",
+      "bytes": 11858
+    }
+  ],
+  "candidates": [
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-001-h5-e8",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-001-h5-e8",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-baseline",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-baseline",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-before",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-before",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-condition-encoder-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-condition-encoder-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-condition-identifiability-265d28a",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-condition-identifiability-265d28a",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-211ab69",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-211ab69",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-61ad87d",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-61ad87d",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-c177c0d",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-c177c0d",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-e35a553",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p2-tool-anchor-b-h15-e35a553",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-3556608",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-3556608",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-9fd89c9",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-9fd89c9",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-d01752c",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-d01752c",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-debug-37d5efd",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-debug-37d5efd",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-debug-6651b79",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-debug-6651b79",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-debug-7ad9ed7",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-debug-7ad9ed7",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-debug-delivery-065f4ec",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-debug-delivery-065f4ec",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-delivery",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-delivery",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-final",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/p3-p4-final",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-001-h10-e8",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-001-h10-e8",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-001-h15-e8",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-001-h15-e8",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-action-identifiability-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-action-identifiability-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-action-loss-comparison-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-action-loss-comparison-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-anchor-interaction-ablation-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-anchor-interaction-ablation-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-attention-gradient-audit-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-attention-gradient-audit-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-contact-audit-ep1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-contact-audit-ep1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-contact-manual-labeling-001",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-contact-manual-labeling-001",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-contact-optimization-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-contact-optimization-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-controller-object-signed-motion-audit-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-controller-object-signed-motion-audit-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-d0-oracle-capacity-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-d0-oracle-capacity-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g4-frozen-attribution-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g4-frozen-attribution-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g4-global-motion-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g4-global-motion-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-arap-iso-ablation-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-arap-iso-ablation-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-direct-e16-continuation-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-direct-e16-continuation-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-direct-h15-delta4-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-direct-h15-delta4-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-direct-stride4-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-direct-stride4-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-frozen-attention-routing-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-frozen-attention-routing-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-frozen-condition-attribution-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-frozen-condition-attribution-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-frozen-cross-attention-audit-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-frozen-cross-attention-audit-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-frozen-motion-attribution-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-frozen-motion-attribution-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-geo-joint-scratch-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-geo-joint-scratch-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-geometry-decoder-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-geometry-decoder-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-runner-integration-smoke-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-runner-integration-smoke-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-signed-local-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-signed-local-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-struct-state-ablation-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-g5-struct-state-ablation-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-h15-condition-ablation-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-h15-condition-ablation-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-normal-oracle-motion-field-audit-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-normal-oracle-motion-field-audit-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-squared-chamfer-v1",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-squared-chamfer-v1",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-stage1-smoke",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/v4-stage1-smoke",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false,
+      "git_status": "",
+      "git_status_rc": 0
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d-worktrees/validation-output",
+      "root": "/data1/userdata/tcweng/projects/touch4d-worktrees",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d-worktrees/validation-output",
+      "is_symlink": false,
+      "kind": "worktree",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/contact-audit-ep1-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/contact-audit-ep1-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/contact-boundaries-001-frozen-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/contact-boundaries-001-frozen-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/contact-manual-labeling-001-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/contact-manual-labeling-001-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/p2-condition-identifiability-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/p2-condition-identifiability-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/p2-tool-anchor-b-h15-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/p2-tool-anchor-b-h15-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/p3-p4-debug-audit-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/p3-p4-debug-audit-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/p3-p4-spatial-dynamics-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/p3-p4-spatial-dynamics-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-gap10-visual-001",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-gap10-visual-001",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-stage2-rerun-001",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/soma-008-stage1-stage2-rerun-001",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/soma-g5-008-cross-episode-strong-001",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/soma-g5-008-cross-episode-strong-001",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/soma-g5-008-h15-compare-001",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/soma-g5-008-h15-compare-001",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-001-h10-e8",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-001-h10-e8",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-001-h10-e8-visual-audit-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-001-h10-e8-visual-audit-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-001-h15-best-visual-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-001-h15-best-visual-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-001-h15-e8",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-001-h15-e8",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-action-identifiability-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-action-identifiability-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-action-loss-comparison-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-action-loss-comparison-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-anchor-interaction-ablation-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-anchor-interaction-ablation-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-attention-gradient-audit-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-attention-gradient-audit-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-attention-gradient-audit-v1-review.zip",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-attention-gradient-audit-v1-review.zip",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-contact-optimization-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-contact-optimization-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-controller-object-signed-motion-audit-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-controller-object-signed-motion-audit-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-d0-oracle-capacity-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-d0-oracle-capacity-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g0-g4-g5-h15-best-visual-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g0-g4-g5-h15-best-visual-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g4-frozen-attribution-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g4-frozen-attribution-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g4-global-motion-v1-smoke",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g4-global-motion-v1-smoke",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g4-global-motion-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g4-global-motion-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g4-global-motion-v1-training-protocol",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g4-global-motion-v1-training-protocol",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-arap-iso-ablation-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-arap-iso-ablation-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-arap-iso-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-arap-iso-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-arap-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-arap-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-all-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-all-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-008-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-e16-continuation-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-e16-continuation-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-geo-h15-visual-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-geo-h15-visual-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-h15-delta4-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-h15-delta4-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-soma-001-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-soma-001-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-stride4-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-stride4-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-direct-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-formal-training-readiness-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-formal-training-readiness-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-frozen-attention-routing-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-frozen-attention-routing-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-frozen-condition-attribution-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-frozen-condition-attribution-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-frozen-cross-attention-audit-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-frozen-cross-attention-audit-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-frozen-motion-attribution-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-frozen-motion-attribution-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geo-joint-scratch-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geo-joint-scratch-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geo-joint-scratch-v1-smoke",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geo-joint-scratch-v1-smoke",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geo-joint-scratch-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geo-joint-scratch-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geometry-decoder-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geometry-decoder-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geometry-decoder-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-geometry-decoder-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-paired-h15-launch-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-paired-h15-launch-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-propagate-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-propagate-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-runner-integration-smoke-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-runner-integration-smoke-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-signed-local-v1-smoke",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-signed-local-v1-smoke",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-struct-state-ablation-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-struct-state-ablation-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-struct-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g5-struct-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-g6-state-struct-v1-training",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-g6-state-struct-v1-training",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-h10-single-window-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-h10-single-window-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-h15-condition-ablation-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-h15-condition-ablation-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-normal-oracle-motion-field-audit-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-normal-oracle-motion-field-audit-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/experiments/touch4d/v4-squared-chamfer-v1",
+      "root": "/data1/userdata/tcweng/experiments/touch4d",
+      "resolved": "/data1/userdata/tcweng/experiments/touch4d/v4-squared-chamfer-v1",
+      "is_symlink": false,
+      "kind": "experiment",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/.download",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/.download",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/derived",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/derived",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/001-rope",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/001-rope",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/metric_params_refined_undistorted.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/metric_params_refined_undistorted.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/pcd_clean.tar",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/pcd_clean.tar",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/render_4dgs.mp4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/render_4dgs.mp4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/robot/opening_dists.png",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/robot/opening_dists.png",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/split.json",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/split.json",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/start_obj_pcd.ply",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/start_obj_pcd.ply",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/tactile.mp4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/tactile.mp4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/tracking_video.mp4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/tracking_video.mp4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/visual_hull_simple_full.ply",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_0/visual_hull_simple_full.ply",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/metric_params_refined_undistorted.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/metric_params_refined_undistorted.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/pcd_clean.tar",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/pcd_clean.tar",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/render_4dgs.mp4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/render_4dgs.mp4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/robot/opening_dists.png",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/robot/opening_dists.png",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/split.json",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/split.json",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/start_obj_pcd.ply",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/start_obj_pcd.ply",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/tactile.mp4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/tactile.mp4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/tracking_video.mp4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/tracking_video.mp4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/visual_hull_simple_full.ply",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_1/visual_hull_simple_full.ply",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_2",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_2",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_3",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_3",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_5",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_5",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_6",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_6",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_7",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_7",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_8",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_8",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_9",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/008-pink-cloth/episode_9",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/051-cube",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/processed/051-cube",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/001-rope",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/001-rope",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-001_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-001_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-001_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-001_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-002_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-002_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-004_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-004_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-006_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-006_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-007_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-007_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-007_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-007_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-008_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-008_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-008_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-008_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-009_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-009_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-009_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-009_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-010_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-010_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-010_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-010_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-011_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-011_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-012_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-012_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-012_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-012_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-013_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-013_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-013_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-013_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-014_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-014_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-014_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-014_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-015_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-015_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-015_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-015_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-016_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-016_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-017_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-017_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-017_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-017_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-018_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-018_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-018_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-018_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-019_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-019_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-019_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-019_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-021_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-021_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-021_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-021_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-022_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-022_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-022_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-022_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-023_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-023_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-024_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-024_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-024_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-024_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-025_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-025_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-025_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-025_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-027_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-027_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-027_cam1",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-027_cam1",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-028_cam0",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid-028_cam0",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008304848174.flac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008304848174.flac",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008304848174.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008304848174.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.flac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.flac",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008323855081.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008343945568.flac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008343945568.flac",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008343945568.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008343945568.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008343945568.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008343945568.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008343945568.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008343945568.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008367454741.flac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008367454741.flac",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008367454741.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008367454741.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008367454741.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008367454741.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008367454741.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008367454741.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008391293719.flac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008391293719.flac",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008391293719.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008391293719.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008391293719.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008391293719.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008391293719.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008391293719.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008425325467.flac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008425325467.flac",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008425325467.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008425325467.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008425325467.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008425325467.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008425325467.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008425325467.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008468018467.flac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008468018467.flac",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008468018467.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008468018467.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008468018467.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008468018467.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008468018467.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008468018467.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008490135820.flac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008490135820.flac",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008490135820.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008490135820.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008490135820.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008490135820.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008490135820.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008490135820.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008531887373.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008531887373.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008531887373.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008531887373.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008531887373.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008531887373.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008565400475.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008565400475.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008565400475.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008565400475.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008565400475.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_left/brics-odroid_tactilel_left_1766008565400475.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008304850576.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008304850576.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008323854084.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008323854084.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008343949651.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008343949651.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008343949651.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008343949651.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008343949651.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008343949651.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008367453279.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008367453279.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008367453279.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008367453279.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008367453279.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008367453279.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008391302692.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008391302692.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008391302692.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008391302692.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008391302692.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008391302692.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008425336543.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008425336543.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008425336543.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008425336543.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008425336543.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008425336543.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008468019298.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008468019298.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008468019298.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008468019298.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008468019298.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008468019298.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008490153387.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008490153387.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008490153387.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008490153387.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008490153387.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008490153387.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008531892454.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008531892454.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008531892454.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008531892454.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008531892454.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008531892454.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008565399551.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008565399551.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008565399551.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008565399551.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008565399551.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactilel_right/brics-odroid_tactilel_right_1766008565399551.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008304855937.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008304855937.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008323830589.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008323830589.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008343909090.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008343909090.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008343909090.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008343909090.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008343909090.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008343909090.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008367461127.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008367461127.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008367461127.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008367461127.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008367461127.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008367461127.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008391290428.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008391290428.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008391290428.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008391290428.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008391290428.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008391290428.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008425325013.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008425325013.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008425325013.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008425325013.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008425325013.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008425325013.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008468037737.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008468037737.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008468037737.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008468037737.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008468037737.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008468037737.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008490140123.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008490140123.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008490140123.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008490140123.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008490140123.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008490140123.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008531893115.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008531893115.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008531893115.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008531893115.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008531893115.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008531893115.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008565398856.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008565398856.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008565398856.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008565398856.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008565398856.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_left/brics-odroid_tactiler_left_1766008565398856.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008304852143.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008304852143.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008323828972.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008323828972.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008343913860.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008343913860.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008343913860.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008343913860.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008343913860.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008343913860.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008367463788.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008367463788.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008367463788.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008367463788.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008367463788.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008367463788.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008391301704.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008391301704.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008391301704.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008391301704.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008391301704.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008391301704.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008425328666.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008425328666.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008425328666.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008425328666.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008425328666.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008425328666.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008468040448.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008468040448.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008468040448.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008468040448.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008468040448.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008468040448.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008490139578.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008490139578.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008490139578.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008490139578.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008490139578.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008490139578.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008531886340.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008531886340.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008531886340.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008531886340.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008531886340.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008531886340.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008565406737.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008565406737.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008565406737.txt",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008565406737.txt",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008565406737.wav",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/brics-odroid_tactiler_right/brics-odroid_tactiler_right_1766008565406737.wav",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/calibration_refined/dist.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/calibration_refined/dist.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/calibration_refined/intrinsics.npy",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/calibration_refined/intrinsics.npy",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/metadata.json",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/008-pink-cloth/metadata.json",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/051-cube",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/deform360/raw/051-cube",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/001-rope",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/001-rope",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_2",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_2",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_3",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_3",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_5",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_5",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_6",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_6",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_7",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_7",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_8",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_8",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_9",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/008-pink-cloth/episode_9",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/051-cube",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-depth-v1/051-cube",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/001-rope",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/001-rope",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_2",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_2",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_3",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_3",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_4",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_4",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_5",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_5",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_6",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_6",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_7",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_7",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_8",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_8",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_9",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/008-pink-cloth/episode_9",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/051-cube",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/datasets/touch4d-v1/051-cube",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/.cache/uv",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/.cache/uv",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/.cache/uv-wheels",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/.cache/uv-wheels",
+      "is_symlink": false,
+      "kind": "unretained_dataset_or_runtime",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/audit",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/audit",
+      "is_symlink": false,
+      "kind": "retired_output_after_validation",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/runs",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/runs",
+      "is_symlink": false,
+      "kind": "retired_output_after_validation",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/logs",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/logs",
+      "is_symlink": false,
+      "kind": "retired_output_after_validation",
+      "blocked_external_target": false
+    },
+    {
+      "path": "/data1/userdata/tcweng/projects/touch4d/how -s --format=-H 753aaac",
+      "root": "/data1/userdata/tcweng/projects/touch4d",
+      "resolved": "/data1/userdata/tcweng/projects/touch4d/how -s --format=-H 753aaac",
+      "is_symlink": false,
+      "kind": "retired_output_after_validation",
+      "blocked_external_target": false
+    }
+  ],
+  "primary_source_action": "Reviewed Git adoption only; preserve current dirty state first. Do not overwrite divergent primary branch.",
+  "requirements": [
+    "35356 must be completed and its reports copied to retained provenance",
+    "Actual checkpoint/data preflight must pass",
+    "New source must be committed/adopted/synchronized with explicit authorization",
+    "Recheck jobs, hashes, dirty-worktree inventories and resolved targets immediately before deletion"
+  ],
+  "missing_raw_files": [],
+  "verification": {
+    "full_source_and_real_checkpoint_cpu": "PASS Job35356",
+    "final_suite_preflight_and_packaging": "PASS Job35373"
+  }
+}

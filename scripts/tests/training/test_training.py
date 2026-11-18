@@ -26,11 +26,11 @@ from scripts.training.model import (PositionPredictor, LocalGSBlock, initial_knn
 from scripts.training.evaluate import load_model
 from scripts.training.rendering import DepthRenderer, GaussianRenderer, assemble_gaussians
 from scripts.training.train import (EpisodeMetrics, GaussianMetrics, checkpoint_state, evaluate_loader, restore_training,
-                    train_epoch, recover_best_score, publish_checkpoints, read_checkpoint, parser,
+                    train_epoch, recover_best_score, publish_checkpoints, read_checkpoint,
                     VERSION, GS_LOCAL_VERSION, GS_LEGACY_VERSION, LEGACY_VERSION, INDEPENDENT_VERSION, DISPLACEMENT_VERSION,
                     resolve_controller_features, resolve_prediction_mode, resolve_output_mode,
                     resolve_local_attention, resolve_chamfer_weight, loss_options)
-from scripts.training.visualize import png_bytes, viewer_html, main as visualize_main
+from scripts.training.cloth_geometry import png_bytes, world_gaussian_arrays
 
 
 def config():
@@ -204,15 +204,13 @@ class TrainingTests(unittest.TestCase):
                      patch('scripts.training.train.read_checkpoint', return_value=canonical):
                     self.assertEqual(recover_best_score(state, 'memory'), .5)
                     self.assertEqual(recover_best_score(resaved, 'memory'), .5)
-        args = parser().parse_args(['--scene', '001-rope'])
-        self.assertEqual(resolve_controller_features(args.controller_features), 7)
+        self.assertEqual(resolve_controller_features(None), 7)
         self.assertEqual(resolve_controller_features(3), 3)
-        self.assertEqual(resolve_prediction_mode(args.prediction_mode), 'autoregressive')
+        self.assertEqual(resolve_prediction_mode(None), 'autoregressive')
         self.assertEqual(resolve_prediction_mode('independent'), 'independent')
-        self.assertEqual(resolve_output_mode(args.output_mode), 'gs_geometry')
-        self.assertEqual(resolve_local_attention(args.gs_local_attention, args.gs_local_k), ('knn', 16))
-        args = parser().parse_args(['--scene', '001-rope', '--gs-local-k', '32'])
-        self.assertEqual(resolve_local_attention(args.gs_local_attention, args.gs_local_k), ('knn', 32))
+        self.assertEqual(resolve_output_mode(None), 'gs_geometry')
+        self.assertEqual(resolve_local_attention(None, None), ('knn', 16))
+        self.assertEqual(resolve_local_attention(None, 32), ('knn', 32))
 
     def test_checkpoint_feature_mismatches_fail_before_restore(self):
         optimizer = torch.optim.AdamW(self.model.parameters())
@@ -500,7 +498,6 @@ class TrainingTests(unittest.TestCase):
         self.assertGreater(self.model.gs_encoder[0].weight.grad.abs().sum().item(), 0.)
 
     def test_chamfer_default_has_no_depth_gradient(self):
-        self.assertEqual(parser().parse_args(['--scene','001-rope']).depth_weight, 0.)
         self.activate_head()
         pred=self.model(self.batch['inputs'])
         def metric_renderer(prediction,batch,processor):
@@ -592,32 +589,12 @@ class TrainingTests(unittest.TestCase):
         loss,parts=objective(pred,batch,self.processor,DepthRenderer(fake_rasterizer),1.,2)
         torch.testing.assert_close(loss,parts['geometry'].mean()+parts['depth_m'][0]/self.processor.state_dict()['scale'])
 
-    def test_html_is_offline_and_png_is_valid_container(self):
+    def test_png_is_valid_container(self):
         image=png_bytes(np.zeros((2,3,3),dtype=np.uint8))
         self.assertTrue(image.startswith(b'\x89PNG\r\n\x1a\n'))
-        text=viewer_html({'initial':[]},'<script>bad</script>')
-        self.assertNotIn('<script>bad</script>',text)
-        self.assertNotIn('https://',text)
-        self.assertIn('GS 中心点',text)
 
-    def test_visualization_export_uses_real_counts_and_world_coordinates(self):
-        # Exercise the full exporter with no filesystem writes and no GPU.
-        cfg=config(); sample=object()
-        ds=SimpleNamespace(windows=[(3,0)])
-        class Dataset:
-            windows=ds.windows
-            def __getitem__(self,index):return sample
-        captured={}
-        def capture(path,**arrays):captured.update(arrays)
-        fake=DepthRenderer(fake_rasterizer)
-        with patch('scripts.training.visualize.load_model',return_value=(self.model,self.processor,cfg)), \
-             patch('scripts.training.visualize.build_loader',return_value=SimpleNamespace(dataset=Dataset())), \
-             patch('scripts.training.visualize.collate_fn',return_value=self.raw), \
-             patch('scripts.training.visualize.DepthRenderer',return_value=fake), \
-             patch('scripts.training.visualize.np.savez_compressed',side_effect=capture), \
-             patch('pathlib.Path.mkdir'), patch('pathlib.Path.write_bytes'), patch('pathlib.Path.write_text'), \
-             redirect_stdout(StringIO()):
-            visualize_main(['--checkpoint','memory/last.pt','--episode','3','--start','0','--device','cpu'])
+    def test_world_array_export_uses_real_counts_and_world_coordinates(self):
+        captured = world_gaussian_arrays(self.raw, self.batch, self.model(self.batch['inputs']), self.processor)
         count=int(self.raw['inputs']['gs_mask'][0].sum())
         self.assertEqual(captured['predicted_xyz'].shape,(5,count,3))
         np.testing.assert_array_equal(captured['initial_xyz'],self.raw['inputs']['gs_xyz'][0,:count].numpy())
@@ -899,12 +876,10 @@ class TrainingTests(unittest.TestCase):
             objective(prediction['xyz'], batch, self.processor, renderer, chamfer_weight=.1)
 
     def test_joint_chamfer_cli_legacy_checkpoint_resume_and_best(self):
-        args = parser().parse_args(['--scene', '001-rope'])
-        self.assertEqual(resolve_chamfer_weight(args.chamfer_weight, 'gs_geometry'), .1)
-        self.assertEqual(resolve_chamfer_weight(args.chamfer_weight, 'position'), 0.)
+        self.assertEqual(resolve_chamfer_weight(None, 'gs_geometry'), .1)
+        self.assertEqual(resolve_chamfer_weight(None, 'position'), 0.)
         for weight in (0., .1, 1.):
-            args = parser().parse_args(['--scene', '001-rope', '--chamfer-weight', str(weight)])
-            self.assertEqual(resolve_chamfer_weight(args.chamfer_weight, 'gs_geometry'), weight)
+            self.assertEqual(resolve_chamfer_weight(weight, 'gs_geometry'), weight)
         for weight in (-1., float('nan'), float('inf')):
             with self.assertRaises(ValueError): resolve_chamfer_weight(weight, 'gs_geometry')
         with self.assertRaises(ValueError): resolve_chamfer_weight(.1, 'position')
@@ -1035,25 +1010,9 @@ class TrainingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate_loader(model,[raw],self.processor,GaussianRenderer(fake_gaussian_rasterizer),cfg,'cpu')
 
-    def test_geometry_visualization_exports_properties_and_real_renders(self):
+    def test_geometry_world_arrays_preserve_properties_and_counts(self):
         model,_=self.geometry_fixture();self.activate_geometry_heads(model)
-        cfg=dict(config(),**model.config,rgb_weight=1.,alpha_weight=.1,scale_weight=.01)
-        sample=object();captured={};written={}
-        class Dataset:
-            windows=[(3,0)]
-            def __getitem__(self,index):return sample
-        def capture(path,**arrays):captured.update(arrays)
-        def capture_text(path,text,**kwargs):written[str(path)]=text
-        fake=GaussianRenderer(fake_gaussian_rasterizer)
-        with patch('scripts.training.visualize.load_model',return_value=(model,self.processor,cfg)), \
-             patch('scripts.training.visualize.build_loader',return_value=SimpleNamespace(dataset=Dataset())), \
-             patch('scripts.training.visualize.collate_fn',return_value=self.raw), \
-             patch('scripts.training.visualize.GaussianRenderer',return_value=fake), \
-             patch('scripts.training.visualize.np.savez_compressed',side_effect=capture), \
-             patch('pathlib.Path.mkdir'),patch('pathlib.Path.write_bytes'), \
-             patch('pathlib.Path.write_text',autospec=True,side_effect=capture_text), \
-             redirect_stdout(StringIO()):
-            visualize_main(['--checkpoint','memory/gs.pt','--episode','3','--start','0','--device','cpu'])
+        captured=world_gaussian_arrays(self.raw,self.batch,model(self.batch['inputs']),self.processor)
         count=int(self.raw['inputs']['gs_mask'][0].sum())
         for key,dim in (('xyz',3),('log_scales',3),('quaternions',4),('opacity_logits',1),('sh_dc',3)):
             self.assertEqual(captured['predicted_'+key].shape,(5,count,dim))
@@ -1061,10 +1020,6 @@ class TrainingTests(unittest.TestCase):
         world_scale=expected['log_scales'][0,:,:count].detach().numpy()+math.log(self.processor.state_dict()['scale'])
         np.testing.assert_allclose(captured['predicted_log_scales'],world_scale,atol=1e-6,rtol=0)
         self.assertEqual(captured['target_attr_1'].shape[0],int(self.raw['targets']['target_lengths'][0,0]))
-        text='\n'.join(written.values())
-        self.assertIn('RGB',text)
-        self.assertIn('alpha',text)
-        self.assertNotIn('https://',text)
 
     @unittest.skipUnless(os.environ.get('TOUCH4D_TEST_CUDA_RENDER')=='1', 'Real gsplat CUDA backward test requires explicit server GPU run')
     def test_real_gsplat_rgb_alpha_geometry_backward(self):

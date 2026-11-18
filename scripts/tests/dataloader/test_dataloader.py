@@ -30,6 +30,7 @@ from scripts.dataloader.loader import make_dataloader
 from scripts.dataloader.splits import SPLITS, episode_ids, window_starts
 from scripts.rebuild_dataset import rebuild as rebuild_module
 from scripts.rebuild_dataset import validate as validate_module
+from scripts.rebuild_dataset import depth as depth_module
 
 
 def encoded_file(name, value):
@@ -995,7 +996,7 @@ class DepthValidationTests(unittest.TestCase):
             return original_open(mode=mode, **kwargs)
 
         with data.mounted(), patch.object(tarfile, "open", side_effect=open_tar):
-            with rebuild_module.DepthSourceReader(data.source_root) as reader:
+            with depth_module.DepthSourceReader(data.source_root) as reader:
                 yield reader
 
     def recorded_camera_archive(self, data, episode=0):
@@ -1026,7 +1027,7 @@ class DepthValidationTests(unittest.TestCase):
         core = data.get(0, "metadata.json")
         obs = data.get(0, "timestamps.npz")["observation_timestamp_us"]
         with self.memory_tar_reader(data, relative, archive) as reader:
-            plan = rebuild_module.depth_source_layout(reader, core, obs)
+            plan = depth_module.depth_source_layout(reader, core, obs)
             for camera in data.cameras:
                 key = f"camera_timestamps_{camera}"
                 self.assertEqual(reader.refs[key], core["source_files"][key])
@@ -1042,12 +1043,12 @@ class DepthValidationTests(unittest.TestCase):
         before = {path: data.digest(path) for path in data.files
                   if data.root in path.parents or data.depth_root in path.parents}
         with self.memory_tar_reader(data, relative, archive), patch("sys.stdout", new_callable=StringIO):
-            result = validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+            result = depth_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
                 core_directory=data.path(0, "metadata.json").parent, source_root=data.source_root,
                 verify_sources=True)
             self.assertEqual(result["status"], "PASS")
             # Exercise the real skip validator/path guards, unlike publication_sandbox.
-            skipped = rebuild_module.rebuild_depth_episode(data.source_root, data.root, data.depth_root,
+            skipped = depth_module.rebuild_depth_episode(data.source_root, data.root, data.depth_root,
                                                            data.scene, 0)
             self.assertTrue(skipped["skipped"])
             self.assertEqual(skipped["source_verification"], "full")
@@ -1063,7 +1064,7 @@ class DepthValidationTests(unittest.TestCase):
                 archive = self.archive_bytes([(name, payload, tarfile.REGTYPE) for name, payload in members.items()])
                 with self.memory_tar_reader(data, relative, archive):
                     with self.assertRaisesRegex(ValueError, "provenance|hashes|SHA-256"):
-                        validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                        depth_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
                             core_directory=data.path(0, "metadata.json").parent, source_root=data.source_root,
                             verify_sources=True)
 
@@ -1080,7 +1081,7 @@ class DepthValidationTests(unittest.TestCase):
                     if missing == "archive":
                         del data.files[data.source_root / relative]
                     with self.assertRaisesRegex(ValueError, "Missing depth"):
-                        validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                        depth_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
                             core_directory=data.path(0, "metadata.json").parent, source_root=data.source_root,
                             verify_sources=True)
 
@@ -1149,7 +1150,7 @@ class DepthValidationTests(unittest.TestCase):
                     for name in ("preflight", "rebuild_episode", "gs_arrays", "tactile_arrays", "load_robot"):
                         stack.enter_context(patch.object(rebuild_module, name, side_effect=AssertionError(name)))
                     stack.enter_context(patch.object(validate_module, "validate_episode", side_effect=AssertionError("core validator")))
-                    result = validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                    result = depth_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
                         core_directory=data.path(0, "metadata.json").parent, expected_scene=scene,
                         expected_episode=0, source_root=data.source_root, verify_sources=True)
                     self.assertEqual(result["status"], "PASS")
@@ -1166,7 +1167,7 @@ class DepthValidationTests(unittest.TestCase):
                         data.source_root / f"processed/{data.scene}/episode_0/{relative}")
                 data.files[path] += b"changed"
                 with data.mounted(), self.assertRaisesRegex(ValueError, "SHA-256|source hashes"):
-                    validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+                    depth_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
                         core_directory=data.path(0, "metadata.json").parent,
                         source_root=data.source_root, verify_sources=True)
 
@@ -1175,7 +1176,7 @@ class DepthValidationTests(unittest.TestCase):
         meta = data.files[data.depth_path(0, "metadata.json")]
         meta["source_files"][f"depth_{data.cameras[0]}"]["sha256"] = "f" * 64
         with data.mounted(), self.assertRaisesRegex(ValueError, "exact source H5 bytes"):
-            validate_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
+            depth_module.validate_depth_episode(data.depth_path(0, "metadata.json").parent,
                 core_directory=data.path(0, "metadata.json").parent, verify_sources=False)
 
     def test_depth_root_cannot_overlap_core_or_source(self):
@@ -1183,7 +1184,7 @@ class DepthValidationTests(unittest.TestCase):
         with data.mounted():
             for protected in (data.root, data.source_root):
                 with self.subTest(protected=protected), self.assertRaisesRegex(ValueError, "disjoint"):
-                    rebuild_module.depth_roots(data.source_root, data.root, protected / "depth")
+                    depth_module.depth_roots(data.source_root, data.root, protected / "depth")
 
     @contextmanager
     def publication_sandbox(self, *, fail_publish=False, fail_cleanup=False):
@@ -1235,25 +1236,25 @@ class DepthValidationTests(unittest.TestCase):
             return destination
 
         with ExitStack() as stack:
-            stack.enter_context(patch.object(rebuild_module, "depth_roots", return_value=(source, core, depth)))
-            stack.enter_context(patch.object(rebuild_module, "read_core_depth_binding",
+            stack.enter_context(patch.object(depth_module, "depth_roots", return_value=(source, core, depth)))
+            stack.enter_context(patch.object(depth_module, "read_core_depth_binding",
                 return_value=(metadata, np.arange(6, dtype=np.int64), {"metadata_sha256": "a" * 64,
                                                                        "timestamps_sha256": "b" * 64})))
-            stack.enter_context(patch.object(rebuild_module, "depth_output_paths", return_value=(target, partial, backup)))
-            stack.enter_context(patch.object(rebuild_module, "DepthSourceReader", return_value=reader))
-            stack.enter_context(patch.object(rebuild_module, "depth_source_layout", return_value=plan))
-            stack.enter_context(patch.object(rebuild_module, "check_depth_h5"))
-            stack.enter_context(patch.object(rebuild_module, "write_npz", side_effect=record_write))
-            stack.enter_context(patch.object(rebuild_module, "hash_file", return_value="a" * 64))
-            stack.enter_context(patch.object(rebuild_module, "checked_path", side_effect=lambda p: p))
-            stack.enter_context(patch.object(rebuild_module, "_validators", return_value=validator))
+            stack.enter_context(patch.object(depth_module, "depth_output_paths", return_value=(target, partial, backup)))
+            stack.enter_context(patch.object(depth_module, "DepthSourceReader", return_value=reader))
+            stack.enter_context(patch.object(depth_module, "depth_source_layout", return_value=plan))
+            stack.enter_context(patch.object(depth_module, "check_depth_h5"))
+            stack.enter_context(patch.object(depth_module, "write_npz", side_effect=record_write))
+            stack.enter_context(patch.object(depth_module, "hash_file", return_value="a" * 64))
+            stack.enter_context(patch.object(depth_module, "checked_path", side_effect=lambda p: p))
+            stack.enter_context(patch.object(depth_module, "validate_depth_episode", side_effect=validator.validate_depth_episode))
             stack.enter_context(patch.object(Path, "exists", lambda path: path in directories))
             stack.enter_context(patch.object(Path, "is_dir", lambda path: path in directories))
             stack.enter_context(patch.object(Path, "stat", lambda path: SimpleNamespace(st_dev=1, st_ino=9)))
             stack.enter_context(patch.object(Path, "mkdir", mkdir))
             stack.enter_context(patch.object(Path, "rename", rename))
             stack.enter_context(patch.object(Path, "open", open_output))
-            cleanup = stack.enter_context(patch.object(rebuild_module.shutil, "rmtree",
+            cleanup = stack.enter_context(patch.object(depth_module.shutil, "rmtree",
                 side_effect=OSError("cleanup rejected") if fail_cleanup else lambda path: directories.remove(path)))
             output = stack.enter_context(patch("sys.stdout", new_callable=StringIO))
             errors = stack.enter_context(patch("sys.stderr", new_callable=StringIO))
@@ -1263,7 +1264,7 @@ class DepthValidationTests(unittest.TestCase):
 
     def test_default_skip_validates_without_copying_sources_or_creating_output(self):
         with self.publication_sandbox() as state:
-            result = rebuild_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0)
+            result = depth_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0)
             self.assertTrue(result["skipped"])
             self.assertEqual(state.created, [])
             self.assertEqual(state.writes, [])
@@ -1274,7 +1275,7 @@ class DepthValidationTests(unittest.TestCase):
     def test_overwrite_publication_failure_restores_old_directory(self):
         with self.publication_sandbox(fail_publish=True) as state:
             with self.assertRaisesRegex(OSError, "publication rejected"):
-                rebuild_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0,
+                depth_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0,
                                                      overwrite=True)
             self.assertIn(state.target, state.directories)
             self.assertNotIn(state.backup, state.directories)
@@ -1285,14 +1286,14 @@ class DepthValidationTests(unittest.TestCase):
 
     def test_cleanup_failure_does_not_fail_publication_or_next_default_skip(self):
         with self.publication_sandbox(fail_cleanup=True) as state:
-            result = rebuild_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0,
+            result = depth_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0,
                                                          overwrite=True)
             self.assertEqual(result["status"], "PASS")
             self.assertFalse(result["skipped"])
             self.assertIn(state.target, state.directories)
             self.assertIn(state.backup, state.directories)
             self.assertIn("WARNING", state.errors.getvalue())
-            again = rebuild_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0)
+            again = depth_module.rebuild_depth_episode(state.source, state.core, state.depth, "001-rope", 0)
             self.assertTrue(again["skipped"])
             self.assertEqual(state.validator.validate_depth_episode.call_count, 2)
 
