@@ -43,7 +43,6 @@ function initRGB(figure) {
   const cameraSelect = figure.querySelector('.rgb-camera');
   const slider = figure.querySelector('input[type="range"]');
   const output = figure.querySelector('output');
-  const image = figure.querySelector('img');
   const viewport = figure.querySelector('.rgb-viewport');
   const previous = figure.querySelector('.rgb-prev');
   const next = figure.querySelector('.rgb-next');
@@ -80,10 +79,11 @@ function initRGB(figure) {
       const ready = await cachedImage(frame.path);
       if (ticket !== request) return;
       viewport.style.aspectRatio = `${frame.width} / ${frame.rgb_height}`;
-      image.style.top = `${-100 * frame.top / frame.rgb_height}%`;
-      image.src = ready.src;
-      image.width = frame.width; image.height = frame.height;
-      image.alt = `Ground truth, SoMA and G5-Direct: episode ${chosen.episode}, frame ${frameId}, ${window.DEMO_RGB.cameras[camera]}.`;
+      viewport.style.setProperty('--rgb-image', `url("${ready.src}")`);
+      // Percentage background positions are relative to the difference in heights.
+      const top = 100 * frame.top / (frame.height - frame.rgb_height);
+      viewport.style.setProperty('--rgb-top', `${top}%`);
+      viewport.setAttribute('aria-label', `Ground truth, G5-Direct and SoMA: episode ${chosen.episode}, frame ${frameId}, ${window.DEMO_RGB.cameras[camera]}.`);
       output.textContent = `H${h} / 15 · Frame ${frameId}`;
       const caption = figure.querySelector('figcaption');
       caption.replaceChildren();

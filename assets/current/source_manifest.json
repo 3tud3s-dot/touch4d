@@ -64,12 +64,12 @@
     "scripts/training/soma_adapter.py": "f58a3c1948089214856ae2f54ec959c4fe3d59ff5da825584a2bf416b4ec53f8",
     "scripts/training/train.py": "eedc9497259462d4643f4607c63b02a50334878c8398adc860731b997c62dcbd",
     "scripts/visualization/__init__.py": "e25af901a8132debb1102e9c4cc4eb862038e78a62efb8b1fde65f4d4aee90b0",
-    "scripts/visualization/app.js": "5f223ac3c2464e2e6bc44755f60e7fa903e89bbb538d4296480c9ab740b4cecf",
-    "scripts/visualization/build_demo.py": "bd3e653161036fb58f7c34040f83cdb253d0f3958f00f8b3de136ddb2effd8ed",
+    "scripts/visualization/app.js": "5b909ed19e58a07d55377f9d6cf621d8bf0572cbf99347d8bcc742fd2e045d10",
+    "scripts/visualization/build_demo.py": "ceb75af1569108edf1624a81f087dbd2018116fde0653781423357c408ac517e",
     "scripts/visualization/gaussian_viewer.js": "86fbef140161452dcb7588124ffcd991c4b1d040df0bcffc08dbd974f86ddad3",
     "scripts/visualization/pack_results.py": "c3c9469e6e9a632abba9264f3aceaaaa54f04f275191acd1d98e7f18f1580133",
-    "scripts/visualization/styles.css": "3a396b1c08b8e0d61115ceb50cb772e0cfbc6eb9394f7d6c9d438db55b86166b",
-    "scripts/visualization/template.html": "5e0c7333ae2fae43d29c32658fba070a082b14f6223a369251de88966e1b6995",
+    "scripts/visualization/styles.css": "eaac4daf7f6c01eb18779ac521522e7295f406c73429c86f0a09f99d79c2fad2",
+    "scripts/visualization/template.html": "bb38da3972d3f0eb394ff85ae744741b35ae0170726daa42240a73aaa90c92fb",
     "third_party/soma/configs/_base_/default_runtime.py": "02d3848ce21d42415d8ce24063a0929ec2dd280681f67e77926828d5afbc3220",
     "third_party/soma/configs/_base_/schedules/adam_hood.py": "8f7ab211e6bd8739f385dd7855f4b3f848bf662404e0a96352b6c049e3325367",
     "third_party/soma/configs/SoMA/deform360_v0_stage2.py": "c4042fa409bdb4bc2746629a390f9763aa7f277a8ec54d2e43e314b30566e16a",
@@ -224,7 +224,7 @@
     "docs/assets/generalization-rollout.gif": "c8148b3717c87587e198470308dfb33e9e937522ad6c1441bd8aa1caa20d3c48",
     "docs/assets/resimulation-h15.png": "bd8f07b50917b515ed88fb43626bfd55d309fd3e1304d78bbad1260aef1656bf",
     "docs/assets/resimulation-rollout.gif": "c9650e4235394cdef21f15fcdc64f0314fe814cccab26592c8f240fb7cb64d79",
-    "docs/demo/comparison.html": "8fdd8613d2d5d38ab5f970633b23f7567bb00e9085526dae4a21385a523056f2",
+    "docs/demo/comparison.html": "200b095bf06612444cf28c8a7ce6bc671320ebd2dd92f48240974ae810aba75b",
     "Methodology.md": "c21d680cd23dcbb0415d2c4557e8ddee768407b24415fe00e7b40951dc2e6913"
   }
 }

@@ -37,9 +37,10 @@ def build(bundle, output, *, overwrite=False):
         html = html.replace('<link rel="stylesheet" href="styles.css">',
                             '<style>' + (source / 'styles.css').read_text(encoding='utf-8') + '</style>')
         html = re.sub(r'\s*<script defer src="[^"]+"></script>', '', html)
-        for name in re.findall(r'<img src="([^"]+)"', html):
+        for name in re.findall(r"--rgb-image:url\('([^']+)'\)", html):
             encoded = base64.b64encode(archive.read(name)).decode('ascii')
-            html = html.replace(f'src="{name}"', f'src="data:image/png;base64,{encoded}"')
+            html = html.replace(f"--rgb-image:url('{name}')",
+                                f"--rgb-image:url('data:image/png;base64,{encoded}')")
         rgb = json.loads(read('rgb_sequences.js').split('=', 1)[1].rstrip(';\r\n'))
         for case in rgb['cases']:
             for view in case['views']:
@@ -60,7 +61,7 @@ def build(bundle, output, *, overwrite=False):
                             f'download="provenance.json" href="data:application/json;base64,{encoded}"')
     if re.search(r'<(?:script|link)[^>]+(?:src|href)=', html):
         raise ValueError('Standalone HTML still depends on an external script or stylesheet')
-    if any(not value.startswith('data:') for value in re.findall(r'<img[^>]+src="([^"]+)"', html)):
+    if any(not value.startswith('data:') for value in re.findall(r"--rgb-image:url\('([^']+)'\)", html)):
         raise ValueError('Standalone HTML still depends on external images')
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(canonical_html_bytes(html))
