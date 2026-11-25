@@ -1,26 +1,26 @@
-# Methodology — G5-Direct
+# 方法：G5-Direct 布料动力学预测
 
-Touch4D predicts cloth motion from an initial 3D Gaussian reconstruction, gripper motion and tactile observations. The demo uses **G5-Direct E8** (620,511 parameters), implemented as [ClothDynamicsPredictor](scripts/training/cloth_model.py). E8 was trained on Episode 0 of Deform360's 008-pink-cloth scene for eight epochs of 140 windows each, totaling 1,120 optimizer updates. The rollout horizon is 15 consecutive frames with a stride of one frame. See the [training and evaluation protocol](configs/workflow.json).
+Touch4D 根据初始三维高斯重建、夹爪运动和触觉观测预测布料运动。最终演示采用 **G5-Direct E8**，共 **620,511 个参数**。E8 在 Deform360 的 008-pink-cloth 场景 Episode 0 上训练 8 轮，每轮 140 个窗口，共 1,120 次优化器更新。每次预测从一帧观测初始化，以一帧为步长自回归预测后续 15 帧。 [模型实现](scripts/training/cloth_model.py) · [训练与评估协议](configs/workflow.json)
 
-## 1. Input and rollout state
+## 1. 输入与递推状态
 
-Index time relative to the start of a window. Let $X_0 \in \mathbb R^{N\times3}$ be the observed Gaussian centers and $A_0\in\mathbb R^{N\times11}$ the associated attributes. Each Gaussian has 14 features.
+将窗口起始帧记为第 0 帧。设 $X_0\in\mathbb R^{N\times3}$ 为初态高斯中心，$A_0\in\mathbb R^{N\times11}$ 为其余属性。每个高斯共 14 维。
 
-| Attribute | Dimensions | Rollout behavior |
+| 属性 | 维度 | 更新方式 |
 |---|---:|---|
-| Center (XYZ) | 3 | Predicted at every step |
-| Log scale | 3 | Inherited from the first frame |
-| Rotation quaternion (WXYZ) | 4 | Inherited from the first frame |
-| Opacity logit | 1 | Inherited from the first frame |
-| Spherical-harmonic DC color | 3 | Inherited from the first frame |
+| 中心坐标（XYZ） | 3 | 每步预测 |
+| 对数尺度 | 3 | 沿用初态 |
+| 旋转四元数（WXYZ） | 4 | 沿用初态 |
+| 不透明度 logit | 1 | 沿用初态 |
+| 零阶球谐颜色（SH DC） | 3 | 沿用初态 |
 
-Step $k$ predicts frame $k$ using the previous predicted geometry and robot conditions through frame $k-1$. Gaussian identities are retained from initialization. The reference Gaussian sets are independently reconstructed per frame and can differ in count and order. The experiment uses fixed training-derived normalization for both the object and robot coordinates. See the [data protocol](docs/DATASET_PROTOCOL.md) and [data preparation code](scripts/training/cloth_data.py).
+第 $k$ 步根据上一帧的预测几何以及截至第 $k-1$ 帧的机器人条件预测第 $k$ 帧。预测序列沿用初态的高斯索引。参考高斯集合逐帧独立重建，各帧的点数和顺序可以不同。物体与机器人坐标使用同一套由训练数据确定的固定归一化参数。 [数据协议](docs/DATASET_PROTOCOL.md) · [数据准备实现](scripts/training/cloth_data.py)
 
-## 2. Gaussian encoding and anchor queries
+## 2. 高斯编码与锚点查询
 
-At the start of each window, farthest-point sampling selects up to 128 valid Gaussians as anchors. The model fixes the 16-nearest-neighbor graph, 16-point anchor pooling neighborhoods and radial basis function (RBF) interpolation weights from the initial geometry. Anchor indices remain fixed and their positions follow the predicted Gaussian centers.
+每个窗口开始时，通过最远点采样从有效高斯中选出最多 128 个锚点。模型根据初态建立高斯的 16 近邻图、每个锚点的 16 点池化邻域，以及径向基函数（RBF）插值权重。锚点索引在递推中固定，位置随对应高斯的预测中心更新。
 
-At each step, a shared MLP encodes the current Gaussian state. A four-head local attention block aggregates features over the fixed graph using relative positions computed from the current predicted geometry. Mean pooling over each anchor's initial neighborhood and a learned prediction-step embedding produce the query tensor.
+每一步先用共享 MLP 编码当前高斯状态，再用四头局部注意力沿固定近邻图聚合特征。注意力使用当前预测几何计算相对位置。对每个锚点的固定邻域做均值池化，再加入可学习的预测步嵌入，得到锚点查询。
 
 $$
 F_{k-1}=\operatorname{LocalGSBlock}\left(
@@ -30,38 +30,38 @@ F_{k-1}=\operatorname{LocalGSBlock}\left(
 Q_k^{(0)}=\operatorname{Pool}_0(F_{k-1})+e^{\mathrm{pred}}_k .
 $$
 
-The query tensor has shape $B\times128\times128$ with padding masked throughout. See the [model](scripts/training/cloth_model.py) and [anchor field](scripts/training/gs_decoder.py).
+查询张量的形状为 $B\times128\times128$，其中 $B$ 为批大小。不足 128 个锚点时填充，并在计算中通过掩码屏蔽填充位置。 [模型](scripts/training/cloth_model.py) · [锚点与插值实现](scripts/training/gs_decoder.py)
 
-## 3. Gripper and tactile conditioning
+## 3. 夹爪与触觉条件编码
 
-Each potential hand has one hand token and 30 controller-point tokens. Separate shared MLPs encode the two types of input, each with widths of $13\to128\to128$.
+模型为每只手预留一个手位姿 token 和 30 个控制点 token。两类输入各自使用一个共享 MLP，层宽均为 $13\to128\to128$。
 
-| Token | Input |
+| Token | 输入特征 |
 |---|---|
-| Hand | Root position (3), rotation matrix (9), gripper opening (1) |
-| Controller point | Current XYZ (3), signed XYZ displacement from the initial condition (3), a validity flag for both endpoints (1), and six tactile features (6) |
+| 手位姿 | 夹爪根部位置（3）、旋转矩阵（9）、开口宽度（1） |
+| 控制点 | 当前 XYZ（3）、相对初态的有符号 XYZ 位移（3）、当前与初态均有效的标志（1）、触觉特征（6） |
 
-The tactile features come from four $12\times32$ arrays aligned to the observation time. For each controller point, the features include a Gaussian-weighted mean, a local maximum, coverage, normalized sample age, and validity flags for the mean and maximum. The mean uses a 10 mm kernel in sensor-local coordinates. Valid samples must be at most 75 ms old. Masks distinguish absent hands, invalid controller points and missing tactile samples.
+触觉来自与观测时刻对齐的四路 $12\times32$ 阵列。每个控制点的六项触觉特征是高斯加权均值、局部最大值、覆盖率、归一化的样本年龄，以及均值和最大值各自的有效标志。加权均值采用传感器局部坐标下尺度为 10 mm 的高斯核。有效样本距观测时刻最多 75 ms。掩码分别处理缺失的手、无效控制点和缺失的触觉样本。
 
-The encoders add identity and condition-time embeddings. Each hand token is then projected and fused into its 30 controller tokens.
+编码器加入身份嵌入和条件时间嵌入。将手位姿 token 投影后，加到所属的 30 个控制点 token 上并做层归一化。$h(j)$ 表示控制点 $j$ 所属的手。
 
 $$
 \widetilde C_{j,k}=\operatorname{LayerNorm}
 \left(C_{j,k}+W_H H_{h(j),k}\right).
 $$
 
-The resulting 60 controller tokens serve as keys and values. Separate hand tokens also provide context for the Global and Local motion branches. See the [condition encoder](scripts/training/cloth_conditions.py).
+融合后的 60 个控制点 token 用作交叉注意力的键和值。手位姿 token 也单独保留，作为全局和局部运动分支的条件。 [条件编码实现](scripts/training/cloth_conditions.py)
 
-## 4. Geometry-aware cross-attention
+## 4. 几何感知交叉注意力
 
-Two blocks update the anchor queries through cross-attention, each with four heads of width 32. For a current predicted anchor $p_a$ and an observed controller point $c_j$, define
+模型用两层交叉注意力更新锚点查询，每层 4 头，每头 32 维。对于当前预测锚点 $p_a$ 和当前观测控制点 $c_j$，定义四维相对几何特征 $g_{aj}$。
 
 $$
 g_{aj}=\left[\frac{p_a-c_j}{\sigma_0},
              \frac{\lVert p_a-c_j\rVert^2}{\sigma_0^2}\right].
 $$
 
-The bandwidth $\sigma_0$ is computed from the initial anchors. Each head $\ell$ combines a dot product, a linear geometry score and a learned pairwise correction.
+带宽 $\sigma_0$ 由初态锚点确定。第 $\ell$ 个头的注意力分数由缩放点积、线性几何评分和学习到的成对修正组成。
 
 $$
 s_{aj}^{(\ell)}
@@ -70,30 +70,30 @@ s_{aj}^{(\ell)}
 +f_\ell([q_a^{(\ell)},k_j^{(\ell)},g_{aj}]).
 $$
 
-The pairwise MLP has widths of $68\to32\to1$. The geometric weights start at $[0,0,0,-0.5]$. Masked softmax covers valid controllers and a null option with zero logit and zero value. When no controller is valid, the attention contribution is zero. Output projection, residual connections and a feed-forward network update the anchor queries. The Base motion head also uses the final block's attention weights. See the [cross-attention block](scripts/training/cloth_attention.py).
+成对修正 MLP 的层宽为 $68\to32\to1$，线性几何权重初始化为 $[0,0,0,-0.5]$。带掩码的 Softmax 同时考虑有效控制点和一个 logit、值向量均为零的空项。控制点全部无效时，注意力聚合结果为零。输出投影、残差连接和前馈网络共同更新锚点查询。最后一层的注意力权重还用于基础分支汇总控制点运动。 [交叉注意力实现](scripts/training/cloth_attention.py)
 
-## 5. Base, Global and Local motion
+## 5. 基础、全局与局部运动分支
 
-The three branches jointly predict motion in the anchor control space. Let $U_{a,k}$ denote the final query for anchor $a$.
+三个分支在锚点空间共同预测运动。$U_{a,k}$ 表示锚点 $a$ 在第 $k$ 步经过两层交叉注意力后的查询向量。
 
-### Base motion
+### 基础位移（Base）
 
-The Base MLP has widths of $151\to128\to3$ and produces a cumulative displacement $d^B_{a,k}$ at each anchor.
+基础分支使用 $151\to128\to3$ 的 MLP，为每个锚点生成累计位移 $d^B_{a,k}$。
 
-| Input | Dimensions |
+| 输入 | 维度 |
 |---|---:|
-| Final anchor query $U_{a,k}$ | 128 |
-| Adjacent-frame controller displacements pooled independently by each attention head | 12 |
-| Adjacent predicted anchor displacement | 3 |
-| Previous cumulative displacement after combining all three branches | 3 |
-| Attention mass on controller points valid at both adjacent times, one scalar per head | 4 |
-| Anchor history validity flag | 1 |
+| 最终锚点查询 $U_{a,k}$ | 128 |
+| 四个注意力头分别汇总的控制点相邻帧位移 | 12 |
+| 锚点相邻两次预测的位置差 | 3 |
+| 上一步三个分支合成后的累计位移 | 3 |
+| 每个头在相邻两帧均有效的控制点上的权重之和 | 4 |
+| 锚点历史有效标志 | 1 |
 
-Each head retains its own XYZ displacement. Pooling uses the controller portion of the original attention distribution, with the null mass still accounted for in its normalization. The first step uses zero motion-history features. See the [Base inputs](scripts/training/cloth_model.py#L86).
+四个注意力头各自保留 3 维 XYZ 位移。汇总时直接使用原注意力分布中分给控制点的权重，空项仍占用归一化时分给它的权重。首步的运动历史特征置零。 [基础分支输入](scripts/training/cloth_model.py#L86)
 
-### Global translation
+### 全局平移（Global）
 
-For each hand $h$, the model constructs a 12-dimensional signed basis from four XYZ vectors: root motion since the initial condition, root motion since the previous condition, mean cumulative controller motion and mean adjacent controller motion. Each controller mean considers points valid at the two relevant times.
+每只手 $h$ 的 12 维有符号运动基底由下式中的四个 XYZ 向量构成。$\Delta_0$ 表示相对初态的差分，$\Delta_1$ 表示相对上一观测时刻的差分。$r_h$ 是夹爪根部位置，$c_{h,j}$ 是该手第 $j$ 个控制点的位置。控制点均值只纳入对应差分两端均有效的点。
 
 $$
 b^G_{h,k}=\left[
@@ -103,16 +103,16 @@ b^G_{h,k}=\left[
 \right].
 $$
 
-A shared $268\to128\to36$ MLP takes the mean valid anchor query (128), the hand token (128) and this basis (12). It produces a $3\times12$ matrix for each hand. With hand validity $m_{h,k}$, the sum of mapped contributions is shared by all anchors.
+共享的 $268\to128\to36$ MLP 读取有效锚点查询的均值（128 维）、对应手位姿 token（128 维）和运动基底（12 维）。网络为每只手生成一个 $3\times12$ 映射矩阵。各手独立映射后，按手有效标志 $m_{h,k}$ 求和，得到所有有效锚点共享的平移 $g_k$。
 
 $$
 t_{h,k}=M^G_{h,k}b^G_{h,k},\qquad
 g_k=\sum_h m_{h,k}t_{h,k}.
 $$
 
-### Local correction
+### 局部形变修正（Local）
 
-For each anchor and hand, the model separately pools cumulative and adjacent controller displacements. The distance kernel uses current predicted anchor positions and observed controller positions. Each softmax is normalized within the hand over controller points valid at both endpoints of the corresponding displacement. An empty set contributes zero.
+对每个锚点和每只手，分别汇总控制点的累计位移与相邻帧位移。距离核使用当前预测锚点与当前观测控制点的位置。两种位移各自使用一套掩码，Softmax 在同一只手内对应差分两端均有效的控制点上计算。没有有效点时，汇总结果为零。
 
 $$
 \beta^{(i)}_{a,h,j,k}
@@ -123,26 +123,26 @@ u^{(i)}_{a,h,k}=\sum_j\beta^{(i)}_{a,h,j,k}\Delta_i c_{h,j},
 \quad i\in\{0,1\}.
 $$
 
-The two pooled vectors extend the hand's global basis to $b^L_{a,h,k}=[b^G_{h,k},u^{(0)}_{a,h,k},u^{(1)}_{a,h,k}]\in\mathbb R^{18}$. These geometric weights are computed separately from cross-attention and have no hard distance cutoff.
+将两个汇总的 3 维向量追加到该手的全局基底，得到 18 维局部基底 $b^L_{a,h,k}=[b^G_{h,k},u^{(0)}_{a,h,k},u^{(1)}_{a,h,k}]\in\mathbb R^{18}$。这组几何权重独立于交叉注意力计算，也不设硬性的距离截断。
 
-| Local mapping input | Dimensions |
+| 局部映射的输入 | 维度 |
 |---|---:|
-| Anchor query and hand token | $128+128$ |
-| Weighted relative XYZ and mean distance in units of $\sigma_0$ | 4 |
-| Signed motion basis | 18 |
-| Anchor history, previous cumulative displacement and the hand's Global contribution | $3+3+3$ |
+| 锚点查询和手位姿 token | $128+128$ |
+| 以 $\sigma_0$ 为单位的加权相对 XYZ 与同一组权重下的平均距离 | 4 |
+| 有符号运动基底 | 18 |
+| 锚点历史差分、上一累计位移、该手的全局平移贡献 | $3+3+3$ |
 
-A shared $287\to128\to54$ MLP produces a $3\times18$ matrix for each anchor and hand. Applying it to the basis and summing valid hands yields
+共享的 $287\to128\to54$ MLP 为每个锚点和每只手生成一个 $3\times18$ 映射矩阵。矩阵乘以局部基底后，按有效手求和，得到该锚点的局部修正。
 
 $$
 d^L_{a,k}=\sum_h m_{h,k}M^L_{a,h,k}b^L_{a,h,k}.
 $$
 
-The Local branch can produce a nonzero spatial mean, allowing it to adjust translation as well as relative shape. Each anchor's correction is applied directly. See the [Global and Local mappings](scripts/training/cloth_motion.py).
+局部修正允许出现非零空间均值，因此既能改变布料各区域的相对形状，也能调整整体平移。每个锚点的修正直接加入该锚点的运动结果。 [全局与局部映射实现](scripts/training/cloth_motion.py)
 
-## 6. Fixed RBF decoding and recurrence
+## 6. 固定 RBF 解码与自回归反馈
 
-The three motion contributions combine before interpolation. Each row of $W_0$ is a normalized Gaussian weight over the valid initial anchors. The bandwidth is based on the median nearest-other-anchor distance in the initial geometry.
+三个分支先在锚点空间相加，再做插值。$W_0$ 的每一行是在有效初态锚点上归一化的高斯权重。带宽 $\sigma_0$ 由初态各锚点到其最近其他锚点的距离中位数确定。
 
 $$
 d_{a,k}=d^B_{a,k}+g_k+d^L_{a,k},
@@ -155,16 +155,16 @@ $$
 \boxed{\widehat X_k=X_0+W_0D_k}
 $$
 
-Here $D_k$ stacks the **cumulative** anchor displacements relative to the initial state. The next step re-encodes $[\widehat X_k,A_0]$ and uses $D_k$, the recent predicted anchor positions and the previous observed controller positions to compute motion history. After the initial observation, all object states come from the model's own predictions.
+$D_k$ 由各锚点**相对窗口初态的累计位移**堆叠而成，因此每一步都以同一个 $X_0$ 为基准重建高斯中心。下一步重新编码 $[\widehat X_k,A_0]$，并读取 $D_k$、最近的预测锚点位置和上一个观测时刻的控制点，用于构造运动历史。初态之后的物体状态均由模型自身预测。
 
-At H1, the Global and Local bases are zero because the available condition is the window's initial observation. Base provides the first prediction. The terminal layers of all three motion MLPs start at zero, so a freshly initialized model reproduces the initial Gaussian state throughout the rollout. See the [recurrence](scripts/training/cloth_model.py#L66).
+预测 H1 时，机器人条件来自窗口起始帧，全局与局部运动基底均为零，首步位移由基础分支给出。三个运动 MLP 的末层均以零初始化，所以刚初始化的模型在完整递推中会复现初始高斯状态。 [递推实现](scripts/training/cloth_model.py#L66)
 
-## 7. Training objective
+## 7. 训练目标
 
-Training unrolls all 15 steps and backpropagates through the predicted states. The objective combines a geometric loss with multi-view rendering losses.
+训练展开完整的 15 步递推，梯度经预测状态回传。目标函数由几何损失和多视角渲染损失组成。
 
 $$
 \mathcal L=\mathcal L_{\mathrm{CD}}+\mathcal L_{\mathrm{RGB}}+0.1\,\mathcal L_{\alpha}.
 $$
 
-The geometric loss averages the two directional unsquared nearest-neighbor distances between predicted and reference centers in normalized coordinates. The rendering losses compare RGB and alpha from the same cameras using mean absolute error in the target-depth-valid region. The rendering targets come from the reference Gaussian reconstructions. See the [training implementation](scripts/training/cloth_train.py) and the [original architecture notes](docs/TOUCH4D_V4_STAGE1_ARCHITECTURE_DRAFT.md#touch4d-g5-directh15-核心计算图).
+几何损失在归一化坐标中计算预测与参考高斯中心集合的双向平均非平方 Chamfer 距离，无需建立逐点对应。渲染损失从相同相机渲染预测高斯和参考高斯，在参考深度有效区域分别计算 RGB 与 Alpha 的平均绝对误差。渲染目标来自逐帧重建的参考高斯。 [训练实现](scripts/training/cloth_train.py) · [原架构文档](docs/TOUCH4D_V4_STAGE1_ARCHITECTURE_DRAFT.md)
