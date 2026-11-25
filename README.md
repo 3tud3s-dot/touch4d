@@ -4,6 +4,8 @@
 
 An ongoing project using real robot manipulation data from Deform360. From an initial Gaussian scene, gripper motion and tactile observations, the model predicts cloth geometry over 15 consecutive frames.
 
+[Methodology](Methodology.md) covers the model architecture and training objective.
+
 ## Demo
 
 [**Download the interactive demo**](docs/demo/comparison.html) (38 MiB). After cloning, open `docs/demo/comparison.html` in your browser to explore the frames, camera views and 3D scenes offline.

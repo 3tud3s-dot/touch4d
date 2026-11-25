@@ -1,5 +1,42 @@
 'use strict';
 
+function createPlayback(button, slider, render) {
+  let pending = null;
+  let playing = false;
+  let generation = 0;
+
+  function stop() {
+    playing = false;
+    generation++;
+    clearTimeout(pending);
+    pending = null;
+    button.textContent = 'Play';
+  }
+
+  function atEnd() {
+    return Number(slider.value) >= Number(slider.max);
+  }
+
+  async function renderAndSchedule(run) {
+    await render();
+    if (!playing || run !== generation) return;
+    pending = setTimeout(() => {
+      slider.value = atEnd() ? slider.min : Number(slider.value) + 1;
+      renderAndSchedule(run);
+    }, 300);
+  }
+
+  button.onclick = () => {
+    if (playing) {stop(); return;}
+    playing = true;
+    button.textContent = 'Pause';
+    if (atEnd()) slider.value = slider.min;
+    renderAndSchedule(++generation);
+  };
+  document.addEventListener('visibilitychange', () => {if (document.hidden) stop();});
+  return stop;
+}
+
 function initRGB(figure) {
   const cases = window.DEMO_RGB.cases;
   const windowSelect = figure.querySelector('.rgb-window');
@@ -56,17 +93,25 @@ function initRGB(figure) {
       figure.dataset.renderedCamera = String(camera);
       figure.dataset.renderedHorizon = String(h);
       figure.setAttribute('aria-busy', 'false');
-      for (const adjacent of [h - 2, h]) {
+      for (const adjacent of [h - 2, h === Number(slider.max) ? 0 : h]) {
         const item = chosen.views[camera].frames[adjacent];
         if (item) cachedImage(item.path).catch(() => {});
       }
-    } catch (error) {if (ticket === request) {output.textContent = error.message; figure.setAttribute('aria-busy','false');}}
+    } catch (error) {
+      if (ticket === request) {
+        stop();
+        output.textContent = error.message;
+        figure.setAttribute('aria-busy', 'false');
+      }
+    }
   }
-  windowSelect.addEventListener('change', render);
-  cameraSelect.addEventListener('change', render);
-  slider.addEventListener('input', render);
-  previous.onclick = () => {slider.value = Math.max(1, Number(slider.value) - 1); render();};
-  next.onclick = () => {slider.value = Math.min(15, Number(slider.value) + 1); render();};
+  const stop = createPlayback(figure.querySelector('.play'), slider, render);
+  function inspect() {stop(); render();}
+  windowSelect.addEventListener('change', inspect);
+  cameraSelect.addEventListener('change', inspect);
+  slider.addEventListener('input', inspect);
+  previous.onclick = () => {slider.value = Math.max(1, Number(slider.value) - 1); inspect();};
+  next.onclick = () => {slider.value = Math.min(15, Number(slider.value) + 1); inspect();};
   render();
 }
 document.querySelectorAll('.rgb-comparison').forEach(initRGB);
@@ -115,7 +160,7 @@ async function initScene(section) {
     const panels = canvases.map(createSplatPanel);
     const initial = {yaw: -.20, pitch: .42, zoom: 1.12};
     let {yaw, pitch, zoom} = initial;
-    let matrix = orbitMatrix(yaw, pitch), pending = false, loaded = false, token = 0, timer = null;
+    let matrix = orbitMatrix(yaw, pitch), pending = false, loaded = false, token = 0;
     let drag = null;
     const cache = new Map();
     function frame(id) {
@@ -127,7 +172,6 @@ async function initScene(section) {
       pending = true;
       requestAnimationFrame(() => {pending = false; if (loaded) panels.forEach(p => p.draw(matrix, data.pivot, zoom));});
     }
-    function stop() {if (timer !== null) clearInterval(timer); timer = null; play.textContent = 'Play';}
     async function show() {
       const current = ++token, h = Number(slider.value), index = h - 1;
       const frameId = data.frame_ids[index];
@@ -139,9 +183,15 @@ async function initScene(section) {
         panels.forEach((p, i) => p.setFrame(pair[i]));
         loaded = true; status.hidden = true; schedule();
         section.dataset.renderedHorizon = String(h);
-        const next = data.frames[index + 1];
+        const next = data.frames[(index + 1) % data.frames.length];
         if (next) next.forEach(id => frame(id).catch(() => {}));
-      } catch (error) {stop(); status.hidden = false; status.classList.add('error'); status.textContent = error.message;}
+      } catch (error) {
+        if (current !== token) return;
+        stop();
+        status.hidden = false;
+        status.classList.add('error');
+        status.textContent = error.message;
+      }
     }
     function rotate(dx, dy) {yaw += dx * .009; pitch = Math.max(-1.55, Math.min(1.55, pitch + dy * .009)); matrix = orbitMatrix(yaw, pitch); schedule();}
     const resize = new ResizeObserver(schedule);
@@ -155,14 +205,8 @@ async function initScene(section) {
       canvas.addEventListener('webglcontextlost', e => {e.preventDefault(); stop(); status.hidden=false; status.textContent='3D rendering was interrupted. Please reload the page.';});
     }
     section.querySelector('.reset').onclick = () => {({yaw,pitch,zoom}=initial); matrix=orbitMatrix(yaw,pitch); schedule();};
+    const stop = createPlayback(play, slider, show);
     slider.addEventListener('input', () => {stop(); show();});
-    play.onclick = () => {
-      if (timer !== null) {stop(); return;}
-      if (Number(slider.value) === 15) {slider.value=1; show();}
-      play.textContent='Pause';
-      timer=setInterval(() => {slider.value=Number(slider.value)+1; show(); if (Number(slider.value)>=15) stop();}, 300);
-    };
-    document.addEventListener('visibilitychange', () => {if (document.hidden) stop();});
     await show();
   } catch (error) {
     status.classList.add('error'); status.textContent='Interactive 3D requires WebGL 2 and a recent browser. '+error.message;

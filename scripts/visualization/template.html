@@ -23,26 +23,26 @@
 
   <section id="qualitative" aria-labelledby="qual-title">
     <div class="section-heading"><h2 id="qual-title">Qualitative comparisons</h2><span>H1–H15 · Δ1 · 3 cameras</span></div>
-    <p class="section-note">Choose a window and camera independently in each comparison, then drag its slider to inspect every predicted frame. GT, SoMA and G5 always share the same frame and crop.</p>
+    <p class="section-note">Choose a window and camera independently in each comparison, then drag the slider or press Play to loop through the rollout. GT, SoMA and G5 always share the same frame and crop.</p>
     <figure class="rgb-comparison" data-default-case="ep0_start225">
       <div class="rgb-options"><label>Window <select class="rgb-window" aria-label="Comparison 1 window"></select></label><label>Camera <select class="rgb-camera" aria-label="Comparison 1 camera"></select></label></div>
       <div class="column-labels"><span>Ground truth</span><span>SoMA</span><span>Ours <small>(G5-Direct)</small></span></div>
       <div class="rgb-viewport"><img src="assets/rgb/ep0_start225_h15.png" width="1980" height="643" alt="Resimulation: ground truth, SoMA and G5-Direct at episode 0 frame 240."></div>
-      <div class="controls rgb-controls"><button type="button" class="rgb-prev" aria-label="Comparison 1 previous frame">←</button><label for="rgb-horizon-0">Horizon</label><input id="rgb-horizon-0" type="range" min="1" max="15" value="15" aria-label="Comparison 1 horizon"><button type="button" class="rgb-next" aria-label="Comparison 1 next frame">→</button><output for="rgb-horizon-0">H15 / 15 · Frame 240</output></div>
+      <div class="controls rgb-controls"><button type="button" class="play">Play</button><button type="button" class="rgb-prev" aria-label="Comparison 1 previous frame">←</button><label for="rgb-horizon-0">Horizon</label><input id="rgb-horizon-0" type="range" min="1" max="15" value="15" aria-label="Comparison 1 horizon"><button type="button" class="rgb-next" aria-label="Comparison 1 next frame">→</button><output for="rgb-horizon-0">H15 / 15 · Frame 240</output></div>
       <figcaption><strong>Resimulation.</strong> Episode 0 · 225 → 240</figcaption>
     </figure>
     <figure class="rgb-comparison" data-default-case="ep1_start181">
       <div class="rgb-options"><label>Window <select class="rgb-window" aria-label="Comparison 2 window"></select></label><label>Camera <select class="rgb-camera" aria-label="Comparison 2 camera"></select></label></div>
       <div class="column-labels"><span>Ground truth</span><span>SoMA</span><span>Ours <small>(G5-Direct)</small></span></div>
       <div class="rgb-viewport"><img src="assets/rgb/ep1_start181_h15.png" width="1800" height="577" alt="Generalization: ground truth, SoMA and G5-Direct at episode 1 frame 196."></div>
-      <div class="controls rgb-controls"><button type="button" class="rgb-prev" aria-label="Comparison 2 previous frame">←</button><label for="rgb-horizon-1">Horizon</label><input id="rgb-horizon-1" type="range" min="1" max="15" value="15" aria-label="Comparison 2 horizon"><button type="button" class="rgb-next" aria-label="Comparison 2 next frame">→</button><output for="rgb-horizon-1">H15 / 15 · Frame 196</output></div>
+      <div class="controls rgb-controls"><button type="button" class="play">Play</button><button type="button" class="rgb-prev" aria-label="Comparison 2 previous frame">←</button><label for="rgb-horizon-1">Horizon</label><input id="rgb-horizon-1" type="range" min="1" max="15" value="15" aria-label="Comparison 2 horizon"><button type="button" class="rgb-next" aria-label="Comparison 2 next frame">→</button><output for="rgb-horizon-1">H15 / 15 · Frame 196</output></div>
       <figcaption><strong>Generalization.</strong> Episode 1 · 181 → 196</figcaption>
     </figure>
     <figure class="rgb-comparison" data-default-case="ep1_start260">
       <div class="rgb-options"><label>Window <select class="rgb-window" aria-label="Comparison 3 window"></select></label><label>Camera <select class="rgb-camera" aria-label="Comparison 3 camera"></select></label></div>
       <div class="column-labels"><span>Ground truth</span><span>SoMA</span><span>Ours <small>(G5-Direct)</small></span></div>
       <div class="rgb-viewport"><img src="assets/rgb/ep1_start260_h15.png" width="1779" height="578" alt="Generalization: ground truth, SoMA and G5-Direct at episode 1 frame 275."></div>
-      <div class="controls rgb-controls"><button type="button" class="rgb-prev" aria-label="Comparison 3 previous frame">←</button><label for="rgb-horizon-2">Horizon</label><input id="rgb-horizon-2" type="range" min="1" max="15" value="15" aria-label="Comparison 3 horizon"><button type="button" class="rgb-next" aria-label="Comparison 3 next frame">→</button><output for="rgb-horizon-2">H15 / 15 · Frame 275</output></div>
+      <div class="controls rgb-controls"><button type="button" class="play">Play</button><button type="button" class="rgb-prev" aria-label="Comparison 3 previous frame">←</button><label for="rgb-horizon-2">Horizon</label><input id="rgb-horizon-2" type="range" min="1" max="15" value="15" aria-label="Comparison 3 horizon"><button type="button" class="rgb-next" aria-label="Comparison 3 next frame">→</button><output for="rgb-horizon-2">H15 / 15 · Frame 275</output></div>
       <figcaption><strong>Generalization.</strong> Episode 1 · 260 → 275</figcaption>
     </figure>
     <p class="footnote">RGB selectors use existing caches for Ep0 starts 225 / 241 and Ep1 starts 181 / 260. Changing a displayed window does not change the fixed aggregate tables below; Ep0/189 is included in the table but has no cached RGB sequence.</p>
@@ -63,18 +63,18 @@
 
   <section id="interactive" aria-labelledby="interactive-title">
     <div class="section-heading"><h2 id="interactive-title">Explore the predictions in 3D</h2><span>Ground truth / G5-Direct</span></div>
-    <p class="section-note">Drag either view to rotate both; scroll to zoom. Move the slider to inspect every predicted frame. Geometry and Gaussian appearance are shown together.</p>
+    <p class="section-note">Drag either view to rotate both; scroll to zoom. Move the slider to inspect a frame or press Play to loop through the rollout. Geometry and Gaussian appearance are shown together.</p>
     <article class="scene" id="scene-train" data-key="train" data-start="225" data-source="assets/3d/train.js">
       <div class="scene-heading"><h3>Resimulation <span>Episode 0 · start 225</span></h3><button type="button" class="reset">Reset view</button></div>
       <div class="scene-labels"><span>Ground truth</span><span>Ours <small>(G5-Direct)</small></span></div>
       <div class="canvas-pair"><canvas tabindex="0" aria-label="Resimulation ground truth. Drag to rotate; scroll to zoom."></canvas><canvas tabindex="0" aria-label="Resimulation G5-Direct prediction. Drag to rotate; scroll to zoom."></canvas><div class="loading" role="status">Loading Gaussian scene…</div></div>
-      <div class="controls"><button type="button" class="play" aria-label="Play resimulation frames">Play</button><label for="train-horizon">Horizon</label><input type="range" min="1" max="15" value="15" id="train-horizon" aria-valuetext="H15, frame 240"><output for="train-horizon">H15 / 15 · Frame 240</output></div>
+      <div class="controls"><button type="button" class="play">Play</button><label for="train-horizon">Horizon</label><input type="range" min="1" max="15" value="15" id="train-horizon" aria-valuetext="H15, frame 240"><output for="train-horizon">H15 / 15 · Frame 240</output></div>
     </article>
     <article class="scene" id="scene-generalization" data-key="generalization" data-start="260" data-source="assets/3d/generalization.js">
       <div class="scene-heading"><h3>Generalization <span>Episode 1 · start 260</span></h3><button type="button" class="reset">Reset view</button></div>
       <div class="scene-labels"><span>Ground truth</span><span>Ours <small>(G5-Direct)</small></span></div>
       <div class="canvas-pair"><canvas tabindex="0" aria-label="Generalization ground truth. Drag to rotate; scroll to zoom."></canvas><canvas tabindex="0" aria-label="Generalization G5-Direct prediction. Drag to rotate; scroll to zoom."></canvas><div class="loading" role="status">Loading Gaussian scene…</div></div>
-      <div class="controls"><button type="button" class="play" aria-label="Play generalization frames">Play</button><label for="generalization-horizon">Horizon</label><input type="range" min="1" max="15" value="15" id="generalization-horizon" aria-valuetext="H15, frame 275"><output for="generalization-horizon">H15 / 15 · Frame 275</output></div>
+      <div class="controls"><button type="button" class="play">Play</button><label for="generalization-horizon">Horizon</label><input type="range" min="1" max="15" value="15" id="generalization-horizon" aria-valuetext="H15, frame 275"><output for="generalization-horizon">H15 / 15 · Frame 275</output></div>
     </article>
     <p class="footnote">Both panes share the same display transform and camera within each scene. The viewer renders anisotropic Gaussians with SH-DC color; its free camera is independent of the calibrated RGB view above. No framewise recentering or alignment is applied.</p>
   </section>
