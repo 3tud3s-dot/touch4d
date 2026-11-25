@@ -6,6 +6,8 @@ An ongoing project using real robot manipulation data from Deform360. From an in
 
 ## Demo
 
+[**Download the interactive demo**](docs/demo/comparison.html) (38 MiB). After cloning, open `docs/demo/comparison.html` in your browser to explore the frames, camera views and 3D scenes offline.
+
 Each comparison shows **Ground truth · SoMA · Touch4D (ours)**, from left to right.
 
 **Resimulation — Episode 0**
